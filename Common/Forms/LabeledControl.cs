@@ -447,11 +447,11 @@ namespace Common.Windows.Forms
         {
             Trace.WriteLine("=>>>> LabeledControl::Label_OnTextChanged(object, EventArgs)");
 
-            // コントロール設定
-            this.SetControl();
-
             // リサイズイベントキャンセル
             this.Resize -= this.OnResize;
+
+            // コントロール設定
+            this.SetControl();
 
             // リサイズイベント再設定
             this.Resize += this.OnResize;
