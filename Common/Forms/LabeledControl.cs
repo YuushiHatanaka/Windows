@@ -228,13 +228,13 @@ namespace Common.Windows.Forms
             {
                 _Width = this.m_Label.Width;
             }
-            this.Width = _Width + this.ControlMargin.Left + this.ControlMargin.Right;
+            this.Width = this.ControlMargin.Left + _Width +  this.ControlMargin.Right;
 
             // 高さ決定
-            this.Height = this.m_Label.Height + this.m_Control.Height + this.m_SeparateSize + this.m_ControlMargin.Top + this.m_ControlMargin.Bottom;
+            this.Height = this.m_ControlMargin.Top + this.m_Label.Height + this.m_SeparateSize + this.m_Control.Height +  this.m_ControlMargin.Bottom;
 
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(this.ControlMargin.Left, this.m_Label.Height + this.m_SeparateSize);
+            // コントロール位置設定
+            this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top + this.m_Label.Height + this.m_SeparateSize);
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Top()");
         }
@@ -246,7 +246,7 @@ namespace Common.Windows.Forms
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Bottom()");
 
-            // テキストボックス位置設定
+            // コントロール位置設定
             this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
 
             // 幅決定
@@ -255,13 +255,13 @@ namespace Common.Windows.Forms
             {
                 _Width = this.m_Label.Width;
             }
-            this.Width = _Width + this.ControlMargin.Left + this.ControlMargin.Right;
+            this.Width = this.ControlMargin.Left + _Width +  this.ControlMargin.Right;
 
             // 高さ決定
-            this.Height = this.m_Label.Height + this.m_Control.Height + this.m_SeparateSize + this.m_ControlMargin.Top + this.m_ControlMargin.Bottom;
+            this.Height = this.m_ControlMargin.Top + this.m_Control.Height + this.m_SeparateSize + this.m_Label.Height + this.m_ControlMargin.Bottom;
 
             // ラベル位置設定
-            this.m_Label.Location = new Point(this.ControlMargin.Left, this.m_Control.Height + this.m_SeparateSize);
+            this.m_Label.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top + this.m_Control.Height + this.m_SeparateSize);
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Bottom()");
         }
@@ -273,11 +273,11 @@ namespace Common.Windows.Forms
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Right()");
 
-            // テキストボックス位置設定
+            // コントロール位置設定
             this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
 
             // 幅決定
-            this.Width = this.m_Label.Width + this.m_Control.Width + this.m_SeparateSize + this.m_ControlMargin.Left + this.m_ControlMargin.Right;
+            this.Width = this.m_ControlMargin.Left + this.m_Control.Width + this.m_SeparateSize + this.m_Label.Width + this.m_ControlMargin.Right;
 
             // 高さ決定
             int _Height = this.m_Control.Height;
@@ -285,10 +285,10 @@ namespace Common.Windows.Forms
             {
                 _Height = this.m_Label.Height;
             }
-            this.Height = _Height;
+            this.Height = this.ControlMargin.Top + _Height +  this.ControlMargin.Bottom;
 
             // ラベル位置設定
-            this.m_Label.Location = new Point(this.m_Control.Width + this.m_SeparateSize, this.ControlMargin.Top);
+            this.m_Label.Location = new Point(this.ControlMargin.Left + this.m_Control.Width + this.m_SeparateSize, this.ControlMargin.Top);
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Right()");
         }
@@ -304,7 +304,7 @@ namespace Common.Windows.Forms
             this.m_Label.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
 
             // 幅決定
-            this.Width = this.m_Label.Width + this.m_Control.Width + this.m_SeparateSize + this.m_ControlMargin.Left + this.m_ControlMargin.Right;
+            this.Width = this.m_ControlMargin.Left + this.m_Label.Width + this.m_SeparateSize + this.m_Control.Width + this.m_ControlMargin.Right;
 
             // 高さ決定
             int _Height = this.m_Control.Height;
@@ -312,10 +312,10 @@ namespace Common.Windows.Forms
             {
                 _Height = this.m_Label.Height;
             }
-            this.Height = _Height;
+            this.Height = this.ControlMargin.Top + _Height +  this.ControlMargin.Bottom;
 
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(this.m_Label.Width + this.m_SeparateSize, this.ControlMargin.Top);
+            // コントロール位置設定
+            this.m_Control.Location = new Point(this.ControlMargin.Left + this.m_Label.Width + this.m_SeparateSize, this.ControlMargin.Top);
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Left()");
         }
@@ -360,16 +360,14 @@ namespace Common.Windows.Forms
         private void OnResize_Top(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Top(object, EventArgs)");
-            /*
-            // ラベル位置設定
-            this.m_Label.Location = new Point(1, 1);
 
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(1, this.m_Label.Height + 2);
+            // コントロールサイズ決定
+            this.m_Control.Width = this.Width - this.ControlMargin.Right - this.ControlMargin.Left;
+            this.m_Control.Height = this.Height - this.m_ControlMargin.Top - this.m_Label.Height - this.m_SeparateSize;
 
-            // テキストボックスサイズ設定
-            this.m_Control.Size = new Size(this.Width - 2, this.Height - this.m_Label.Height - 3);
-            */
+            // コントロール設定
+            this.SetControl();
+
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Top(object, EventArgs)");
         }
 
@@ -381,16 +379,14 @@ namespace Common.Windows.Forms
         private void OnResize_Bottom(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Bottom(object, EventArgs)");
-            /*
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(1, 1);
 
-            // テキストボックスサイズ設定
-            this.m_Control.Size = new Size(this.Width - 2, this.Height - this.m_Label.Height - 3);
+            // コントロールサイズ決定
+            this.m_Control.Width = this.Width - this.ControlMargin.Right - this.ControlMargin.Left;
+            this.m_Control.Height = this.Height - this.m_SeparateSize - this.m_Label.Height - this.m_ControlMargin.Bottom;
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(1, this.m_Control.Height + 2);
-            */
+            // コントロール設定
+            this.SetControl();
+
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Bottom(object, EventArgs)");
         }
 
@@ -402,16 +398,14 @@ namespace Common.Windows.Forms
         private void OnResize_Right(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Right(object, EventArgs)");
-            /*
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(1, 1);
 
-            // テキストボックスサイズ設定
-            this.m_Control.Size = new Size(this.Width - this.m_Label.Width - 2, this.Height - 2);
+            // コントロールサイズ決定
+            this.m_Control.Width = this.Width - this.m_Label.Width - this.m_SeparateSize - this.ControlMargin.Right;
+            this.m_Control.Height = this.Height - this.ControlMargin.Top - this.ControlMargin.Bottom;
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(this.m_Control.Width + 2, 1);
-            */
+            // コントロール設定
+            this.SetControl();
+
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Right(object, EventArgs)");
         }
 
@@ -423,16 +417,14 @@ namespace Common.Windows.Forms
         private void OnResize_Left(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledTextBox::OnResize_Left(object, EventArgs)");
-            /*
-            // ラベル位置設定
-            this.m_Label.Location = new Point(1, 1);
 
-            // テキストボックス位置設定
-            this.m_Control.Location = new Point(this.m_Label.Width + 2, 1);
+            // コントロールサイズ決定
+            this.m_Control.Width = this.Width - this.ControlMargin.Left - this.m_Label.Width - this.m_SeparateSize;
+            this.m_Control.Height = this.Height - this.ControlMargin.Top - this.ControlMargin.Bottom;
 
-            // テキストボックスサイズ設定
-            this.m_Control.Size = new Size(this.Width - this.m_Label.Width - 2, this.Height - 2);
-            */
+            // コントロール設定
+            this.SetControl();
+
             Trace.WriteLine("<<<<= LabeledTextBox::OnResize_Left(object, EventArgs)");
         }
         #endregion
@@ -447,11 +439,11 @@ namespace Common.Windows.Forms
         {
             Trace.WriteLine("=>>>> LabeledControl::Label_OnTextChanged(object, EventArgs)");
 
-            // コントロール設定
-            this.SetControl();
-
             // リサイズイベントキャンセル
             this.Resize -= this.OnResize;
+
+            // コントロール設定
+            this.SetControl();
 
             // リサイズイベント再設定
             this.Resize += this.OnResize;

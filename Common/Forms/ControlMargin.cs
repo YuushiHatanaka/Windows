@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace Common.Control
+namespace Common.Windows.Forms
 {
     /// <summary>
     /// コントロールマージン
