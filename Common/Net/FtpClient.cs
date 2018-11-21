@@ -16,12 +16,14 @@ namespace Common.Net
     {
         public Socket Socket = null;
         public byte[] Buffer = null;
+        public FtpResponse Response = new FtpResponse();
     }
 
     public class FtpClientSendData
     {
         public Socket Socket = null;
         public byte[] Buffer = null;
+        public FtpResponse Response = new FtpResponse();
     }
 
     /// <summary>
