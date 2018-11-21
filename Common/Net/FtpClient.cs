@@ -178,6 +178,9 @@ namespace Common.Net
 
             // 接続完了を設定
             this.OnConnectEvent.Set();
+
+            // イベントリセット
+            this.OnConnectEvent.Reset();
         }
         #endregion
 
@@ -195,6 +198,9 @@ namespace Common.Net
 
             // 切断通知
             this.OnDisconnectEvent.Set();
+
+            // イベントリセット
+            this.OnDisconnectEvent.Reset();
         }
         #endregion
 
@@ -232,6 +238,9 @@ namespace Common.Net
 
             // 送信完了通知
             this.OnSendEvent.Set();
+
+            // イベントリセット
+            this.OnSendEvent.Reset();
         }
         #endregion
 
@@ -374,6 +383,9 @@ namespace Common.Net
 
             // コマンド応答通知
             this.OnCommandResponceEvent.Set();
+
+            // イベントリセット
+            this.OnCommandResponceEvent.Reset();
         }
     }
 }
