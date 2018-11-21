@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace Common.Windows.Forms
+namespace Common.Control
 {
     /// <summary>
     /// コントロールマージン
     /// </summary>
     [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class ControlMargin: Attribute
+    public class ControlMargin : Attribute
     {
         /// <summary>
         /// マージン(Top)
@@ -77,7 +77,7 @@ namespace Common.Windows.Forms
         /// <param name="bottom"></param>
         /// <param name="right"></param>
         /// <param name="left"></param>
-        private void Initialization(int top,int bottom, int right,int left)
+        private void Initialization(int top, int bottom, int right, int left)
         {
             this.m_Top = top;
             this.m_Bottom = bottom;

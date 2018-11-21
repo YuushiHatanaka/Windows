@@ -31,7 +31,7 @@ namespace Common.Windows.Forms
         /// <summary>
         /// 文字列返却
         /// </summary>
-        public override string Text
+        public string AddresString
         {
             set
             {
