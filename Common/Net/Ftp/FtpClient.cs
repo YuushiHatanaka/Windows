@@ -28,8 +28,12 @@ namespace Common.Net
         /// </summary>
         private Socket m_Socket = null;
 
+        /// <summary>
+        /// 受信バッファサイズ
+        /// </summary>
         private int m_ReciveBufferCapacity = 4096;
 
+        #region エンコーダー
         /// <summary>
         /// エンコーダー(受信)
         /// </summary>
@@ -39,7 +43,9 @@ namespace Common.Net
         /// エンコーダー(送信)
         /// </summary>
         private Encoding m_SendEncoding = Encoding.Default;
+        #endregion
 
+        #region タイムアウト
         /// <summary>
         /// 接続タイムアウト
         /// </summary>
@@ -64,18 +70,44 @@ namespace Common.Net
         /// 転送タイムアウト
         /// </summary>
         private int m_TransferMillisecondsTimeout = 60000;
+        #endregion
 
         /// <summary>
         /// データコネクション情報
         /// </summary>
         private FtpClientDataConnection m_DataConnection = null;
 
+        #region 通知イベント
+        /// <summary>
+        /// 接続通知イベント
+        /// </summary>
         public ManualResetEvent OnConnectNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 受信通知イベント
+        /// </summary>
         public ManualResetEvent OnReciveNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 送信通知イベント
+        /// </summary>
         public ManualResetEvent OnSendNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// コマンド応答通知イベント
+        /// </summary>
         public ManualResetEvent OnCommandResponceNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 切断通知イベント
+        /// </summary>
         public ManualResetEvent OnDisconnectNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 転送通知イベント
+        /// </summary>
         public ManualResetEvent OnTransferNotify = new ManualResetEvent(false);
+        #endregion
 
         #region コンストラクタ
         /// <summary>
