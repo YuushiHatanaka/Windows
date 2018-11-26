@@ -43,27 +43,27 @@ namespace Common.Net
         /// <summary>
         /// 接続タイムアウト
         /// </summary>
-        private int m_ConnectillisecondsTimeout = 3000;
+        private int m_ConnectillisecondsTimeout = 10000;
 
         /// <summary>
         /// 受信タイムアウト
         /// </summary>
-        private int m_ReciveMillisecondsTimeout = 3000;
+        private int m_ReciveMillisecondsTimeout = 10000;
 
         /// <summary>
         /// 送信タイムアウト
         /// </summary>
-        private int m_SendMillisecondsTimeout = 3000;
+        private int m_SendMillisecondsTimeout = 10000;
 
         /// <summary>
         /// コマンド応答タイムアウト
         /// </summary>
-        private int m_CommandResponceMillisecondsTimeout = 3000;
+        private int m_CommandResponceMillisecondsTimeout = 10000;
 
         /// <summary>
         /// 転送タイムアウト
         /// </summary>
-        private int m_TransferMillisecondsTimeout = 30000;
+        private int m_TransferMillisecondsTimeout = 60000;
 
         /// <summary>
         /// データコネクション情報
@@ -370,6 +370,18 @@ namespace Common.Net
             this.SendCommand(_Command);
 
             // 結果受信待ち
+            FtpClientReciveData _FtpClientReciveData = this.CommandResponseWaiting();
+
+            // コマンド応答
+            return _FtpClientReciveData.Response;
+        }
+
+        /// <summary>
+        /// コマンド応答待ち
+        /// </summary>
+        private FtpClientReciveData CommandResponseWaiting()
+        {
+            // 結果受信待ち
             FtpClientReciveData _FtpClientReciveData = new FtpClientReciveData();
             _FtpClientReciveData.Socket = this.m_Socket;
             _FtpClientReciveData.Buffer = new byte[this.m_ReciveBufferCapacity];
@@ -384,14 +396,15 @@ namespace Common.Net
                 // 例外
                 throw new FtpClientException("コマンド応答タイムアウト");
             }
+            Debug.WriteLine("コマンド応答：" + _FtpClientReciveData.Response.ToString());
 
             // 通知リセット
             this.OnCommandResponceNotify.Reset();
 
-            // コマンド応答
-            Debug.WriteLine("コマンド応答：" + _FtpClientReciveData.Response.ToString());
-            return _FtpClientReciveData.Response;
+            // コマンド応答を返却
+            return _FtpClientReciveData;
         }
+
 
         /// <summary>
         /// コマンド実行結果応答コールバック
@@ -471,9 +484,12 @@ namespace Common.Net
             if (this.m_DataConnection != null)
             {
                 // 接続していたら破棄
-                if (this.m_DataConnection.Socket.Connected)
+                if (this.m_DataConnection.Socket != null)
                 {
-                    this.m_DataConnection.Socket.Dispose();
+                    if (this.m_DataConnection.Socket.Connected)
+                    {
+                        this.m_DataConnection.Socket.Dispose();
+                    }
                 }
                 this.m_DataConnection = null;
             }
@@ -716,7 +732,6 @@ namespace Common.Net
             string[] _portStrings = null;
             int _Port = 0;
             Regex _Regex = new Regex(@"\((?<address>[0-9]+,[0-9]+,[0-9]+,[0-9]+),(?<port>[0-9]+,[0-9]+)\)", RegexOptions.Singleline);
-            Debug.WriteLine(_FtpResponse.StatusDetail.ToString());
             for (Match _Match = _Regex.Match(_FtpResponse.StatusDetail.ToString()); _Match.Success; _Match = _Match.NextMatch())
             {
                 _ipAddressString = _Match.Groups["address"].Value.ToString().Replace(',', '.');
@@ -778,13 +793,9 @@ namespace Common.Net
                 throw new FtpClientException(_FtpResponse);
             }
 
-            // 受信サイズ抽出
-            Regex _Regex = new Regex(@"\((?<size>[0-9]+)[ ]*(?<unit>.*)\)\.", RegexOptions.Singleline);
-            for (Match _Match = _Regex.Match(_FtpResponse.StatusDetail.ToString()); _Match.Success; _Match = _Match.NextMatch())
-            {
-                this.m_DataConnection.ReciveSize = int.Parse(_Match.Groups["size"].Value.ToString());
-                this.m_DataConnection.ReciveSizeUnit = _Match.Groups["unit"].Value.ToString().ToLower();
-            }
+            // 受信バッファサイズ決定
+            this.m_DataConnection.ReciveSize = this.m_ReciveBufferCapacity;
+            this.m_DataConnection.ReciveSizeUnit = "byte";
 
             // ファイル転送
             MemoryStream _MemoryStream = this.Transfer();
@@ -800,9 +811,78 @@ namespace Common.Net
                 throw new FtpClientException("ファイル転送に失敗しました：" + fileName);
             }
 
+            // 結果受信待ち
+            FtpClientReciveData _FtpClientReciveData = this.CommandResponseWaiting();
+
+            // 応答判定
+            if (_FtpClientReciveData.Response.StatusCode != 226)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpClientReciveData.Response);
+            }
+
             // 受信結果を返却する
             return _MemoryStream;
         }
+
+        /// <summary>
+        /// 指定したファイル名を変更する(変更元ファイル名の指定)。
+        /// RNTOを続けて実行しなくてはならない
+        /// </summary>
+        /// <param name="fileName">変更元ファイル名</param>
+        /// <returns></returns>
+        public bool RNFR(string fileName)
+        {
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("RNFR", fileName);
+
+            // 応答判定
+            if (_FtpResponse.StatusCode == 550)
+            {
+                // ファイル削除失敗
+                Debug.WriteLine("ファイル名変更失敗(RNFR)：" + fileName);
+                return false;
+            }
+            else if (_FtpResponse.StatusCode != 350)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 正常終了
+            return true;
+        }
+
+        /// <summary>
+        /// RNFRコマンドで指定したファイルを、指定したファイル名に変更する。
+        /// </summary>
+        /// <param name="fileName">変更先ファイル名</param>
+        /// <returns></returns>
+        public bool RNTO(string fileName)
+        {
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("RNTO", fileName);
+
+            // 応答判定
+            if (_FtpResponse.StatusCode == 550)
+            {
+                // ファイル削除失敗
+                Debug.WriteLine("ファイル名変更失敗(RNTO)：" + fileName);
+                return false;
+            }
+            else if (_FtpResponse.StatusCode != 250)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 正常終了
+            return true;
+        }
+
 
         /// <summary>
         /// 指定したディレクトリを削除する
@@ -889,27 +969,121 @@ namespace Common.Net
         /// 現在のワーキングディレクトリ内のファイル一覧を表示する
         /// </summary>
         /// <param name="fileName"></param>
-        public void NLST(string fileName, params string[] option)
+        /// <returns></returns>
+        public string[] NLST(string fileName, params string[] option)
         {
+            // ソケット接続
+            if (!this.m_DataConnection.Socket.Connected)
+            {
+                this.m_DataConnection.Socket.Connect(this.m_DataConnection.IpAddress, this.m_DataConnection.Port);
+            }
+
+            // コマンドパラメータ設定
+            List<string> _ParameterList = new List<string>(option);
+            _ParameterList.Add(fileName);
+
             // コマンド送信
-            FtpResponse _FtpResponse = this.CommandExec("NLST", fileName);
+            FtpResponse _FtpResponse = this.CommandExec("NLST", _ParameterList.ToArray());
 
-            // TODO:未実装
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
 
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 受信バッファサイズ決定
+            this.m_DataConnection.ReciveSize = this.m_ReciveBufferCapacity;
+            this.m_DataConnection.ReciveSizeUnit = "byte";
+
+            // ファイル一覧受信
+            MemoryStream _MemoryStream = this.Transfer();
+
+            // 結果受信待ち
+            FtpClientReciveData _FtpClientReciveData = this.CommandResponseWaiting();
+
+            // 応答判定
+            if (_FtpClientReciveData.Response.StatusCode != 226)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpClientReciveData.Response);
+            }
+
+            // リスト変換して返却
+            return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
         }
 
         /// <summary>
         /// 現在のワーキングディレクトリ内のファイル一覧を表示する
         /// </summary>
         /// <param name="fileName"></param>
-        public void LIST(string fileName)
+        /// <returns></returns>
+        public string[] LIST(string fileName)
         {
+            // ソケット接続
+            if (!this.m_DataConnection.Socket.Connected)
+            {
+                this.m_DataConnection.Socket.Connect(this.m_DataConnection.IpAddress, this.m_DataConnection.Port);
+            }
+
             // コマンド送信
             FtpResponse _FtpResponse = this.CommandExec("LIST", fileName);
 
-            // TODO:未実装
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 受信バッファサイズ決定
+            this.m_DataConnection.ReciveSize = this.m_ReciveBufferCapacity;
+            this.m_DataConnection.ReciveSizeUnit = "byte";
+
+            // ファイル一覧受信
+            MemoryStream _MemoryStream = this.Transfer();
+
+            // 結果受信待ち
+            FtpClientReciveData _FtpClientReciveData = this.CommandResponseWaiting();
+
+            // 応答判定
+            if (_FtpClientReciveData.Response.StatusCode != 226)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpClientReciveData.Response);
+            }
+
+            // リスト変換して返却
+            return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
         }
 
-#endregion
+        /// <summary>
+        /// MemoryStreamから文字列配列に変換
+        /// </summary>
+        /// <param name="memoryStream"></param>
+        /// <param name="separetor"></param>
+        /// <returns></returns>
+        private string[] MemoryStreamToStringArray(MemoryStream memoryStream, string[] separetor)
+        {
+            string[] _List = this.m_ReciveEncoding.GetString(memoryStream.ToArray()).Split(separetor, StringSplitOptions.None);
+            foreach (string list in _List)
+            {
+                Debug.WriteLine(list);
+            }
+            return _List;
+        }
+        #endregion
     }
 }
