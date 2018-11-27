@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 namespace Common.Net
 {
     /// <summary>
-    /// Telnetクライアント例外クラス
+    /// Pingクライアント例外クラス
     /// </summary>
-    public class TelnetClientException : Exception
+    public class PingClientException : Exception
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="message"></param>
-        public TelnetClientException(string message)
+        public PingClientException(string message)
             : base(message)
         {
 
