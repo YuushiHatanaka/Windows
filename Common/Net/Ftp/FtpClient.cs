@@ -282,7 +282,30 @@ namespace Common.Net
             _FtpClientSendData.Socket = this.m_Socket;
 
             // 送信開始
-            this.m_Socket.BeginSend(_FtpClientSendData.Buffer, 0, _FtpClientSendData.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnSendCallBack), _FtpClientSendData);
+            this.m_Socket.BeginSend(_FtpClientSendData.Buffer, 0, _FtpClientSendData.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnSendMessageCallBack), _FtpClientSendData);
+
+            // 送信応答待ち
+            if (!this.OnSendNotify.WaitOne(this.m_SendMillisecondsTimeout))
+            {
+                // 通知リセット
+                this.OnSendNotify.Reset();
+
+                // 例外
+                throw new FtpClientException("メッセージ送信タイムアウト");
+            }
+
+            // 通知リセット
+            this.OnSendNotify.Reset();
+        }
+
+        /// <summary>
+        /// 送信
+        /// </summary>
+        /// <param name="stream"></param>
+        public void Send(MemoryStream stream)
+        {
+            // 送信開始
+            this.m_Socket.BeginSend(stream.ToArray(), 0, stream.ToArray().Length, SocketFlags.None, new AsyncCallback(this.OnSendStreamCallBack), null);
 
             // 送信応答待ち
             if (!this.OnSendNotify.WaitOne(this.m_SendMillisecondsTimeout))
@@ -322,12 +345,24 @@ namespace Common.Net
         /// 非同期送信のコールバックメソッド(別スレッドで実行される)
         /// </summary>
         /// <param name="asyncResult"></param>
-        private void OnSendCallBack(IAsyncResult asyncResult)
+        private void OnSendMessageCallBack(IAsyncResult asyncResult)
         {
-            Trace.WriteLine("FtpClient::OnSendCallBack");
+            Trace.WriteLine("FtpClient::OnSendMessageCallBack");
 
             // オブジェクト変換
             FtpClientSendData _FtpClientSendData = (FtpClientSendData)asyncResult.AsyncState;
+
+            // 送信完了通知
+            this.OnSendNotify.Set();
+        }
+
+        /// <summary>
+        /// 非同期送信のコールバックメソッド(別スレッドで実行される)
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private void OnSendStreamCallBack(IAsyncResult asyncResult)
+        {
+            Trace.WriteLine("FtpClient::OnSendStreamCallBack");
 
             // 送信完了通知
             this.OnSendNotify.Set();
@@ -474,9 +509,9 @@ namespace Common.Net
         }
         #endregion
 
-        #region 転送(サーバ⇒ローカル)
+        #region 転送
         /// <summary>
-        /// 転送
+        /// 転送(サーバ⇒ローカル)
         /// </summary>
         private MemoryStream Transfer()
         {
@@ -493,14 +528,43 @@ namespace Common.Net
             }
         }
 
+        /// <summary>
+        /// 転送(ローカル⇒サーバ)
+        /// </summary>
+        /// <param name="memoryStream"></param>
+        /// <returns></returns>
+        private bool Transfer(MemoryStream memoryStream)
+        {
+            // 転送モードによる
+            if (this.m_DataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード転送
+                return this.ActiveTransfer(memoryStream);
+            }
+            else
+            {
+                // パッシブモード転送
+                return this.PassiveTransfer(memoryStream);
+            }
+        }
+
         #region アクティブモード
         /// <summary>
-        /// アクティブモード転送
+        /// アクティブモード転送(サーバ⇒ローカル)
         /// </summary>
         private MemoryStream ActiveTransfer()
         {
             // TODO:未実装
             return null;
+        }
+
+        /// <summary>
+        /// アクティブモード転送(ローカル⇒サーバ)
+        /// </summary>
+        private bool ActiveTransfer(MemoryStream memoryStream)
+        {
+            // TODO:未実装
+            return false;
         }
         #endregion
 
@@ -537,7 +601,7 @@ namespace Common.Net
         }
 
         /// <summary>
-        /// パッシブモード転送
+        /// パッシブモード転送(サーバ⇒ローカル)
         /// </summary>
         private MemoryStream PassiveTransfer()
         {
@@ -560,6 +624,20 @@ namespace Common.Net
 
             // MemoryStreamを返却
             return _FtpClientReciveData.Memory;
+        }
+
+        /// <summary>
+        /// パッシブモード転送(ローカル⇒サーバ)
+        /// </summary>
+        /// <param name="memoryStream"></param>
+        /// <returns></returns>
+        private bool PassiveTransfer(MemoryStream memoryStream)
+        {
+            // データ送信
+            this.Send(memoryStream);
+
+            // TODO:未実装
+            return false;
         }
 
         /// <summary>
@@ -726,8 +804,6 @@ namespace Common.Net
         /// <exception cref="FtpClientException"></exception>
         public void PORT(string ipAddress, int port)
         {
-            // TODO:うまく動作していない
-
             // ポート設定
             int _PortFirstOctet = (port & 0x0000ff00) >> 8;
             int _PortSecondOctet = (port & 0x000000ff);
@@ -829,7 +905,7 @@ namespace Common.Net
             this.m_DataConnection.ReciveSize = this.m_ReciveBufferCapacity;
             this.m_DataConnection.ReciveSizeUnit = "byte";
 
-            // ファイル転送
+            // ファイル転送(ローカル⇒サーバ)
             MemoryStream _MemoryStream = this.Transfer();
 
             // ソケット破棄
@@ -858,6 +934,62 @@ namespace Common.Net
 
             // 受信結果を返却する
             return _MemoryStream;
+        }
+
+        /// <summary>
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する。
+        /// <remarks>同⼀名のファイルがすでにある場合には、上書きする</remarks>
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool STOR(string fileName)
+        {
+            // ソケット接続
+            if (!this.m_DataConnection.Socket.Connected)
+            {
+                this.m_DataConnection.Socket.Connect(this.m_DataConnection.IpAddress, this.m_DataConnection.Port);
+            }
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("STOR", Path.GetFileName(fileName));
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // ファイルをMemoryStreamに読み込む
+            MemoryStream _MemoryStream = new MemoryStream();
+            using (FileStream _FileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                byte[] bytes = new byte[_FileStream.Length];
+                _FileStream.Read(bytes, 0, (int)_FileStream.Length);
+                _MemoryStream.Write(bytes, 0, (int)_FileStream.Length);
+            }
+
+            // ファイル転送(サーバ⇒ローカル)
+            bool result = this.Transfer(_MemoryStream);
+
+            // 結果受信待ち
+            FtpClientReciveData _FtpClientReciveData = this.CommandResponseWaiting();
+
+            // 応答判定
+            if (_FtpClientReciveData.Response.StatusCode != 226)
+            {
+                // ソケット破棄
+                this.m_DataConnection.Socket.Dispose();
+
+                // 例外送出
+                throw new FtpClientException(_FtpClientReciveData.Response);
+            }
+
+            // 転送結果を返却
+            return result;
         }
 
         /// <summary>
@@ -914,7 +1046,6 @@ namespace Common.Net
             // 正常終了
             return true;
         }
-
 
         /// <summary>
         /// 指定したディレクトリを削除する

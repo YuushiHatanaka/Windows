@@ -133,7 +133,7 @@ namespace Common.Net
             }
             else
             {
-                Debug.WriteLine("Status={0}", pingReply.Status.ToString());
+                Debug.WriteLine("Status={0}", pingReply.Status);
             }
         }
 
