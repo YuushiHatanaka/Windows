@@ -18,7 +18,28 @@ namespace Common.Net
         public string IpAddress = string.Empty;
         public int Port;
         public int ReciveSize;
-        public string ReciveSizeUnit = string.Empty;
         public Socket Socket = null;
+
+        /// <summary>
+        /// 文字列変換
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            StringBuilder _StringBuilder = new StringBuilder();
+
+            // 文字列作成
+            _StringBuilder.AppendFormat("　Mode       : {0}\n", Mode.ToString());
+            _StringBuilder.AppendFormat("　IpAddress  : {0}\n", IpAddress);
+            _StringBuilder.AppendFormat("　Port       : {0}\n", Port.ToString());
+            _StringBuilder.AppendFormat("　ReciveSize : {0}\n", ReciveSize.ToString());
+            _StringBuilder.AppendFormat("　Socket     : {0}\n", Socket);
+            if (Socket != null)
+            {
+                _StringBuilder.AppendFormat("　└ Connected : {0}\n", Socket.Connected);
+            }
+
+            return _StringBuilder.ToString();
+        }
     }
 }

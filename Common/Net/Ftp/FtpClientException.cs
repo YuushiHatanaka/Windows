@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Diagnostics;
+
 namespace Common.Net
 {
     /// <summary>
@@ -23,7 +25,8 @@ namespace Common.Net
         public FtpClientException(string message)
             : base(message)
         {
-
+            Trace.WriteLine("FtpClientException::FtpClientException(string)");
+            Debug.WriteLine(message);
         }
 
         /// <summary>
@@ -33,6 +36,8 @@ namespace Common.Net
         public FtpClientException(FtpResponse response)
             : base(response.ToString())
         {
+            Trace.WriteLine("FtpClientException::FtpClientException(FtpResponse)");
+            Debug.WriteLine("レスポンスコード：[" + response.ToString() + "]");
             this.Response = response;
         }
     }
