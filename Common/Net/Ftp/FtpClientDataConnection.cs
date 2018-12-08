@@ -12,13 +12,96 @@ namespace Common.Net
     /// <summary>
     /// データコネクションクラス
     /// </summary>
-    public class FtpClientDataConnection
+    public class FtpClientDataConnection : IDisposable
     {
+        /// <summary>
+        /// 転送モード
+        /// </summary>
         public FtpTransferMode Mode = FtpTransferMode.Active;
+
+        /// <summary>
+        /// IPアドレス
+        /// </summary>
         public string IpAddress = string.Empty;
+
+        /// <summary>
+        /// ポート番号
+        /// </summary>
         public int Port;
+
+        /// <summary>
+        /// 受信サイズ
+        /// </summary>
         public int ReciveSize;
+
+        /// <summary>
+        /// ソケット
+        /// </summary>
         public Socket Socket = null;
+
+        #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public FtpClientDataConnection()
+        {
+            Trace.WriteLine("FtpClientDataConnection::FtpClientDataConnection()");
+        }
+        #endregion
+
+        #region デストラクタ
+        /// <summary>
+        /// デストラクタ
+        /// </summary>
+        ~FtpClientDataConnection()
+        {
+            Trace.WriteLine("FtpClientDataConnection::~FtpClientDataConnection()");
+
+            // 破棄
+            this.Dispose(false);
+        }
+        #endregion
+
+        #region 破棄
+        /// <summary>
+        /// 破棄フラグ
+        /// </summary>
+        private bool m_Disposed = false;
+
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        public void Dispose()
+        {
+            Trace.WriteLine("FtpClientDataConnection::Dispose()");
+
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        /// <param name="isDisposing"></param>
+        protected virtual void Dispose(bool isDisposing)
+        {
+            Trace.WriteLine("FtpClientDataConnection::Dispose(bool)");
+
+            // 破棄しているか？
+            if (!this.m_Disposed)
+            {
+                // TODO:未実装(アンマネージドリソース解放)
+
+                // TODO:マネージドリソース解放
+                if (isDisposing)
+                {
+                }
+
+                // 破棄済みを設定
+                this.m_Disposed = true;
+            }
+        }
+        #endregion
 
         /// <summary>
         /// 文字列変換
