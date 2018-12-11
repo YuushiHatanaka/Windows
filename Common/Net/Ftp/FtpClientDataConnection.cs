@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.IO;
 
 namespace Common.Net
 {
@@ -30,14 +31,14 @@ namespace Common.Net
         public int Port;
 
         /// <summary>
-        /// 受信サイズ
-        /// </summary>
-        public int ReciveSize;
-
-        /// <summary>
-        /// ソケット
+        /// データ転送用ソケット
         /// </summary>
         public Socket Socket = null;
+
+        /// <summary>
+        /// データ書込み用FileStream
+        /// </summary>
+        public FileStream FileStream = null;
 
         #region コンストラクタ
         /// <summary>
@@ -115,7 +116,6 @@ namespace Common.Net
             _StringBuilder.AppendFormat("　Mode       : {0}\n", Mode.ToString());
             _StringBuilder.AppendFormat("　IpAddress  : {0}\n", IpAddress);
             _StringBuilder.AppendFormat("　Port       : {0}\n", Port.ToString());
-            _StringBuilder.AppendFormat("　ReciveSize : {0}\n", ReciveSize.ToString());
             _StringBuilder.AppendFormat("　Socket     : {0}\n", Socket);
             if (Socket != null)
             {

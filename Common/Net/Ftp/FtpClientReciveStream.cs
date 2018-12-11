@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Diagnostics;
-using System.IO;
 using System.Net.Sockets;
+using System.IO;
 
 namespace Common.Net
 {
     /// <summary>
-    /// 送信Streamクラス
+    /// 受信Streamクラス
     /// </summary>
-    public class FtpClientSendStream
+    public class FtpClientReciveStream
     {
         /// <summary>
         /// データ転送用ソケット
@@ -34,6 +34,11 @@ namespace Common.Net
         /// データ保持用Stream
         /// </summary>
         public MemoryStream Stream = null;
+
+        /// <summary>
+        /// データ書込み用FileStream
+        /// </summary>
+        public FileStream FileStream = null;
 
         /// <summary>
         /// 文字列変換
