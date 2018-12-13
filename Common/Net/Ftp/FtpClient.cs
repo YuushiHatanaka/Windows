@@ -38,6 +38,13 @@ namespace Common.Net
         /// </summary>
         private Socket m_Socket = null;
 
+        /// <summary>
+        /// 破棄フラグ
+        /// </summary>
+        private bool m_Disposed = false;
+
+        // TODO:転送中の中断実装
+
         #region 送信バッファサイズ
         /// <summary>
         /// 送信バッファサイズ
@@ -102,38 +109,75 @@ namespace Common.Net
         /// 転送タイムアウト
         /// </summary>
         private int m_DownLoadMillisecondsTimeout = 10000;
+
+        /// <summary>
+        /// 切断タイムアウト
+        /// </summary>
+        private int m_DisconnectMillisecondsTimeout = 10000;
+
+        /// <summary>
+        /// ソケット受入タイムアウト
+        /// </summary>
+        private int m_AcceptMillisecondsTimeout = 10000;
         #endregion
 
         #region 通知イベント
         /// <summary>
         /// 接続完了通知イベント
         /// </summary>
-        public ManualResetEvent OnConnectNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnConnectNotify = new ManualResetEvent(false);
 
         /// <summary>
         /// 受信完了通知イベント
         /// </summary>
-        public ManualResetEvent OnReciveNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnReciveNotify = new ManualResetEvent(false);
 
         /// <summary>
         /// 送信完了通知イベント
         /// </summary>
-        public ManualResetEvent OnSendNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnSendNotify = new ManualResetEvent(false);
 
         /// <summary>
         /// コマンド応答完了通知イベント
         /// </summary>
-        public ManualResetEvent OnCommandResponceNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnCommandResponceNotify = new ManualResetEvent(false);
 
         /// <summary>
         /// 切断完了通知イベント
         /// </summary>
-        public ManualResetEvent OnDisconnectNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnDisconnectNotify = new ManualResetEvent(false);
 
         /// <summary>
         /// DownLoad完了通知イベント
         /// </summary>
-        public ManualResetEvent OnDownLoadNotify = new ManualResetEvent(false);
+        private ManualResetEvent OnDownLoadNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// ソケット受入完了通知イベント
+        /// </summary>
+        private ManualResetEvent OnAcceptNotify = new ManualResetEvent(false);
+        #endregion
+
+        #region イベント定義
+        /// <summary>
+        /// 接続イベント
+        /// </summary>
+        public FtpClientConnectedEventHandler OnConnected;
+
+        /// <summary>
+        /// Uploadイベント
+        /// </summary>
+        public FtpClientUploadEventHandler OnUpload;
+
+        /// <summary>
+        /// Downloadイベント
+        /// </summary>
+        public FtpClientDownloadEventHandler OnDownload;
+
+        /// <summary>
+        /// 切断イベント
+        /// </summary>
+        public FtpClientDisonnectedEventHandler OnDisconnected;
         #endregion
 
         #region コンストラクタ
@@ -198,11 +242,6 @@ namespace Common.Net
 
         #region 破棄
         /// <summary>
-        /// 破棄フラグ
-        /// </summary>
-        private bool m_Disposed = false;
-
-        /// <summary>
         /// 破棄
         /// </summary>
         public void Dispose()
@@ -224,7 +263,7 @@ namespace Common.Net
             // 破棄しているか？
             if (!this.m_Disposed)
             {
-                // TODO:未実装(アンマネージドリソース解放)
+                // アンマネージドリソース解放
 
                 // マネージドリソース解放
                 if (isDisposing)
@@ -315,21 +354,27 @@ namespace Common.Net
         /// <summary>
         /// アクティブモード初期化
         /// </summary>
-        /// <param name="ipAddressString"></param>
-        /// <param name="port"></param>
         /// <returns></returns>
-        private FtpClientDataConnection InitActiveMode(string ipAddressString, int port)
+        private FtpClientDataConnection InitActiveMode()
         {
-            Trace.WriteLine("FtpClient::InitActiveMode(string, int)");
+            Trace.WriteLine("FtpClient::InitActiveMode(string)");
+
+            // ポート番号決定
+            string[] _ipaddress = this.m_Socket.LocalEndPoint.ToString().Split(new char[] { ':' });
+            Debug.WriteLine(this.m_Socket.LocalEndPoint.ToString());
+            TcpListener _TcpListener = new TcpListener(IPAddress.Parse(_ipaddress[0]), 0);
+            _TcpListener.Start();
+            string[] _port = _TcpListener.LocalEndpoint.ToString().Split(new char[] { ':' });
 
             // データコネクションを設定
-            Debug.WriteLine("アクティブモード：[{0}:{1}]", ipAddressString, port);
+            Debug.WriteLine("アクティブモード：[{0}:{1}]", _ipaddress[0], _port[1]);
             FtpClientDataConnection _FtpClientDataConnection = new FtpClientDataConnection()
             {
                 Mode = FtpTransferMode.Active,
-                IpAddress = ipAddressString,
-                Port = port,
-                Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                IpAddress = _ipaddress[0],
+                Port = int.Parse(_port[1]),
+                Listener = _TcpListener,
+                Socket = _TcpListener.Server
             };
             return _FtpClientDataConnection;
         }
@@ -401,6 +446,18 @@ namespace Common.Net
 
                 // 接続完了通知を設定
                 this.OnConnectNotify.Set();
+
+                // イベント呼出
+                if (this.OnConnected != null)
+                {
+                    // パラメータ設定
+                    FtpClientConnectedEventArgs _FtpClientConnectedEventArgs = new FtpClientConnectedEventArgs()
+                    {
+                        LocalEndPoint = _Socket.LocalEndPoint,
+                        RemoteEndPoint = _Socket.RemoteEndPoint,
+                    };
+                    this.OnConnected(this, _FtpClientConnectedEventArgs);
+                }
             }
             catch (Exception ex)
             {
@@ -423,21 +480,54 @@ namespace Common.Net
             // 切断判定
             if (this.m_Socket != null && this.m_Socket.Connected)
             {
-                // 切断
-                this.m_Socket?.Disconnect(false);
+                // 切断開始
+                this.m_Socket.BeginDisconnect(false, new AsyncCallback(this.OnDisconnectCallBack), this.m_Socket);
 
-                // 破棄
-                this.m_Socket?.Dispose();
+                // 切断待ち
+                if (!this.OnDisconnectNotify.WaitOne(this.m_DisconnectMillisecondsTimeout))
+                {
+                    // 切断完了通知リセット
+                    this.OnDisconnectNotify.Reset();
+
+                    // 例外
+                    throw new FtpClientException("切断タイムアウト");
+                }
+
+                // 切断完了通知リセット
+                this.OnDisconnectNotify.Reset();
             }
+        }
 
-            // ソケット初期化
-            this.m_Socket = null;
+        /// <summary>
+        /// 非同期切断のコールバックメソッド(別スレッドで実行される)
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private void OnDisconnectCallBack(IAsyncResult asyncResult)
+        {
+            Trace.WriteLine("FtpClient::OnDisconnectCallBack(IAsyncResult)");
+
+            // ソケット取得
+            Socket _Socket = (Socket)(asyncResult.AsyncState);
+
+            // 切断・破棄
+            if (_Socket != null)
+            {
+                _Socket.Disconnect(false);
+                _Socket.Dispose();
+            }
 
             // 切断通知
             this.OnDisconnectNotify.Set();
 
-            // 切断通知リセット
-            this.OnDisconnectNotify.Reset();
+            // イベント呼出
+            if (this.OnDisconnected != null)
+            {
+                FtpClientDisconnectedEventArgs _FtpClientDisconnectedEventArgs = new FtpClientDisconnectedEventArgs()
+                {
+                    RemoteEndPoint = this.m_IPEndPoint,
+                };
+                this.OnDisconnected(this, _FtpClientDisconnectedEventArgs);
+            }
         }
         #endregion
 
@@ -698,6 +788,141 @@ namespace Common.Net
         }
         #endregion
 
+        #region 受信
+        /// <summary>
+        /// 受信
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <returns></returns>
+        private MemoryStream Recive(FtpClientDataConnection dataConnection)
+        {
+            Trace.WriteLine("FtpClient::Recive(FtpClientDataConnection)");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード転送
+                return this.ActiveRecive(dataConnection);
+            }
+            else
+            {
+                // パッシブモード転送
+                return this.PassiveRecive(dataConnection);
+            }
+        }
+
+        /// <summary>
+        /// 受信(アクティブモード転送)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <returns></returns>
+        private MemoryStream ActiveRecive(FtpClientDataConnection dataConnection)
+        {
+            Trace.WriteLine("FtpClient::ActiveRecive(FtpClientDataConnection)");
+            Debug.Write(dataConnection.ToString());
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpClientReciveData = new FtpClientReciveStream();
+            _FtpClientReciveData.Socket = dataConnection.Socket;
+            _FtpClientReciveData.Buffer = new byte[this.m_ReciveBufferCapacity];
+            _FtpClientReciveData.Stream = new MemoryStream(this.m_ReciveBufferCapacity);
+            _FtpClientReciveData.FileStream = dataConnection.FileStream;
+            dataConnection.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, this.OnReciveCallback, _FtpClientReciveData);
+
+            // データ転送待ち
+            if (!this.OnReciveNotify.WaitOne(this.m_DownLoadMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnReciveNotify.Reset();
+                return _FtpClientReciveData.Stream;
+            }
+
+            // 転送通知リセット
+            this.OnReciveNotify.Reset();
+
+            // MemoryStreamを返却
+            return _FtpClientReciveData.Stream;
+        }
+
+        /// <summary>
+        /// 受信(パッシブモード転送)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <returns></returns>
+        private MemoryStream PassiveRecive(FtpClientDataConnection dataConnection)
+        {
+            Trace.WriteLine("FtpClient::PassiveRecive(FtpClientDataConnection)");
+            Debug.Write(dataConnection.ToString());
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpClientReciveData = new FtpClientReciveStream();
+            _FtpClientReciveData.Socket = dataConnection.Socket;
+            _FtpClientReciveData.Buffer = new byte[this.m_ReciveBufferCapacity];
+            _FtpClientReciveData.Stream = new MemoryStream(this.m_ReciveBufferCapacity);
+            _FtpClientReciveData.FileStream = dataConnection.FileStream;
+            dataConnection.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, this.OnReciveCallback, _FtpClientReciveData);
+
+            // データ転送待ち
+            if (!this.OnReciveNotify.WaitOne(this.m_DownLoadMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnReciveNotify.Reset();
+                return _FtpClientReciveData.Stream;
+            }
+
+            // 転送通知リセット
+            this.OnReciveNotify.Reset();
+
+            // MemoryStreamを返却
+            return _FtpClientReciveData.Stream;
+        }
+
+        /// <summary>
+        /// 非同期受信のコールバックメソッド(別スレッドで実行される)
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private void OnReciveCallback(IAsyncResult asyncResult)
+        {
+            Trace.WriteLine("FtpClient::OnReciveCallback(IAsyncResult)");
+
+            // オブジェクト変換
+            FtpClientReciveStream _FtpClientReciveData = (FtpClientReciveStream)asyncResult.AsyncState;
+
+            // ソケットが切断されているか？
+            if (_FtpClientReciveData.Socket == null || !_FtpClientReciveData.Socket.Connected)
+            {
+                Debug.WriteLine("既にソケットが切断されています");
+                return;
+            }
+
+            // 非同期読込が終了しているか？
+            int bytesRead = _FtpClientReciveData.Socket.EndReceive(asyncResult);
+            Debug.WriteLine("　読込データサイズ:[{0}]", bytesRead);
+            if (bytesRead > 0)
+            {
+                // 残りがある場合にはデータ保持する
+                if (_FtpClientReciveData.Stream != null)
+                {
+                    _FtpClientReciveData.Stream.Write(_FtpClientReciveData.Buffer, 0, bytesRead);
+                }
+
+                // ファイル書込み
+                if (_FtpClientReciveData.FileStream != null)
+                {
+                    _FtpClientReciveData.FileStream.Write(_FtpClientReciveData.Buffer, 0, bytesRead);
+                }
+
+                // 再度受信待ちを実施
+                _FtpClientReciveData.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnReciveCallback), _FtpClientReciveData);
+            }
+            else
+            {
+                // 転送通知設定
+                this.OnReciveNotify.Set();
+            }
+        }
+        #endregion
+
         #region アップロード
         /// <summary>
         /// アップロード
@@ -732,8 +957,36 @@ namespace Common.Net
         {
             Trace.WriteLine("FtpClient::ActiveUpload(FtpClientDataConnection, MemoryStream)");
 
-            // TODO:未実装
-            return false;
+            // ソケット判定
+            if (dataConnection.Socket == null || !dataConnection.Socket.Connected)
+            {
+                // 既にソケットが切断されている
+                Debug.WriteLine("既にソケットが切断されています");
+                return false;
+            }
+
+            FtpClientSendStream _FtpClientSendStream = new FtpClientSendStream();
+            _FtpClientSendStream.Stream = memoryStream;
+            _FtpClientSendStream.Socket = dataConnection.Socket;
+
+            // 送信開始
+            dataConnection.Socket.BeginSend(memoryStream.ToArray(), 0, memoryStream.ToArray().Length, SocketFlags.None, new AsyncCallback(this.OnUploadCallback), _FtpClientSendStream);
+
+            // 送信応答待ち
+            if (!this.OnSendNotify.WaitOne(this.m_SendMillisecondsTimeout))
+            {
+                // 通知リセット
+                this.OnSendNotify.Reset();
+
+                // 例外
+                throw new FtpClientException("メッセージ送信タイムアウト");
+            }
+
+            // 通知リセット
+            this.OnSendNotify.Reset();
+
+            // 正常終了
+            return true;
         }
 
         /// <summary>
@@ -746,11 +999,73 @@ namespace Common.Net
         {
             Trace.WriteLine("FtpClient::PassiveUpload(FtpClientDataConnection, MemoryStream)");
 
-            // データ送信
-            this.Send(dataConnection, memoryStream);
+            // ソケット判定
+            if (dataConnection.Socket == null || !dataConnection.Socket.Connected)
+            {
+                // 既にソケットが切断されている
+                Debug.WriteLine("既にソケットが切断されています");
+                return false;
+            }
+
+            FtpClientSendStream _FtpClientSendStream = new FtpClientSendStream();
+            _FtpClientSendStream.Stream = memoryStream;
+            _FtpClientSendStream.Socket = dataConnection.Socket;
+
+            // 送信開始
+            dataConnection.Socket.BeginSend(memoryStream.ToArray(), 0, memoryStream.ToArray().Length, SocketFlags.None, new AsyncCallback(this.OnUploadCallback), _FtpClientSendStream);
+
+            // 送信応答待ち
+            if (!this.OnSendNotify.WaitOne(this.m_SendMillisecondsTimeout))
+            {
+                // 通知リセット
+                this.OnSendNotify.Reset();
+
+                // 例外
+                throw new FtpClientException("メッセージ送信タイムアウト");
+            }
+
+            // 通知リセット
+            this.OnSendNotify.Reset();
 
             // 正常終了
             return true;
+        }
+
+        /// <summary>
+        /// 非同期転送のコールバックメソッド(別スレッドで実行される)
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private void OnUploadCallback(IAsyncResult asyncResult)
+        {
+            Trace.WriteLine("FtpClient::OnPassiveUploadCallback(IAsyncResult)");
+
+            // オブジェクト変換
+            FtpClientSendStream _FtpClientSendStream = (FtpClientSendStream)asyncResult.AsyncState;
+
+            // ソケットが切断されているか？
+            if (_FtpClientSendStream.Socket == null || !_FtpClientSendStream.Socket.Connected)
+            {
+                Debug.WriteLine("既にソケットが切断されています");
+                return;
+            }
+
+            // 送信完了
+            int bytesSent = _FtpClientSendStream.Socket.EndSend(asyncResult);
+            Debug.WriteLine("送信完了サイズ：[{0}]", bytesSent);
+
+            // 送信完了通知
+            this.OnSendNotify.Set();
+
+            // イベント呼出し
+            if (this.OnUpload != null)
+            {
+                // イベントパラメータ設定
+                FtpClientUploadEventArgs _EventArgs = new FtpClientUploadEventArgs()
+                {
+                    Size = bytesSent,
+                };
+                this.OnUpload(this, _EventArgs);
+            }
         }
         #endregion
 
@@ -785,9 +1100,29 @@ namespace Common.Net
         private MemoryStream ActiveDownload(FtpClientDataConnection dataConnection)
         {
             Trace.WriteLine("FtpClient::ActiveDownload(FtpClientDataConnection)");
+            Debug.Write(dataConnection.ToString());
 
-            // TODO:未実装
-            return null;
+            // 結果受信待ち
+            FtpClientReciveStream _FtpClientReciveData = new FtpClientReciveStream();
+            _FtpClientReciveData.Socket = dataConnection.Socket;
+            _FtpClientReciveData.Buffer = new byte[this.m_ReciveBufferCapacity];
+            _FtpClientReciveData.Stream = new MemoryStream(this.m_ReciveBufferCapacity);
+            _FtpClientReciveData.FileStream = dataConnection.FileStream;
+            dataConnection.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, this.OnDownloadCallback, _FtpClientReciveData);
+
+            // データ転送待ち
+            if (!this.OnDownLoadNotify.WaitOne(this.m_DownLoadMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnDownLoadNotify.Reset();
+                return null;
+            }
+
+            // 転送通知リセット
+            this.OnDownLoadNotify.Reset();
+
+            // MemoryStreamを返却
+            return _FtpClientReciveData.Stream;
         }
 
         /// <summary>
@@ -806,7 +1141,7 @@ namespace Common.Net
             _FtpClientReciveData.Buffer = new byte[this.m_ReciveBufferCapacity];
             _FtpClientReciveData.Stream = new MemoryStream(this.m_ReciveBufferCapacity);
             _FtpClientReciveData.FileStream = dataConnection.FileStream;
-            dataConnection.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, this.OnPassiveDownloadCallback, _FtpClientReciveData);
+            dataConnection.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, this.OnDownloadCallback, _FtpClientReciveData);
 
             // データ転送待ち
             if (!this.OnDownLoadNotify.WaitOne(this.m_DownLoadMillisecondsTimeout))
@@ -827,7 +1162,7 @@ namespace Common.Net
         /// 非同期転送のコールバックメソッド(別スレッドで実行される)
         /// </summary>
         /// <param name="asyncResult"></param>
-        private void OnPassiveDownloadCallback(IAsyncResult asyncResult)
+        private void OnDownloadCallback(IAsyncResult asyncResult)
         {
             Trace.WriteLine("FtpClient::OnPassiveDownloadCallback(IAsyncResult)");
 
@@ -859,15 +1194,41 @@ namespace Common.Net
                 }
 
                 // 再度受信待ちを実施
-                _FtpClientReciveData.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnPassiveDownloadCallback), _FtpClientReciveData);
+                _FtpClientReciveData.Socket.BeginReceive(_FtpClientReciveData.Buffer, 0, _FtpClientReciveData.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnDownloadCallback), _FtpClientReciveData);
             }
             else
             {
                 // 転送通知設定
                 this.OnDownLoadNotify.Set();
             }
+
+            // イベント呼出し
+            if (this.OnDownload != null)
+            {
+                // イベントパラメータ設定
+                FtpClientDownloadEventArgs _EventArgs = new FtpClientDownloadEventArgs()
+                {
+                    Size = bytesRead,
+                };
+                this.OnDownload(this, _EventArgs);
+            }
         }
         #endregion
+
+        /// <summary>
+        /// 非同期Accept完了通知のコールバックメソッド(別スレッドで実行される)
+        /// </summary>
+        /// <param name="asyncResult"></param>
+        private void OnAccetptNotifyCallBack(IAsyncResult asyncResult)
+        {
+            Trace.WriteLine("FtpClient::OnAccetptNotifyCallBack(IAsyncResult)");
+
+            // オブジェクト変換
+            FtpClientDataConnection dataConnection = (FtpClientDataConnection)asyncResult.AsyncState;
+
+            // Accept完了通知
+            this.OnAcceptNotify.Set();
+        }
 
         #region ログイン・ログアウト
         /// <summary>
@@ -974,6 +1335,7 @@ namespace Common.Net
             }
         }
 
+        #region LIST
         /// <summary>
         /// 現在のワーキングディレクトリ内のファイル一覧を表示する
         /// </summary>
@@ -982,7 +1344,89 @@ namespace Common.Net
         /// <returns></returns>
         public string[] LIST(FtpClientDataConnection dataConnection, string path)
         {
-            Trace.WriteLine("FtpClient::LIST(string)");
+            Trace.WriteLine("FtpClient::LIST(FtpClientDataConnection, string)");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード
+                return this.Active_LIST(dataConnection, path);
+            }
+            else
+            {
+                // パッシブモード
+                return this.Passive_LIST(dataConnection, path);
+            }
+        }
+
+        /// <summary>
+        /// 現在のワーキングディレクトリ内のファイル一覧を表示する(Active)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private string[] Active_LIST(FtpClientDataConnection dataConnection, string path)
+        {
+            Trace.WriteLine("FtpClient::Active_LIST(FtpClientDataConnection, string)");
+            Debug.Write(dataConnection.ToString());
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("LIST", path);
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpCommandResponseData = this.CommandResponseWaiting(this.m_Socket);
+
+            // 応答判定
+            if (_FtpCommandResponseData.Response.StatusCode != 226)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpCommandResponseData.Response);
+            }
+
+            // ソケット接続
+            dataConnection.Listener.Start();
+            IAsyncResult _IAsyncResult = dataConnection.Listener.BeginAcceptSocket(new AsyncCallback(this.OnAccetptNotifyCallBack), dataConnection);
+
+            // ACCEPT待ち
+            if (!this.OnAcceptNotify.WaitOne(this.m_AcceptMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnAcceptNotify.Reset();
+                return null;
+            }
+
+            // 転送通知リセット
+            this.OnAcceptNotify.Reset();
+
+            // ソケット設定
+            dataConnection.Socket = dataConnection.Listener.EndAcceptSocket(_IAsyncResult);
+
+            // ファイル一覧受信
+            MemoryStream _MemoryStream = this.Recive(dataConnection);
+
+            // ソケット切断
+            dataConnection.Listener.Stop();
+
+            // リスト変換して返却
+            return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
+        }
+
+        /// <summary>
+        /// 現在のワーキングディレクトリ内のファイル一覧を表示する(Passive)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private string[] Passive_LIST(FtpClientDataConnection dataConnection, string path)
+        {
+            Trace.WriteLine("FtpClient::Passive_LIST(FtpClientDataConnection, string)");
             Debug.Write(dataConnection.ToString());
 
             // ソケット接続
@@ -1015,7 +1459,7 @@ namespace Common.Net
             }
 
             // ファイル一覧受信
-            MemoryStream _MemoryStream = this.Download(dataConnection);
+            MemoryStream _MemoryStream = this.Recive(dataConnection);
 
             // ソケット切断
             dataConnection.Socket.Close();
@@ -1023,6 +1467,7 @@ namespace Common.Net
             // リスト変換して返却
             return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
         }
+        #endregion
 
         /// <summary>
         /// 指定したディレクトリを作成する
@@ -1053,6 +1498,7 @@ namespace Common.Net
             return true;
         }
 
+        #region NLST
         /// <summary>
         /// 現在のワーキングディレクトリ内のファイル一覧を表示する
         /// </summary>
@@ -1062,7 +1508,95 @@ namespace Common.Net
         /// <returns></returns>
         public string[] NLST(FtpClientDataConnection dataConnection, string fileName, params string[] option)
         {
-            Trace.WriteLine("FtpClient::NLST(string, string[])");
+            Trace.WriteLine("FtpClient::NLST(FtpClientDataConnection, string, string[])");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード
+                return this.Active_NLST(dataConnection, fileName, option);
+            }
+            else
+            {
+                // パッシブモード
+                return this.Passive_NLST(dataConnection, fileName, option);
+            }
+        }
+
+        /// <summary>
+        /// 現在のワーキングディレクトリ内のファイル一覧を表示する(Passive)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        private string[] Active_NLST(FtpClientDataConnection dataConnection, string fileName, params string[] option)
+        {
+            Trace.WriteLine("FtpClient::Active_NLST(FtpClientDataConnection, string, string[])");
+            Debug.Write(dataConnection.ToString());
+
+            // コマンドパラメータ設定
+            List<string> _ParameterList = new List<string>(option);
+            _ParameterList.Add(fileName);
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("NLST", _ParameterList.ToArray());
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpCommandResponseData = this.CommandResponseWaiting(this.m_Socket);
+
+            // 応答判定
+            if (_FtpCommandResponseData.Response.StatusCode != 226)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpCommandResponseData.Response);
+            }
+
+            // ソケット接続
+            dataConnection.Listener.Start();
+            IAsyncResult _IAsyncResult = dataConnection.Listener.BeginAcceptSocket(new AsyncCallback(this.OnAccetptNotifyCallBack), dataConnection);
+
+            // ACCEPT待ち
+            if (!this.OnAcceptNotify.WaitOne(this.m_AcceptMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnAcceptNotify.Reset();
+                return null;
+            }
+
+            // 転送通知リセット
+            this.OnAcceptNotify.Reset();
+
+            // ソケット設定
+            dataConnection.Socket = dataConnection.Listener.EndAcceptSocket(_IAsyncResult);
+
+            // ファイル一覧受信
+            MemoryStream _MemoryStream = this.Recive(dataConnection);
+
+            // ソケット切断
+            dataConnection.Listener.Stop();
+
+            // リスト変換して返却
+            return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
+        }
+
+        /// <summary>
+        /// 現在のワーキングディレクトリ内のファイル一覧を表示する(Passive)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        private string[] Passive_NLST(FtpClientDataConnection dataConnection, string fileName, params string[] option)
+        {
+            Trace.WriteLine("FtpClient::Passive_NLST(FtpClientDataConnection, string, string[])");
             Debug.Write(dataConnection.ToString());
 
             // ソケット接続
@@ -1099,13 +1633,32 @@ namespace Common.Net
             }
 
             // ファイル一覧受信
-            MemoryStream _MemoryStream = this.Download(dataConnection);
+            MemoryStream _MemoryStream = this.Recive(dataConnection);
 
             // ソケット切断
             dataConnection.Socket.Close();
 
             // リスト変換して返却
             return this.MemoryStreamToStringArray(_MemoryStream, new string[] { "\r\n" });
+        }
+        #endregion
+
+        /// <summary>
+        /// 何もしない。サーバの稼動を確認するために実⾏される。
+        /// </summary>
+        public void NOOP()
+        {
+            Trace.WriteLine("FtpClient::NOOP()");
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("NOOP");
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 200)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
         }
 
         /// <summary>
@@ -1173,20 +1726,19 @@ namespace Common.Net
         /// <summary>
         /// データコネクションで使用するIPアドレス（通常はクライアント）とポート番号を指示する
         /// </summary>
-        /// <param name="ipaddress"></param>
-        /// <param name="port"></param>
         /// <returns></returns>
-        public FtpClientDataConnection PORT(string ipaddress, int port)
+        public FtpClientDataConnection PORT()
         {
-            Trace.WriteLine("FtpClient::PORT(string, string)");
-            Debug.WriteLine("　ipaddress：" + ipaddress);
-            Debug.WriteLine("　port     ：" + port);
+            Trace.WriteLine("FtpClient::PORT(string)");
+
+            // アクディブモード初期化
+            FtpClientDataConnection _FtpClientDataConnection = this.InitActiveMode();
 
             // IPアドレス変換
-            string _IpAddress = ipaddress.Replace(".", ",");
+            string _IpAddress = _FtpClientDataConnection.IpAddress.Replace(".", ",");
 
             // ポート番号分解
-            int[] _Port = new int[2] { (port & 0x0000ff00) >> 8, (port & 0x000000ff) };
+            int[] _Port = new int[2] { (_FtpClientDataConnection.Port & 0x0000ff00) >> 8, (_FtpClientDataConnection.Port & 0x000000ff) };
 
             // パラメータ設定
             string _Parameter = string.Format("{0},{1},{2}", _IpAddress, _Port[0], _Port[1]);
@@ -1201,8 +1753,8 @@ namespace Common.Net
                 throw new FtpClientException(_FtpResponse);
             }
 
-            // アクディブモード初期化
-            return this.InitActiveMode(ipaddress, port);
+            // データコネクションオブジェクト返却
+            return _FtpClientDataConnection;
         }
 
         /// <summary>
@@ -1254,6 +1806,7 @@ namespace Common.Net
             }
         }
 
+        #region RETR
         /// <summary>
         /// 指定したファイルの内容をサーバから取得する
         /// </summary>
@@ -1263,6 +1816,96 @@ namespace Common.Net
         public MemoryStream RETR(FtpClientDataConnection dataConnection, string fileName)
         {
             Trace.WriteLine("FtpClient::RETR(FtpClientDataConnection, string)");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード
+                return this.Active_RETR(dataConnection, fileName);
+            }
+            else
+            {
+                // パッシブモード
+                return this.Passive_RETR(dataConnection, fileName);
+            }
+        }
+
+        /// <summary>
+        /// 指定したファイルの内容をサーバから取得する(Active)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public MemoryStream Active_RETR(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Active_RETR(FtpClientDataConnection, string)");
+            Debug.Write(dataConnection.ToString());
+            Debug.WriteLine("　fileName   :" + fileName);
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("RETR", fileName);
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpCommandResponseData = this.CommandResponseWaiting(this.m_Socket);
+
+            // 応答判定
+            if (_FtpCommandResponseData.Response.StatusCode != 226)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpCommandResponseData.Response);
+            }
+
+            // ソケット接続
+            dataConnection.Listener.Start();
+            IAsyncResult _IAsyncResult = dataConnection.Listener.BeginAcceptSocket(new AsyncCallback(this.OnAccetptNotifyCallBack), dataConnection);
+
+            // ACCEPT待ち
+            if (!this.OnAcceptNotify.WaitOne(this.m_AcceptMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnAcceptNotify.Reset();
+                return null;
+            }
+
+            // 転送通知リセット
+            this.OnAcceptNotify.Reset();
+
+            // ソケット設定
+            dataConnection.Socket = dataConnection.Listener.EndAcceptSocket(_IAsyncResult);
+
+            // ファイル転送(ローカル⇒サーバ)
+            MemoryStream _MemoryStream = this.Download(dataConnection);
+
+            // 転送結果判定
+            if (_MemoryStream == null)
+            {
+                // 例外送出
+                throw new FtpClientException("ファイル転送に失敗しました：" + fileName);
+            }
+
+            // ソケット切断
+            dataConnection.Listener.Stop();
+
+            // 受信結果を返却する
+            return _MemoryStream;
+        }
+
+        /// <summary>
+        /// 指定したファイルの内容をサーバから取得する(Passive)
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public MemoryStream Passive_RETR(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Passive_RETR(FtpClientDataConnection, string)");
             Debug.Write(dataConnection.ToString());
             Debug.WriteLine("　fileName   :" + fileName);
 
@@ -1311,6 +1954,7 @@ namespace Common.Net
             // 受信結果を返却する
             return _MemoryStream;
         }
+        #endregion
 
         /// <summary>
         /// 指定したディレクトリを削除する
@@ -1418,8 +2062,9 @@ namespace Common.Net
             }
         }
 
+        #region STOR
         /// <summary>
-        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する。
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する
         /// <remarks>同⼀名のファイルがすでにある場合には、上書きする</remarks>
         /// </summary>
         /// <param name="dataConnection"></param>
@@ -1428,6 +2073,98 @@ namespace Common.Net
         public bool STOR(FtpClientDataConnection dataConnection, string fileName)
         {
             Trace.WriteLine("FtpClient::STOR(FtpClientDataConnection, string)");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード
+                return this.Active_STOR(dataConnection, fileName);
+            }
+            else
+            {
+                // パッシブモード
+                return this.Passive_STOR(dataConnection, fileName);
+            }
+        }
+
+        /// <summary>
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する(Passive)
+        /// <remarks>同⼀名のファイルがすでにある場合には、上書きする</remarks>
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool Active_STOR(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Active_STOR(FtpClientDataConnection, string)");
+            Debug.Write(dataConnection.ToString());
+            Debug.WriteLine("　fileName   :" + fileName);
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("STOR", Path.GetFileName(fileName));
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // ソケット接続
+            dataConnection.Listener.Start();
+            IAsyncResult _IAsyncResult = dataConnection.Listener.BeginAcceptSocket(new AsyncCallback(this.OnAccetptNotifyCallBack), dataConnection);
+
+            // ACCEPT待ち
+            if (!this.OnAcceptNotify.WaitOne(this.m_AcceptMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnAcceptNotify.Reset();
+                return false;
+            }
+
+            // 転送通知リセット
+            this.OnAcceptNotify.Reset();
+
+            // ソケット設定
+            dataConnection.Socket = dataConnection.Listener.EndAcceptSocket(_IAsyncResult);
+
+            // ファイル送信
+            if (!this.FileUpload(dataConnection, fileName))
+            {
+                // ソケット切断
+                dataConnection.Socket.Close();
+
+                // 異常終了
+                return false;
+            }
+
+            // ソケット切断
+            dataConnection.Socket.Close();
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpCommandResponseData = this.CommandResponseWaiting(this.m_Socket);
+
+            // 応答判定
+            if (_FtpCommandResponseData.Response.StatusCode != 226)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpCommandResponseData.Response);
+            }
+
+            // 正常終了
+            return true;
+        }
+
+        /// <summary>
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する(Passive)
+        /// <remarks>同⼀名のファイルがすでにある場合には、上書きする</remarks>
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool Passive_STOR(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Passive_STOR(FtpClientDataConnection, string)");
             Debug.Write(dataConnection.ToString());
             Debug.WriteLine("　fileName   :" + fileName);
 
@@ -1473,7 +2210,9 @@ namespace Common.Net
             // 正常終了
             return true;
         }
+        #endregion
 
+        #region STOU
         /// <summary>
         /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する。
         /// <remarks>すでに同一名のファイルがあった場合には、重ならないようなファイル名を自動的に付けて作成する</remarks>
@@ -1484,6 +2223,101 @@ namespace Common.Net
         public bool STOU(FtpClientDataConnection dataConnection, string fileName)
         {
             Trace.WriteLine("FtpClient::STOU(FtpClientDataConnection, string)");
+
+            // 転送モードによる
+            if (dataConnection.Mode == FtpTransferMode.Active)
+            {
+                // アクティブモード
+                return this.Active_STOU(dataConnection, fileName);
+            }
+            else
+            {
+                // パッシブモード
+                return this.Passive_STOU(dataConnection, fileName);
+            }
+        }
+
+        /// <summary>
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する(Active)
+        /// <remarks>すでに同一名のファイルがあった場合には、重ならないようなファイル名を自動的に付けて作成する</remarks>
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool Active_STOU(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Active_STOU(FtpClientDataConnection, string)");
+            Debug.Write(dataConnection.ToString());
+            Debug.WriteLine("　fileName   :" + fileName);
+
+            // コマンド送信
+            FtpResponse _FtpResponse = this.CommandExec("STOU", Path.GetFileName(fileName));
+
+            // 応答判定
+            if (_FtpResponse.StatusCode != 150)
+            {
+                // ソケット切断
+                dataConnection.Socket.Close();
+
+                // 例外送出
+                throw new FtpClientException(_FtpResponse);
+            }
+
+            // ソケット接続
+            dataConnection.Listener.Start();
+            IAsyncResult _IAsyncResult = dataConnection.Listener.BeginAcceptSocket(new AsyncCallback(this.OnAccetptNotifyCallBack), dataConnection);
+
+            // ACCEPT待ち
+            if (!this.OnAcceptNotify.WaitOne(this.m_AcceptMillisecondsTimeout))
+            {
+                // 転送通知リセット
+                this.OnAcceptNotify.Reset();
+                return false;
+            }
+
+            // 転送通知リセット
+            this.OnAcceptNotify.Reset();
+
+            // ソケット設定
+            dataConnection.Socket = dataConnection.Listener.EndAcceptSocket(_IAsyncResult);
+
+            // ファイル送信
+            if (!this.FileUpload(dataConnection, fileName))
+            {
+                // ソケット切断
+                dataConnection.Socket.Close();
+
+                // 異常終了
+                return false;
+            }
+
+            // ソケット切断
+            dataConnection.Socket.Close();
+
+            // 結果受信待ち
+            FtpClientReciveStream _FtpCommandResponseData = this.CommandResponseWaiting(this.m_Socket);
+
+            // 応答判定
+            if (_FtpCommandResponseData.Response.StatusCode != 226)
+            {
+                // 例外送出
+                throw new FtpClientException(_FtpCommandResponseData.Response);
+            }
+
+            // 正常終了
+            return true;
+        }
+
+        /// <summary>
+        /// 指定したファイル名で、サーバへ送信するデータでファイルを作成する(Passive)
+        /// <remarks>すでに同一名のファイルがあった場合には、重ならないようなファイル名を自動的に付けて作成する</remarks>
+        /// </summary>
+        /// <param name="dataConnection"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool Passive_STOU(FtpClientDataConnection dataConnection, string fileName)
+        {
+            Trace.WriteLine("FtpClient::Passive_STOU(FtpClientDataConnection, string)");
             Debug.Write(dataConnection.ToString());
             Debug.WriteLine("　fileName   :" + fileName);
 
@@ -1529,6 +2363,7 @@ namespace Common.Net
             // 正常終了
             return true;
         }
+        #endregion
 
         /// <summary>
         /// ファイルアップロード
@@ -1563,7 +2398,7 @@ namespace Common.Net
                     _FileStream.Read(bytes, 0, bytes.Length);
                     _MemoryStream.Write(bytes, 0, bytes.Length);
 
-                    // ファイル転送(サーバ⇒ローカル)
+                    // ファイル転送(ローカル⇒サーバ)
                     if (!this.Upload(dataConnection, _MemoryStream))
                     {
                         // 異常終了

@@ -40,6 +40,11 @@ namespace Common.Net
         /// </summary>
         public FileStream FileStream = null;
 
+        /// <summary>
+        /// TCPリスナー
+        /// </summary>
+        public TcpListener Listener = null;
+
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
@@ -91,9 +96,13 @@ namespace Common.Net
             // 破棄しているか？
             if (!this.m_Disposed)
             {
-                // TODO:未実装(アンマネージドリソース解放)
+                // 未実装(アンマネージドリソース解放)
+                if (this.Socket != null && this.Socket.Connected)
+                {
+                    this.Socket.Dispose();
+                }
 
-                // TODO:マネージドリソース解放
+                // マネージドリソース解放
                 if (isDisposing)
                 {
                 }
@@ -116,6 +125,7 @@ namespace Common.Net
             _StringBuilder.AppendFormat("　Mode       : {0}\n", Mode.ToString());
             _StringBuilder.AppendFormat("　IpAddress  : {0}\n", IpAddress);
             _StringBuilder.AppendFormat("　Port       : {0}\n", Port.ToString());
+            _StringBuilder.AppendFormat("　Listener   : {0}\n", Listener);
             _StringBuilder.AppendFormat("　Socket     : {0}\n", Socket);
             if (Socket != null)
             {
