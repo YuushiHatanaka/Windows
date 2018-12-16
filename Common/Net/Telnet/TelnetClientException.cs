@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Diagnostics;
+
 namespace Common.Net
 {
     /// <summary>
@@ -18,7 +20,8 @@ namespace Common.Net
         public TelnetClientException(string message)
             : base(message)
         {
-
+            Trace.WriteLine("TelnetClientException::TelnetClientException(string)");
+            Debug.WriteLine(message);
         }
     }
 }

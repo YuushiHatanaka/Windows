@@ -602,7 +602,7 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void Send(FtpClientDataConnection dataConnection, MemoryStream stream)
         {
-            Trace.WriteLine("FtpClient::Send(MemoryStream)");
+            Trace.WriteLine("FtpClient::Send(FtpClientDataConnection, MemoryStream)");
 
             // ソケット判定
             if (dataConnection.Socket == null || !dataConnection.Socket.Connected)
@@ -1215,6 +1215,7 @@ namespace Common.Net
         }
         #endregion
 
+        #region Accept完了通知
         /// <summary>
         /// 非同期Accept完了通知のコールバックメソッド(別スレッドで実行される)
         /// </summary>
@@ -1229,6 +1230,7 @@ namespace Common.Net
             // Accept完了通知
             this.OnAcceptNotify.Set();
         }
+        #endregion
 
         #region ログイン・ログアウト
         /// <summary>
