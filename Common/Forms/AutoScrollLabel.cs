@@ -70,6 +70,9 @@ namespace Common.Windows.Forms
         {
             Trace.WriteLine("=>>>> AutoScrollLabel::InitializeComponent()");
 
+            // 自動サイズデフォルト
+            ((Label)(this.Control)).AutoSize = true;
+
             Trace.WriteLine("<<<<= AutoScrollLabel::InitializeComponent()");
         }
 

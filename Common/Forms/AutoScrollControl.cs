@@ -299,13 +299,23 @@ namespace Common.Windows.Forms
             this.m_Control.Left += this.m_ScrollSize.Width;
 
             // 右方向スクロールの場合
-            if (this.m_Control.Left > this.Width)
+            if (this.m_ScrollSize.Width > 0)
             {
-                // 休止タイマー発動
-                this.m_WaitTimer.Start();
-                return;
+                if (this.m_Control.Left > this.Width)
+                {
+                    // 休止タイマー発動
+                    this.m_WaitTimer.Start();
+                }
             }
-            // TODO:左方向スクロールの場合
+            // 左方向スクロールの場合
+            else if (this.m_ScrollSize.Width < 0)
+            {
+                if (this.m_Control.Left + this.Width <= 0)
+                {
+                    // 休止タイマー発動
+                    this.m_WaitTimer.Start();
+                }
+            }
 
             Trace.WriteLine("<<<<= AutoScrollControl::SideWayScroll()");
         }
@@ -363,13 +373,17 @@ namespace Common.Windows.Forms
             Trace.WriteLine("=>>>> AutoScrollControl::ResetSideWayScroll()");
 
             // 右方向スクロールの場合
-            if (this.m_Control.Left > this.Width)
+            if (this.m_ScrollSize.Width > 0)
             {
-                // 休止タイマー発動
+                // ポジションリセット
                 this.m_Control.Left = 0 - this.m_Control.Width;
-                return;
             }
-            // TODO:左方向スクロールの場合
+            // 左方向スクロールの場合
+            else if (this.m_ScrollSize.Width < 0)
+            {
+                // ポジションリセット
+                this.m_Control.Left = this.Width;
+            }
 
             Trace.WriteLine("<<<<= AutoScrollControl::ResetSideWayScroll()");
         }
