@@ -1,4 +1,4 @@
-﻿namespace Common.Windows.Forms
+namespace Common.Windows.Forms
 {
     partial class AutoScrollControl
     {
