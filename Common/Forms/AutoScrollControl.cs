@@ -47,7 +47,7 @@ namespace Common.Windows.Forms
         /// <summary>
         /// スクロールサイズ
         /// </summary>
-        private Size m_ScrollSize = new Size();
+        private Size m_ScrollSize = new Size(1, 1);
         #endregion
 
         #region プロパティ
@@ -158,6 +158,8 @@ namespace Common.Windows.Forms
 
             // 初期設定
             this.m_Control = control;
+            this.Width = control.Width;
+            this.Height = control.Height;
 
             // コントロール追加
             this.Controls.Add(control);
@@ -167,6 +169,9 @@ namespace Common.Windows.Forms
 
             // 初期化
             this.Initialization();
+
+            // スクロールリセット
+            this.Reset();
 
             Trace.WriteLine("<<<<= AutoScrollControl::AutoScrollControl()");
         }
@@ -228,6 +233,77 @@ namespace Common.Windows.Forms
         }
 
         /// <summary>
+        /// リセット
+        /// </summary>
+        public void Reset()
+        {
+            Trace.WriteLine("=>>>> AutoScrollControl::Reset()");
+
+            // 横スクロール有効か？
+            if (this.m_AllowScroll.HasFlag(AllowScroll.SideWay))
+            {
+                // 横スクロールリセット
+                this.ResetSideWayScroll();
+            }
+
+            // 縦スクロール有効か？
+            if (this.m_AllowScroll.HasFlag(AllowScroll.Vertical))
+            {
+                // 縦スクロールリセット
+                this.ResetVirticalScroll();
+            }
+
+            Trace.WriteLine("<<<<= AutoScrollControl::Reset()");
+        }
+
+
+        /// <summary>
+        /// 横スクロールリセット
+        /// </summary>
+        private void ResetSideWayScroll()
+        {
+            Trace.WriteLine("=>>>> AutoScrollControl::ResetSideWayScroll()");
+
+            // 右方向スクロールの場合
+            if (this.m_ScrollSize.Width > 0)
+            {
+                // ポジションリセット
+                this.m_Control.Left = 0 - this.m_Control.Width;
+            }
+            // 左方向スクロールの場合
+            else if (this.m_ScrollSize.Width < 0)
+            {
+                // ポジションリセット
+                this.m_Control.Left = this.Width;
+            }
+
+            Trace.WriteLine("<<<<= AutoScrollControl::ResetSideWayScroll()");
+        }
+
+        /// <summary>
+        /// 縦スクロールリセット
+        /// </summary>
+        private void ResetVirticalScroll()
+        {
+            Trace.WriteLine("=>>>> AutoScrollControl::ResetVirticalScroll()");
+
+            // 下方向スクロールの場合
+            if (this.m_ScrollSize.Height > 0)
+            {
+                // ポジションリセット
+                this.m_Control.Top = 0 - this.m_Control.Height;
+            }
+            // 上方向スクロールの場合
+            else if (this.m_ScrollSize.Height < 0)
+            {
+                // ポジションリセット
+                this.m_Control.Top = this.Height;
+            }
+
+            Trace.WriteLine("<<<<= AutoScrollControl::ResetVirticalScroll()");
+        }
+
+        /// <summary>
         /// スクロール停止
         /// </summary>
         public void Stop()
@@ -269,18 +345,17 @@ namespace Common.Windows.Forms
             }
 
             // 横スクロール有効か？
-            if ((this.m_AllowScroll & AllowScroll.SideWay) == AllowScroll.SideWay)
+            if(this.m_AllowScroll.HasFlag(AllowScroll.SideWay))
             {
                 // 横スクロール実行
                 this.SideWayScroll();
             }
 
             // 縦スクロール有効か？
-            if ((this.m_AllowScroll & AllowScroll.Vietical) == AllowScroll.Vietical)
+            if (this.m_AllowScroll.HasFlag(AllowScroll.Vertical))
             {
                 // 縦スクロール実行
                 this.VirticalScroll();
-
             }
 
             Trace.WriteLine("<<<<= AutoScrollControl::OnIntervalTimer(object, EventArgs)");
@@ -310,7 +385,7 @@ namespace Common.Windows.Forms
             // 左方向スクロールの場合
             else if (this.m_ScrollSize.Width < 0)
             {
-                if (this.m_Control.Left + this.Width <= 0)
+                if (this.m_Control.Left + this.m_Control.Width <= 0)
                 {
                     // 休止タイマー発動
                     this.m_WaitTimer.Start();
@@ -329,7 +404,27 @@ namespace Common.Windows.Forms
             Debug.WriteLine("タイマ間隔：{0}", this.m_IntervalTimer.Interval);
             Debug.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss.fff"));
 
-            // TODO:未実装
+            // コントロール移動
+            this.m_Control.Top += this.m_ScrollSize.Height;
+
+            // 下方向スクロールの場合
+            if (this.m_ScrollSize.Height > 0)
+            {
+                if (this.m_Control.Top > this.Height)
+                {
+                    // 休止タイマー発動
+                    this.m_WaitTimer.Start();
+                }
+            }
+            // 上方向スクロールの場合
+            else if (this.m_ScrollSize.Height < 0)
+            {
+                if (this.m_Control.Top + this.m_Control.Height <= 0)
+                {
+                    // 休止タイマー発動
+                    this.m_WaitTimer.Start();
+                }
+            }
 
             Trace.WriteLine("<<<<= AutoScrollControl::VirticalScroll()");
         }
@@ -348,56 +443,11 @@ namespace Common.Windows.Forms
             // ウェイト完了なのでタイマー停止
             this.m_WaitTimer.Stop();
 
-            // 横スクロール有効か？
-            if ((this.m_AllowScroll & AllowScroll.SideWay) == AllowScroll.SideWay)
-            {
-                // 横スクロールリセット
-                this.ResetSideWayScroll();
-            }
-
-            // 縦スクロール有効か？
-            if ((this.m_AllowScroll & AllowScroll.Vietical) == AllowScroll.Vietical)
-            {
-                // 縦スクロールリセット
-                this.ResetVirticalScroll();
-            }
+            // リセット
+            this.Reset();
 
             Trace.WriteLine("<<<<= AutoScrollControl::OnWaitTimer(object, EventArgs)");
         }
 
-        /// <summary>
-        /// 横スクロールリセット
-        /// </summary>
-        private void ResetSideWayScroll()
-        {
-            Trace.WriteLine("=>>>> AutoScrollControl::ResetSideWayScroll()");
-
-            // 右方向スクロールの場合
-            if (this.m_ScrollSize.Width > 0)
-            {
-                // ポジションリセット
-                this.m_Control.Left = 0 - this.m_Control.Width;
-            }
-            // 左方向スクロールの場合
-            else if (this.m_ScrollSize.Width < 0)
-            {
-                // ポジションリセット
-                this.m_Control.Left = this.Width;
-            }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::ResetSideWayScroll()");
-        }
-
-        /// <summary>
-        /// 縦スクロールリセット
-        /// </summary>
-        private void ResetVirticalScroll()
-        {
-            Trace.WriteLine("=>>>> AutoScrollControl::ResetVirticalScroll()");
-
-            // TODO:未実装
-
-            Trace.WriteLine("<<<<= AutoScrollControl::ResetVirticalScroll()");
-        }
     }
 }

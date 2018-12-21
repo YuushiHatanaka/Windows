@@ -19,7 +19,7 @@ namespace Common.Windows.Forms
         /// <summary>
         /// 縦方向
         /// </summary>
-        Vietical = 0x01,
+        Vertical = 0x01,
 
         /// <summary>
         /// 横方向
