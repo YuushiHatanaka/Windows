@@ -815,12 +815,14 @@ namespace Common.Data.Json
                         // 直前にエスケープされているか？
                         if (!_escape)
                         {
-                            // エスケープされていない場合、エスケープ文字設定
+                            // 文字列に追加
+                            _result.Append(_column);
+                            // エスケープ文字設定
                             _escape = true;
                         }
                         else
                         {
-                            // されている場合は文字扱いなので、文字列に追加
+                            // 文字列に追加
                             _result.Append(_column);
 
                             // エスケープ解除
