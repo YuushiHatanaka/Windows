@@ -86,7 +86,7 @@ namespace Common.Logging
             {
                 lock (this.m_StreamWriter)
                 {
-                    this.m_StreamWriter.WriteLine(this.GetDateTime() + message);
+                    this.m_StreamWriter.WriteLine(message);
                     this.m_StreamWriter.Flush();
                 }
             }
@@ -139,16 +139,6 @@ namespace Common.Logging
                 System.Diagnostics.Debug.Print(ex.ToString());
             }
         }
-
-        /// <summary>
-        /// 日時取得
-        /// </summary>
-        /// <returns>デバッグ用日時文字列</returns>
-        protected string GetDateTime()
-        {
-            // 日時文字列を返却する
-            return DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff");
-        }
     }
 
     /// <summary>
@@ -168,6 +158,16 @@ namespace Common.Logging
         public static void SetTraceSourceInstance(string m_InstanceName)
         {
             m_TraceSource = new TraceSource(m_InstanceName);
+        }
+
+        /// <summary>
+        /// 日時取得
+        /// </summary>
+        /// <returns>デバッグ用日時文字列</returns>
+        private static string GetDateTime()
+        {
+            // 日時文字列を返却する
+            return DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff");
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Critical, 0, string.Format(" [{0,-8}][{1,5}] ", "Critical", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Critical, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Critical", id) + GetString(format, args));
             m_TraceSource.Flush();
         }
 
@@ -246,7 +246,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Error, 0, string.Format(" [{0,-8}][{1,5}] ", "Error", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Error, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Error", id) + GetString(format, args));
             m_TraceSource.Flush();
         }
 
@@ -272,7 +272,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Information, 0, string.Format(" [{0,-8}][{1,5}] ", "Info", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Information, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Info", id) + GetString(format, args));
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Warning, 0, string.Format(" [{0,-8}][{1,5}] ", "Warning", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Warning, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Warning", id) + GetString(format, args));
         }
 
         /// <summary>
@@ -322,7 +322,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Verbose, 0, string.Format(" [{0,-8}][{1,5}] ", "Verbose", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Verbose, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Verbose", id) + GetString(format, args));
         }
 
         /// <summary>
@@ -347,7 +347,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Start, 0, string.Format(" [{0,-8}][{1,5}] =>>>>", "Start", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Start, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] =>>>>", "Start", id) + GetString(format, args));
             m_TraceSource.Flush();
         }
 
@@ -373,7 +373,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Suspend, 0, string.Format(" [{0,-8}][{1,5}] ", "Suspend", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Suspend, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Suspend", id) + GetString(format, args));
         }
         
         /// <summary>
@@ -398,7 +398,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Resume, 0, string.Format(" [{0,-8}][{1,5}] ", "Resume", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Resume, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Resume", id) + GetString(format, args));
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Stop, 0, string.Format(" [{0,-8}][{1,5}] <<<<=", "Stop", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Stop, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] <<<<=", "Stop", id) + GetString(format, args));
             m_TraceSource.Flush();
         }
 
@@ -449,7 +449,7 @@ namespace Common.Logging
             {
                 return;
             }
-            m_TraceSource.TraceEvent(TraceEventType.Transfer, 0, string.Format(" [{0,-8}][{1,5}] ", "Transfer", id) + GetString(format, args));
+            m_TraceSource.TraceEvent(TraceEventType.Transfer, 0, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Transfer", id) + GetString(format, args));
         }
 
         /// <summary>
@@ -533,7 +533,7 @@ namespace Common.Logging
                 _dump.Clear();
                 _text.Clear();
             }
-            m_TraceSource.TraceEvent(TraceEventType.Information, id, string.Format(" [{0,-8}][{1,5}] ", "Dump", id) + message + Environment.NewLine + _message.ToString().TrimEnd('\r', '\n'));
+            m_TraceSource.TraceEvent(TraceEventType.Information, id, GetStackFrame() + " " + GetDateTime() + " " + string.Format(" [{0,-8}][{1,5}] ", "Dump", id) + message + Environment.NewLine + _message.ToString().TrimEnd('\r', '\n'));
             m_TraceSource.Flush();
         }
 
@@ -547,6 +547,22 @@ namespace Common.Logging
                 return;
             }
             m_TraceSource.Flush();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Message"></param>
+        public static string GetStackFrame()
+        {
+            StackFrame CallStack = new StackFrame(3, true);
+
+            string SourceFile = CallStack.GetFileName();
+            int SourceLine = CallStack.GetFileLineNumber();
+
+            string _result = SourceFile + " : " + SourceLine.ToString();
+
+            return _result;
         }
     }
 }
