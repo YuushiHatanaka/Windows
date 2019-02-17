@@ -9,34 +9,70 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Common.Utility
 {
+    /// <summary>
+    /// コンソールヒストリクラス
+    /// </summary>
+    public class ConsoleHistory : List<string>
+    {
+
+    }
+
     /// <summary>
     /// 共通コンソール
     /// </summary>
     public class CommonConsole : TextBox
     {
+        const int EM_LINEINDEX = 0xBB;
+        const int EM_LINEFORMCHAR = 0xC9;
+
+        [DllImport("User32.Dll")]
+        private static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
         /// <summary>
         /// プロンプト
         /// </summary>
         private string m_Prompt = string.Empty;
 
         /// <summary>
-        /// ヒストリ
-        /// </summary>
-        private List<string> m_History = new List<string>();
-
-        private Point m_Point = new Point(0, 0);
-
-        /// <summary>
         /// プロンプト
         /// </summary>
         public string Prompt
         {
-            set { this.m_Prompt = value; }
+            set
+            {
+                // プロンプト更新
+                this.Write(Environment.NewLine);
+                this.Write(value);
+                this.m_Prompt = value;
+            }
             get { return this.m_Prompt; }
         }
+
+        /// <summary>
+        /// カーソル位置(保存用)
+        /// </summary>
+        private int m_CursolPosition = 0;
+
+        #region delegate
+        /// <summary>
+        /// [delegate] 文字列入力イベントdelegate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="strings"></param>
+        /// <returns></returns>
+        public delegate void EventHandlerInputString(object sender, string strings);
+        #endregion
+
+        #region イベントハンドラ
+        /// <summary>
+        /// 文字列入力イベント通知
+        /// </summary>
+        public EventHandlerInputString OnInputString = null;
+        #endregion
 
         /// <summary>
         /// コンストラクタ
@@ -50,100 +86,208 @@ namespace Common.Utility
         }
 
         /// <summary>
+        /// 文字列書込
+        /// </summary>
+        /// <param name="line"></param>
+        private void Write(string line)
+        {
+            this.AppendText(line);
+            this.m_CursolPosition = this.SelectionStart;
+        }
+
+        /// <summary>
         /// 初期化
         /// </summary>
         /// <param name="prompt"></param>
         private void Initialization(string prompt)
         {
-            this.Multiline = true;
-            this.ScrollBars = ScrollBars.Both;
-            this.BackColor = Color.Black;
-            this.ForeColor = Color.White;
-            this.ReadOnly = true;
-
+            // 各設定
             this.m_Prompt = prompt;
 
-            this.KeyDown += this.OnKeyDown;
+            // プロパティ設定
+            this.Multiline = true;
+            this.ScrollBars = ScrollBars.Both;
+            this.WordWrap = false;
+            this.BackColor = Color.Black;
+            this.ForeColor = Color.White;
+            this.ImeMode = ImeMode.NoControl;
+
+            // イベントハンドラ設定
             this.KeyPress += this.OnKeyPress;
+            this.MouseClick += this.OnMouseClick;
 
-            this.AppendText(this.m_Prompt);
-
-            this.m_Point.X = this.SelectionStart;
+            // プロンプト追加
+            this.Write(this.m_Prompt);
         }
 
-/*
         /// <summary>
-        /// [Override] IsInputKey
+        /// 入力キー判定
         /// </summary>
         /// <param name="keyData"></param>
         /// <returns></returns>
         protected override bool IsInputKey(Keys keyData)
         {
-            // Altキーが押されているか確認する
-            if ((keyData & Keys.Alt) != Keys.Alt)
+            // カーソル位置更新
+            this.UpdateCursolPosition();
+
+            Keys kcode = keyData & Keys.KeyCode;
+            switch (kcode)
             {
-                Keys kcode = keyData & Keys.KeyCode;
-                switch (kcode)
-                {
-                    case Keys.Up:
+                case Keys.Up:
+                    // TODO:ヒストリ表示
+                    return false;
+                case Keys.Down:
+                    // TODO:ヒストリ表示
+                    return false;
+                case Keys.Left:
+                    {
+                        // 現在位置取得
+                        Point _Position = this.GetCursolPosition();
+
+                        // プロンプト位置以前になるか？
+                        if (this.m_Prompt.Length >= _Position.X - 1)
                         {
                             return false;
                         }
-                    case Keys.Down:
+                        else
                         {
-                            return false;
+                            return true;
                         }
-                    case Keys.Left:
-                        {
-                            // 行数を判定
-                            if (this.Lines.Length == 0)
-                            {
-                                // 1行も無ければ終了
-                                return false;
-                            }
-
-                            // 文字数を判定
-                            Debug.WriteLine("Left:" + this.SelectionStart);
-                            if (this.m_Prompt.Length >= this.SelectionStart)
-                            {
-                                return false;
-                            }
-
-                            // カーソル位置を移動
-                            this.SelectionStart -= 1;
-
-                            return false;
-                        }
-                    case Keys.Right:
-                        {
-                            // 行数を判定
-                            if (this.Lines.Length == 0)
-                            {
-                                // 1行も無ければ終了
-                                return false;
-                            }
-
-                            // 最終行を取得
-                            string _LastLine = this.Lines[this.Lines.Length - 1];
-
-                            // 文字数を判定
-                            Debug.WriteLine("Right:" + this.SelectionStart);
-                            if (_LastLine.Length <= this.SelectionStart)
-                            {
-                                return false;
-                            }
-
-                            // カーソル位置を移動
-                            this.SelectionStart += 1;
-
-                            return false;
-                        }
-                }
-
+                    }
+                case Keys.Right:
+                    {
+                        return true;
+                    }
             }
             return base.IsInputKey(keyData);
         }
-        */
+
+        /// <summary>
+        /// 現在カーソル位置取得
+        /// </summary>
+        /// <returns></returns>
+        private Point GetCursolPosition()
+        {
+            Point _Point = new Point
+            {
+                Y = SendMessage(this.Handle, EM_LINEFORMCHAR, -1, 0) + 1
+            };
+            int _lineIndex = SendMessage(this.Handle, EM_LINEINDEX, -1, 0);
+            _Point.X = this.SelectionStart - _lineIndex + 1;
+            Debug.WriteLine(_Point.ToString());
+
+            return _Point;
+        }
+
+        /// <summary>
+        /// カーソル位置更新
+        /// </summary>
+        private void UpdateCursolPosition()
+        {
+            this.m_CursolPosition = this.SelectionStart;
+            Debug.WriteLine("UpdateCursolPosition:" + this.m_CursolPosition);
+        }
+
+        /// <summary>
+        /// カーソル位置復旧
+        /// </summary>
+        private void RestoreCursolPosition()
+        {
+            this.SelectionStart = this.m_CursolPosition;
+            Debug.WriteLine("RestoreCursolPosition:" + this.m_CursolPosition);
+        }
+
+        /// <summary>
+        /// 行取得
+        /// </summary>
+        /// <returns></returns>
+        private string GetLine()
+        {
+            // 行を返却
+            return this.GetLine(this.GetCursolPosition());
+        }
+
+        /// <summary>
+        /// 行取得
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        private string GetLine(Point position)
+        {
+            // 現在行を返却
+            return this.Lines[position.Y - 1];
+        }
+
+        /// <summary>
+        /// 文字列取得
+        /// </summary>
+        /// <returns></returns>
+        /// <remarks>プロンプト文字列を除く文字を取得</remarks>
+        private string GetString()
+        {
+            // 文字列取得
+            return this.GetString(this.GetCursolPosition());
+        }
+
+        /// <summary>
+        /// 文字列取得
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        /// <remarks>プロンプト文字列を除く文字を取得</remarks>
+        private string GetString(Point position)
+        {
+            // 行を取得
+            string _CurentLine = this.GetLine(position);
+
+            // プロンプトを除く文字を返却
+            return _CurentLine.Substring(this.m_Prompt.Length);
+        }
+
+        /// <summary>
+        /// 入力文字列取得
+        /// </summary>
+        /// <returns></returns>
+        private string GetInputString()
+        {
+            // 現在位置取得
+            Point _Position = this.GetCursolPosition();
+
+            // 入力された1行前の文字を取得
+            if (_Position.Y > 1)
+            {
+                _Position.Y -= 1;
+                return this.GetString(_Position);
+            }
+
+            // 前行がなければ空白
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 文字入力イベント通知
+        /// </summary>
+        /// <param name="input_string"></param>
+        private void OnInputStringNotyfy(string input_string)
+        {
+            // イベント通知
+            if (this.OnInputString != null)
+            {
+                this.OnInputString(this, input_string);
+            }
+        }
+
+        /// <summary>
+        /// [Event] MouseClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnMouseClick(object sender, MouseEventArgs e)
+        {
+            // カーソル位置復旧
+            this.RestoreCursolPosition();
+        }
+
         /// <summary>
         /// [Event] KeyPress
         /// </summary>
@@ -151,178 +295,44 @@ namespace Common.Utility
         /// <param name="e"></param>
         private void OnKeyPress(object sender, KeyPressEventArgs e)
         {
+            // カーソル位置更新
+            this.UpdateCursolPosition();
+
             if (e.KeyChar.ToString() == "\b")
             {
-                Debug.WriteLine(@"OnKeyPress:\b");
+                // 現在位置取得
+                Point _Position = this.GetCursolPosition();
+
+                // プロンプト位置以前になるか？
+                if (this.m_Prompt.Length >= _Position.X - 1)
+                {
+                    // イベントキャンセル
+                    e.Handled = true;
+                }
                 return;
             }
-            else if (e.KeyChar.ToString() == "\r")
+            else if (e.KeyChar.ToString() == "\r" || e.KeyChar.ToString() == "\n")
             {
-                Debug.WriteLine(@"OnKeyPress:\r");
-                this.Add(Environment.NewLine);
-                this.Add(this.m_Prompt);
+                // 改行、プロンプト表示
+                this.Write(Environment.NewLine);
+                this.Write(this.m_Prompt);
+
+                // 入力文字列取得
+                string _InputString = this.GetInputString();
+
+                // TODO:入力があったらヒストリ―に追加
+                if (_InputString != string.Empty)
+                {
+
+                }
+
+                // 入力イベント通知
+                this.OnInputStringNotyfy(_InputString);
+
+                // イベントキャンセル
+                e.Handled = true;
                 return;
             }
-            else if (e.KeyChar.ToString() == "\n")
-            {
-                Debug.WriteLine(@"OnKeyPress:\n");
-                return;
-            }
-            Debug.WriteLine("OnKeyPress:" + e.KeyChar.ToString());
-
-            // 文字追加
-            //this.Add(e.KeyChar.ToString());
-        }
-
-        /// <summary>
-        /// コンソール位置更新
-        /// </summary>
-        /// <param name="keys"></param>
-        private void UpdateConsolePosition(Keys keys)
-        {
-            Keys kcode = keys & Keys.KeyCode;
-
-            // コンソール位置更新
-            switch (kcode)
-            {
-                case Keys.Return:
-                    this.m_Point.X = this.m_Prompt.Length;
-                    this.m_Point.Y += 1;
-                    break;
-                case Keys.Back:
-                    this.m_Point.X -= 1;
-                    if (this.m_Point.X < this.m_Prompt.Length)
-                    {
-                        this.m_Point.X = this.m_Prompt.Length;
-                    }
-                    break;
-                case Keys.Up:
-                    /*
-                    this.m_Point.Y -= 1;
-                    if (this.m_Point.Y < 0)
-                    {
-                        this.m_Point.Y = 0;
-                    }
-                    */
-                    break;
-                case Keys.Down:
-                    /*
-                    this.m_Point.Y += 1;
-                    if (this.m_Point.Y > this.Lines.Length)
-                    {
-                        this.m_Point.Y = this.Lines.Length;
-                    }
-                    */
-                    break;
-                case Keys.Left:
-                    this.m_Point.X -= 1;
-                    if (this.m_Point.X < this.m_Prompt.Length)
-                    {
-                        this.m_Point.X = this.m_Prompt.Length;
-                    }
-                    break;
-                case Keys.Right:
-                    this.m_Point.X += 1;
-                    if (this.m_Point.X > this.Lines[this.Lines.Length - 1].Length)
-                    {
-                        this.m_Point.X = this.Lines[this.Lines.Length - 1].Length;
-                    }
-                    break;
-                default:
-                    this.m_Point.X += 1;
-                    break;
-            }
-            Debug.WriteLine(this.m_Point.ToString());
-        }
-
-        /// <summary>
-        /// 文字列追加
-        /// </summary>
-        /// <param name="value"></param>
-        private void Add(string value)
-        {
-            this.AppendText(value);
-        }
-
-        /// <summary>
-        /// 文字列追加
-        /// </summary>
-        /// <param name="keys"></param>
-        private void Add(Keys keys)
-        {
-        }
-
-        /// <summary>
-        /// [Event] KeyDown
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnKeyDown(object sender, KeyEventArgs e)
-        {
-            // コンソール位置更新
-            this.UpdateConsolePosition(e.KeyData);
-
-            Keys kcode = e.KeyData & Keys.KeyCode;
-            switch (kcode)
-            {
-                case Keys.Return:
-                case Keys.Back:
-                case Keys.Up:
-                case Keys.Down:
-                case Keys.Left:
-                case Keys.Right:
-                    break;
-                default:
-                    break;
-            }
-
-            /*
-            switch (kcode)
-            {
-                case Keys.Return:
-                    {
-                        // プロンプト行を表示
-                        this.AppendText(Environment.NewLine + this.m_Prompt);
-                    }
-                    break;
-                case Keys.Back:
-                    {
-                        // 行数を判定
-                        if (this.Lines.Length == 0)
-                        {
-                            // 1行も無ければ終了
-                            break;
-                        }
-
-                        // 最終行を取得
-                        string _LastLine = this.Lines[this.Lines.Length - 1];
-
-                        // 文字数を判定
-                        if (this.m_Prompt.Length >= _LastLine.Length)
-                        {
-                            // プロンプト行より同じ（または短い）ので、何もしない
-                            break;
-                        }
-
-                        // 1文字削除させる
-                        int _OldSelectionStart = this.SelectionStart;
-
-                        // 更新
-                        string _FrontString = this.Text.Substring(0, _OldSelectionStart - 1);
-                        string _BackString = this.Text.Substring(_OldSelectionStart);
-                        this.Text = _FrontString + _BackString;
-                        //_UpdateLines[this.Lines.Length - 1] = _FrontString + _BackString;
-                        //this.Lines = _UpdateLines;
-
-                        // カーソル位置を決定
-                        this.SelectionStart = _OldSelectionStart - 1;
-                    }
-                    break;
-                default:
-                    {
-                    }
-                    break;
-            }*/
         }
     }
 }

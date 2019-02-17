@@ -16,21 +16,21 @@ namespace Common.Data.Json
     /// </summary>
     public enum JsonStatus : byte
     {
-        NotStart = 0,                //   0:解析未実施
-        StartObject,                 //   1:Object開始
-        NextObject,                  //  xx:次Object開始
-        Object,                      //  xx:Object処理
-        EndObject,                   //  xx:Object終了
-        StartArray,                  //  xx:Array開始
-        NextArray,                   //  xx:次Array処理
-        EndArray,                    //  xx:Array終了
-        EndKey,                      //  xx:Key終了
-        StartValue,                  //  xx:Value開始
-        Value,                       //  xx:Value処理
-        EndValue,                    //  xx:Value終了
-        EndArrayValue,               //  xx:Value終了(Array)
-        NextWait,                    //  xx:次遷移待ち
-        End                          //  xx:解析終了
+        NotStart = 0,                // 解析未実施
+        StartObject,                 // Object開始
+        NextObject,                  // 次Object開始
+        Object,                      // Object処理
+        EndObject,                   // Object終了
+        StartArray,                  // Array開始
+        NextArray,                   // 次Array処理
+        EndArray,                    // Array終了
+        EndKey,                      // Key終了
+        StartValue,                  // Value開始
+        Value,                       // Value処理
+        EndValue,                    // Value終了
+        EndArrayValue,               // Value終了(Array)
+        NextWait,                    // 次遷移待ち
+        End                          // 解析終了
     };
 
     /// <summary>
@@ -38,9 +38,9 @@ namespace Common.Data.Json
     /// </summary>
     public enum JsonMode
     {
-        Non = 0,                    //   0:設定なし
-        Object,                     //   1:Objectモード
-        Array,                      //   2:Arrayモード
+        Non = 0,                    // 設定なし
+        Object,                     // Objectモード
+        Array,                      // Arrayモード
     };
 
     /// <summary>
@@ -48,19 +48,19 @@ namespace Common.Data.Json
     /// </summary>
     public enum JsonValueType
     {
-        Unknown = 0,                //   0:不明
-        ObjectStart,                //   x:object開始
-        Object,                     //   x:object
-        ObjectEnd,                  //   x:object終了
-        ArrayStart,                 //   x:array開始
-        Array,                      //   x:array
-        ArrayEnd,                   //   x:array終了
-        Element,                    //   x:element
-        Value,                      //   x:value
-        String,                     //   x:string
-        Number,                     //   x:number
-        Bool,                       //   x:true/false
-        Null,                       //   x:null
+        Unknown = 0,                // 不明
+        ObjectStart,                // object開始
+        Object,                     // object
+        ObjectEnd,                  // object終了
+        ArrayStart,                 // array開始
+        Array,                      // array
+        ArrayEnd,                   // array終了
+        Element,                    // element
+        Value,                      // value
+        String,                     // string
+        Number,                     // number
+        Bool,                       // true/false
+        Null,                       // null
     };
 
     /// <summary>
@@ -68,13 +68,13 @@ namespace Common.Data.Json
     /// </summary>
     public enum JsonError
     {
-        NormalEnd = 0,                //   0:正常終了
-        NotFoundStartTag,             //   1:開始タグなしエラー
-        NotFindEndTag,                //   2:終了タグなしエラー
-        NotFoundKey,                  //   3:Keyなしエラー
-        NotFoundValue,                //   4:Valueなしエラー
-        InvalidFormat,                //   5:フォーマットエラー
-        InvalidSyntax,                //   6:構文エラー
+        NormalEnd = 0,                // 正常終了
+        NotFoundStartTag,             // 開始タグなしエラー
+        NotFindEndTag,                // 終了タグなしエラー
+        NotFoundKey,                  // Keyなしエラー
+        NotFoundValue,                // Valueなしエラー
+        InvalidFormat,                // フォーマットエラー
+        InvalidSyntax,                // 構文エラー
         OutOfMemory,
         StackOverflow,
         CannotOpenFile,
@@ -89,8 +89,8 @@ namespace Common.Data.Json
         DuplicateKey,
         NumericOverflow,
         ItemNotFound,
-        IndexOutOfRange,              //   x:インデックス範囲エラー
-        SystemError                   // xxx:システムエラー
+        IndexOutOfRange,              // インデックス範囲エラー
+        SystemError                   // システムエラー
     };
 
     /// <summary>
