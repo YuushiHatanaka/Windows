@@ -130,8 +130,7 @@ namespace Common.Net
         /// </summary>
         /// <param name="hostName"></param>
         public TelnetClient(string hostName)
-            : this(hostName, 23
-                  )
+            : this(hostName, 23)
         {
             Trace.WriteLine("TelnetClient::TelnetClient(string)");
         }
