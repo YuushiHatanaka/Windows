@@ -45,7 +45,7 @@ namespace Common.Data.Config
         /// <summary>
         /// ファイル名
         /// </summary>
-        private string m_FileName = string.Empty;
+        protected string m_FileName = string.Empty;
 
         /// <summary>
         /// バッファサイズ
@@ -104,14 +104,14 @@ namespace Common.Data.Config
         }
         #endregion
 
-        #region 追加
+        #region 書込
         /// <summary>
-        /// 追加
+        /// 書込
         /// </summary>
         /// <param name="section"></param>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public void Add(string section, string key, string value)
+        public void Write(string section, string key, string value)
         {
             WritePrivateProfileString(section, key, value, this.m_FileName);
         }
