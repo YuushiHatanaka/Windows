@@ -13,6 +13,180 @@ using System.IO;
 namespace Common.Net
 {
     /// <summary>
+    /// Telnetコマンド
+    /// </summary>
+    public enum TelnetCommand : byte
+    {
+        /// <summary>
+        /// SE
+        /// 副交渉の終わり 
+        /// </summary>
+        SE = 0xf0,
+        
+        /// <summary>
+        /// NOP
+        /// 無操作(Synch のデータストリーム部分)
+        /// </summary>
+        NOP = 0xf1,
+
+        /// <summary>
+        /// Data Mark
+        /// (これは常に TCP Urgent 通知を伴う べきである)
+        /// </summary>
+        DM = 0xf2,
+
+        /// <summary>
+        /// Break
+        /// NVT 文字 BRK 
+        /// </summary>
+        BRK = 0xf3,
+
+        /// <summary>
+        /// Interrupt Process
+        /// IP 機能 
+        /// </summary>
+        IP = 0xf4,
+
+        /// <summary>
+        /// Abort output
+        /// AO 機能
+        /// </summary>
+        AO = 0xf5,
+
+        /// <summary>
+        /// Are You There
+        /// AYT 機能 
+        /// </summary>
+        AYT = 0xf6,
+
+        /// <summary>
+        /// Erase character
+        /// EC 機能 
+        /// </summary>
+        EC = 0xf7,
+        
+        /// <summary>
+        /// Erase Line
+        /// EL 機能
+        /// </summary>
+        EL = 0xf8,
+
+        /// <summary>
+        /// Go ahead
+        /// GA シグナル
+        /// </summary>
+        GA = 0xf9,
+
+        /// <summary>
+        /// SB
+        /// (後に続くのが示されたオプションの副 交渉であることを表す)
+        /// </summary>
+        SB = 0xfa,
+
+        /// <summary>
+        /// WILL (オプションコード)
+        /// (示されたオプションの実行開始、 または実行中かどうかの確認を望 むことを表す)
+        /// </summary>
+        WILL = 0xfb,
+
+        /// <summary>
+        /// WON'T (オプションコード)
+        /// (示されたオプションの実行拒否ま たは継続実行拒否を表す)
+        /// </summary>
+        WONT = 0xfc,
+
+        /// <summary>
+        /// DO (オプションコード)
+        /// (示されたオプションを実行すると いう相手側の要求、またはあなた がそれを実行することを期待して いるという確認を表す)
+        /// </summary>
+        DO = 0xfd,
+
+        /// <summary>
+        /// DO (オプションコード)
+        /// (示されたオプションを停止すると いう相手側の要求、またはあなた がそれを実行することをもはや期 待しないという確認を表す )
+        /// </summary>
+        DONT = 0xfe,
+
+        /// <summary>
+        /// IAC
+        /// (データバイト)
+        /// </summary>
+        IAC = 0xff,
+    };
+
+    /// <summary>
+    /// Telnetオプション
+    /// </summary>
+    public enum TelnetOption : byte
+    {
+        /// <summary>
+        /// 通常の7ビットデータではなく、8ビットバイナリとしてデータを受信する        /// </summary>
+        binary = 0x00,
+
+        /// <summary>
+        /// エコーバックを行う
+        /// </summary>
+        echo = 0x01,
+
+        /// <summary>
+        /// 送受信を切り替えるGO AHEADコマンドの送信を抑制する
+        /// </summary>
+        suppress_go_ahead = 0x03,
+
+        /// <summary>
+        /// Telnetオプション状態を送信する
+        /// </summary>
+        status = 0x05,
+
+        /// <summary>
+        /// コネクションの双方の同期を取る際に使用される
+        /// </summary>
+        timing_mark = 0x06,
+
+        /// <summary>
+        /// 端末タイプを送信する
+        /// （クライアント側のみに対して有効）
+        /// </summary>
+        terminal_type = 0x18,
+
+        /// <summary>
+        /// 端末ウィンドウの行と列の数を送る
+        /// （クライアント側のみに対して有効）
+        /// </summary>
+        window_size = 0x1f,
+
+        /// <summary>
+        /// 端末の送信速度と受信速度を送る
+        /// （クライアント側のみに対して有効）
+        /// </summary>
+        terminal_speed = 0x20,
+
+        /// <summary>
+        /// フロー制御を行う        /// </summary>
+        remote_flow_control = 0x21,
+
+        /// <summary>
+        /// リアルラインモードにてデータを行単位で送る
+        /// </summary>
+        linemode = 0x22,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        display_location = 0x23,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        environment_variables = 0x24,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        environment_option = 0x27,
+    };
+
+    /// <summary>
     /// Telnetクライアントクラス
     /// </summary>
     public class TelnetClient : IDisposable
@@ -41,7 +215,7 @@ namespace Common.Net
         /// <summary>
         /// 受信バッファサイズ
         /// </summary>
-        private int m_ReciveBufferCapacity = 4096;
+        private int m_ReciveBufferCapacity = 8192;
 
         /// <summary>
         /// 受信バッファサイズ
@@ -389,6 +563,16 @@ namespace Common.Net
         /// <summary>
         /// 送信
         /// </summary>
+        /// <param name="data"></param>
+        public void Send(byte[] data)
+        {
+            Trace.WriteLine("TelnetClient::Send(MemoryStream)");
+            this.Send(new MemoryStream(data));
+        }
+
+        /// <summary>
+        /// 送信
+        /// </summary>
         /// <param name="stream"></param>
         public void Send(MemoryStream stream)
         {
@@ -496,6 +680,7 @@ namespace Common.Net
             // 非同期読込が終了しているか？
             int bytesRead = _TelnetClientReciveStream.Socket.EndReceive(asyncResult);
             Debug.WriteLine("　読込データサイズ:[{0}]", bytesRead);
+            Debug.WriteLine("　受信データサイズ:[{0}]", _TelnetClientReciveStream.Socket.ReceiveBufferSize);
             if (bytesRead > 0)
             {
                 // 残りがある場合にはデータ保持する
@@ -504,25 +689,24 @@ namespace Common.Net
                     _TelnetClientReciveStream.Stream.Write(_TelnetClientReciveStream.Buffer, 0, bytesRead);
                 }
 
-                // 再度受信待ちを実施
-                _TelnetClientReciveStream.Socket.BeginReceive(_TelnetClientReciveStream.Buffer, 0, _TelnetClientReciveStream.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnReciveCallback), _TelnetClientReciveStream);
+                // バッファ全て受信したら残りがある場合があるので、再受信実施
+                if (bytesRead >= _TelnetClientReciveStream.Socket.ReceiveBufferSize)
+                {
+                    // 再度受信待ちを実施
+                    Debug.WriteLine("再受信開始");
+                    _TelnetClientReciveStream.Socket.BeginReceive(_TelnetClientReciveStream.Buffer, 0, _TelnetClientReciveStream.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnReciveCallback), _TelnetClientReciveStream);
+                }
+                else
+                {
+                    // 転送通知設定
+                    this.OnReciveNotify.Set();
+                }
             }
             else
             {
                 // 転送通知設定
                 this.OnReciveNotify.Set();
             }
-        }
-        #endregion
-
-        #region ネゴシエーション
-        /// <summary>
-        /// ネゴシエーション
-        /// </summary>
-        /// <param name="memoryStream"></param>
-        public void Negotiation(MemoryStream memoryStream)
-        {
-            Trace.WriteLine("TelnetClient::Negotiation(MemoryStream)");
         }
         #endregion
     }
