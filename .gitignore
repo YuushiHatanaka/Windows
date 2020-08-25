@@ -1,8 +1,17 @@
 # 拡張子 .chach の全てのファイルを除外
 *.chach
 
+# exe ファイルは要らない
+*.exe
+
 #ディレクトリ bin 配下の全てのファイルを除外
 bin/
 
 #ディレクトリ obj 配下の全てのファイルを除外
 obj/
+
+# nuget.exe は必用なファイル
+!/.nuget/nuget.exe
+
+# パッケージフォルダ内の .ts ファイルは要らない
+package/**/*.ts
