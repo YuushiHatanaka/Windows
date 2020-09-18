@@ -57,12 +57,29 @@ namespace Common.Control
         /// コンストラクタ
         /// </summary>
         public IpV4AddressControl()
+            : this("127.0.0.1")
         {
             // コンポーネント初期化
             InitializeComponent();
 
             // 初期化
             this.Initialization();
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="address"></param>
+        public IpV4AddressControl(string address)
+        {
+            // コンポーネント初期化
+            InitializeComponent();
+
+            // 初期化
+            this.Initialization();
+
+            // アドレス設定
+            this.Value(address);
         }
 
         /// <summary>
