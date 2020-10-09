@@ -3,17 +3,17 @@ using System.Diagnostics;
 
 namespace Common.Net
 {
-    #region Telnetクライアント例外クラス
+    #region 仮想ネットワーク端末例外クラス
     /// <summary>
-    /// Telnetクライアント例外クラス
+    /// 仮想ネットワーク端末例外クラス
     /// </summary>
-    public class TelnetClientException : Exception
+    public class NetworkVirtualTerminalException : Exception
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="message"></param>
-        public TelnetClientException(string message)
+        public NetworkVirtualTerminalException(string message)
             : base(message)
         {
             Debug.WriteLine(message);

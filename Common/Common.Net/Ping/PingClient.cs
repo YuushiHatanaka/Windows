@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using System.Diagnostics;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.NetworkInformation;
 using System.Threading;
 
@@ -61,40 +62,60 @@ namespace Common.Net
         }
 
         /// <summary>
+        /// ローカルアドレス取得(IPv4)
+        /// </summary>
+        /// <param name="family"></param>
+        /// <returns></returns>
+        private IPAddress GetLocalIPAddress(AddressFamily family)
+        {
+            IPAddress[] _IPAddress = Dns.GetHostAddresses(Dns.GetHostName());
+            foreach (IPAddress address in _IPAddress)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return address;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// 送信(IPv4)
         /// </summary>
         /// <param name="ipAddress"></param>
         /// <param name="count"></param>
         /// <param name="wait"></param>
+        /// <exception cref="PingClientException"></exception>
         public void Send(string ipAddress, int count, int wait)
         {
             // IPアドレス(送信元)
-            IpAddress _fromIpAddress = new IpAddress();
-            if (_fromIpAddress.IpV4.Count < 1)
+            IPAddress localIPAddress = this.GetLocalIPAddress(AddressFamily.InterNetwork);
+            if (localIPAddress == null)
             {
                 throw new PingClientException("送信元が見つかりません");
             }
 
             // IPアドレス(送信先)
-            IpAddress _toIpAddress = new IpAddress(ipAddress);
-            if (_toIpAddress.IpV4.Count != 1)
+            IPAddress remoteIpAddress = new IPAddress(Encoding.ASCII.GetBytes(ipAddress));
+            if (remoteIpAddress == null)
             {
                 throw new PingClientException("送信先が見つかりません：[" + ipAddress + "]");
             }
 
             // 結果オブジェクト生成
-            this.m_Statistics = new PingStatistics(_fromIpAddress, _toIpAddress);
+            this.m_Statistics = new PingStatistics(localIPAddress, remoteIpAddress);
 
             Debug.WriteLine("PING from {0} to {1}({2}) {3} bytes of data.",
-                _fromIpAddress.IpV4[0].ToString(),
-                ipAddress, _toIpAddress.IpV4[0].ToString(),
+                localIPAddress.ToString(),
+                ipAddress,
+                remoteIpAddress.ToString(),
                 this.m_SendBuffer.Length);
 
             // 送信回数分繰り返す
             for (int i = 0; i < count; i++)
             {
                 // 送信実行
-                PingReply _PingReply = this.SendExec(_toIpAddress.IpV4[0].ToString());
+                PingReply _PingReply = this.SendExec(remoteIpAddress.ToString());
 
                 // 結果追加
                 this.m_Statistics.PingReply.Add(_PingReply);
@@ -156,7 +177,7 @@ namespace Common.Net
             }
             else
             {
-                //結果を取得
+                // 結果を取得
                 if (e.Reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                 {
                     Console.WriteLine("Reply from {0}:bytes={1} time={2}ms TTL={3}",

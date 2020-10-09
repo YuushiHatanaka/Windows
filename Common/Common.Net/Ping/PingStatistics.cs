@@ -18,12 +18,12 @@ namespace Common.Net
         /// <summary>
         /// 送信元IPアドレス
         /// </summary>
-        private IpAddress m_FromIpAddress = null;
+        private IPAddress m_FromIpAddress = null;
 
         /// <summary>
         /// 送信先IPアドレス
         /// </summary>
-        private IpAddress m_ToIpAddress = null;
+        private IPAddress m_ToIpAddress = null;
 
         /// <summary>
         /// 結果リスト
@@ -33,7 +33,7 @@ namespace Common.Net
         /// <summary>
         /// 送信元IPアドレス
         /// </summary>
-        public IpAddress FromIpAddress
+        public IPAddress FromIpAddress
         {
             get { return this.m_FromIpAddress; }
             set { this.m_FromIpAddress = value; }
@@ -42,7 +42,7 @@ namespace Common.Net
         /// <summary>
         /// 送信先IPアドレス
         /// </summary>
-        public IpAddress ToIpAddress
+        public IPAddress ToIpAddress
         {
             get { return this.m_ToIpAddress; }
             set { this.m_ToIpAddress = value; }
@@ -61,7 +61,7 @@ namespace Common.Net
         /// </summary>
         /// <param name="from"></param>
         /// <param name="to"></param>
-        public PingStatistics(IpAddress from, IpAddress to)
+        public PingStatistics(IPAddress from, IPAddress to)
         {
             // 設定
             this.m_FromIpAddress = from;

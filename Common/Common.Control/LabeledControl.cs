@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
 using System.Diagnostics;
-using Common.Control;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace Common.Control
 {
@@ -25,6 +18,16 @@ namespace Common.Control
         private ControlPositions m_LabelPosition = ControlPositions.Left;
 
         /// <summary>
+        /// ラベル
+        /// </summary>
+        private Label m_Label = null;
+
+        /// <summary>
+        /// Labelマージン
+        /// </summary>
+        private ControlMargin m_LabelMargin = new ControlMargin(1, 1, 1, 1);
+
+        /// <summary>
         /// コントロール
         /// </summary>
         private System.Windows.Forms.Control m_Control = null;
@@ -33,11 +36,6 @@ namespace Common.Control
         /// Controlマージン
         /// </summary>
         private ControlMargin m_ControlMargin = new ControlMargin(1, 1, 1, 1);
-
-        /// <summary>
-        /// Controlセパレート
-        /// </summary>
-        private int m_SeparateSize = 1;
         #endregion
 
         #region プロパティ
@@ -93,6 +91,27 @@ namespace Common.Control
             }
         }
 
+
+        /// <summary>
+        /// Labelマージン
+        /// </summary>
+        //[Localizable(false)]
+        //[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public ControlMargin LabelMargin
+        {
+            get
+            {
+                return this.m_LabelMargin;
+            }
+            set
+            {
+                this.m_LabelMargin = value;
+
+                // コントロール設定
+                this.SetControl();
+            }
+        }
+
         /// <summary>
         /// Controlマージン
         /// </summary>
@@ -112,25 +131,53 @@ namespace Common.Control
                 this.SetControl();
             }
         }
+        #endregion
 
-        /// <summary>
-        /// Controlセパレート
-        /// </summary>
-        public int SeparateSize
+        private TableLayoutPanel m_Layout = new TableLayoutPanel();
+        private Panel m_LabelPanel = new Panel();
+        private Panel m_ControlPanel = new Panel();
+        private float m_LabelPercent = 50;
+        public float LabelPercent
         {
             get
             {
-                return this.m_SeparateSize;
+                return this.m_LabelPercent;
             }
             set
             {
-                this.m_SeparateSize = value;
+                if (value > 100)
+                {
+                    return;
+                }
+
+                this.m_LabelPercent = value;
+                this.m_ControlPercent = 100F - value;
 
                 // コントロール設定
                 this.SetControl();
             }
         }
-        #endregion
+        private float m_ControlPercent = 50;
+        public float ControlPercent
+        {
+            get
+            {
+                return this.m_ControlPercent;
+            }
+            set
+            {
+                if (value > 100)
+                {
+                    return;
+                }
+
+                this.m_LabelPercent = 100F - value;
+                this.m_ControlPercent = value;
+
+                // コントロール設定
+                this.SetControl();
+            }
+        }
 
         #region コンストラクタ
         /// <summary>
@@ -138,43 +185,33 @@ namespace Common.Control
         /// </summary>
         public LabeledControl(System.Windows.Forms.Control control)
         {
-            Trace.WriteLine("=>>>> LabeledControl::LabeledControl()");
-
-            // 初期設定
-            this.m_Control = control;
-
-            // コントロール追加
-            this.Controls.Add(control);
-
             // コンポーネント初期化
             InitializeComponent();
 
-            // 初期化
-            this.Initialization();
+            // 初期設定
+            this.m_Label = new Label() { Text = "Label" };
+            this.m_Control = control;
 
-            Trace.WriteLine("<<<<= LabeledControl::LabeledControl()");
-        }
-        #endregion
-
-        #region 初期化
-        /// <summary>
-        /// 初期化
-        /// </summary>
-        private void Initialization()
-        {
-            Trace.WriteLine("=>>>> LabeledControl::Initialization()");
+            // コントロール追加
+            this.Controls.Add(this.m_Layout);
+            this.m_LabelPanel.Controls.Add(this.m_Label);
+            this.m_ControlPanel.Controls.Add(this.m_Control);
+            this.m_LabelPanel.Dock = DockStyle.Fill;
+            this.m_ControlPanel.Dock = DockStyle.Fill;
+            this.m_Label.Dock = DockStyle.Fill;
+            this.m_Control.Dock = DockStyle.Fill;
+            this.m_Layout.Dock = DockStyle.Fill;
 
             // コントロール設定
             this.SetControl();
 
+
             // イベントハンドラ設定
             this.Resize += this.OnResize;
-            this.m_Label.AutoSizeChanged += this.Label_OnAutoSizeChanged;
-            this.m_Label.SizeChanged += this.Label_OnSizeChanged;
-            this.m_Label.TextChanged += this.Label_OnTextChanged;
-            this.m_Control.SizeChanged += this.Control_OnSizeChanged;
-
-            Trace.WriteLine("<<<<= LabeledControl::Initialization()");
+            //this.m_Label.AutoSizeChanged += this.Label_OnAutoSizeChanged;
+            //this.m_Label.SizeChanged += this.Label_OnSizeChanged;
+            //this.m_Label.TextChanged += this.Label_OnTextChanged;
+            //this.m_Control.SizeChanged += this.Control_OnSizeChanged;
         }
         #endregion
 
@@ -184,8 +221,6 @@ namespace Common.Control
         /// </summary>
         public void SetControl()
         {
-            Trace.WriteLine("=>>>> LabeledControl::SetControl()");
-
             // リサイズイベントキャンセル
             this.Resize -= this.OnResize;
 
@@ -208,8 +243,6 @@ namespace Common.Control
 
             // リサイズイベント再設定
             this.Resize += this.OnResize;
-
-            Trace.WriteLine("<<<<= LabeledControl::SetControl()");
         }
 
         /// <summary>
@@ -219,22 +252,35 @@ namespace Common.Control
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Top()");
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
+            // レイアウト一旦停止
+            this.m_Layout.SuspendLayout();
 
-            // 幅決定
-            int _Width = this.m_Control.Width;
-            if (this.m_Label.Width > this.m_Control.Width)
-            {
-                _Width = this.m_Label.Width;
-            }
-            this.Width = this.ControlMargin.Left + _Width +  this.ControlMargin.Right;
+            // コントロールクリア
+            this.m_Layout.Controls.Clear();
+            this.m_Layout.RowStyles.Clear();
+            this.m_Layout.ColumnStyles.Clear();
 
-            // 高さ決定
-            this.Height = this.m_ControlMargin.Top + this.m_Label.Height + this.m_SeparateSize + this.m_Control.Height +  this.m_ControlMargin.Bottom;
+            // サイズ設定
+            this.Height = this.GetHeightTotal();
+            this.Width = this.GetWidthMax();
 
-            // コントロール位置設定
-            this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top + this.m_Label.Height + this.m_SeparateSize);
+            // コントロール追加
+            this.m_Layout.RowCount = 2;
+            this.m_Layout.ColumnCount = 1;
+            this.m_Layout.Controls.Add(this.m_Label, 0, 0);
+            this.m_Layout.Controls.Add(this.m_Control, 0, 1);
+
+            // コントロール設定
+            RowStyle labelRowStyle = new RowStyle(SizeType.Percent, this.m_LabelPercent);
+            RowStyle controlRowStyle = new RowStyle(SizeType.Percent, this.m_ControlPercent);
+            ColumnStyle columnStyle = new ColumnStyle(SizeType.Absolute, this.GetWidthMax());
+            this.m_Layout.RowStyles.Add(labelRowStyle);
+            this.m_Layout.RowStyles.Add(controlRowStyle);
+            this.m_Layout.ColumnStyles.Add(columnStyle);
+
+            // レイアウト再開
+            //this.m_SplitContainer.ResumeLayout();
+            this.m_Layout.ResumeLayout();
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Top()");
         }
@@ -246,22 +292,34 @@ namespace Common.Control
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Bottom()");
 
-            // コントロール位置設定
-            this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
+            // レイアウト一旦停止
+            this.m_Layout.SuspendLayout();
 
-            // 幅決定
-            int _Width = this.m_Control.Width;
-            if (this.m_Label.Width > this.m_Control.Width)
-            {
-                _Width = this.m_Label.Width;
-            }
-            this.Width = this.ControlMargin.Left + _Width +  this.ControlMargin.Right;
+            // コントロールクリア
+            this.m_Layout.Controls.Clear();
+            this.m_Layout.RowStyles.Clear();
+            this.m_Layout.ColumnStyles.Clear();
 
-            // 高さ決定
-            this.Height = this.m_ControlMargin.Top + this.m_Control.Height + this.m_SeparateSize + this.m_Label.Height + this.m_ControlMargin.Bottom;
+            // サイズ設定
+            this.Height = this.GetHeightTotal();
+            this.Width = this.GetWidthMax();
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top + this.m_Control.Height + this.m_SeparateSize);
+            // コントロール追加
+            this.m_Layout.RowCount = 2;
+            this.m_Layout.ColumnCount = 1;
+            this.m_Layout.Controls.Add(this.m_Control, 0, 0);
+            this.m_Layout.Controls.Add(this.m_Label, 0, 1);
+
+            // コントロール設定
+            RowStyle labelRowStyle = new RowStyle(SizeType.Percent, this.m_LabelPercent);
+            RowStyle controlRowStyle = new RowStyle(SizeType.Percent, this.m_ControlPercent);
+            ColumnStyle columnStyle = new ColumnStyle(SizeType.Absolute, this.GetWidthMax());
+            this.m_Layout.RowStyles.Add(controlRowStyle);
+            this.m_Layout.RowStyles.Add(labelRowStyle);
+            this.m_Layout.ColumnStyles.Add(columnStyle);
+
+            // レイアウト再開
+            this.m_Layout.ResumeLayout();
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Bottom()");
         }
@@ -272,24 +330,38 @@ namespace Common.Control
         private void SetControl_Right()
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Right()");
+            Trace.WriteLine("=>>>> LabeledControl::SetControl_Left()");
 
-            // コントロール位置設定
-            this.m_Control.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
+            // レイアウト一旦停止
+            this.m_Layout.SuspendLayout();
 
-            // 幅決定
-            this.Width = this.m_ControlMargin.Left + this.m_Control.Width + this.m_SeparateSize + this.m_Label.Width + this.m_ControlMargin.Right;
+            // コントロールクリア
+            this.m_Layout.Controls.Clear();
+            this.m_Layout.RowStyles.Clear();
+            this.m_Layout.ColumnStyles.Clear();
 
-            // 高さ決定
-            int _Height = this.m_Control.Height;
-            if (this.m_Label.Height > this.m_Control.Height)
-            {
-                _Height = this.m_Label.Height;
-            }
-            this.Height = this.ControlMargin.Top + _Height +  this.ControlMargin.Bottom;
+            // サイズ設定
+            this.Height = this.GetHeightMax();
+            this.Width = this.GetWidthTotal();
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(this.ControlMargin.Left + this.m_Control.Width + this.m_SeparateSize, this.ControlMargin.Top);
+            // コントロール追加
+            this.m_Layout.RowCount = 1;
+            this.m_Layout.ColumnCount = 2;
+            this.m_Layout.Controls.Add(this.m_Control, 0, 0);
+            this.m_Layout.Controls.Add(this.m_Label, 1, 0);
 
+            // コントロール設定
+            RowStyle rowStyle = new RowStyle(SizeType.Absolute, this.GetHeightMax());
+            ColumnStyle labelColumnStyle = new ColumnStyle(SizeType.Percent, this.m_LabelPercent);
+            ColumnStyle controlColumnStyle = new ColumnStyle(SizeType.Percent, this.m_ControlPercent);
+            this.m_Layout.RowStyles.Add(rowStyle);
+            this.m_Layout.ColumnStyles.Add(controlColumnStyle);
+            this.m_Layout.ColumnStyles.Add(labelColumnStyle);
+
+            // レイアウト再開
+            this.m_Layout.ResumeLayout();
+
+            Trace.WriteLine("<<<<= LabeledControl::SetControl_Left()");
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Right()");
         }
 
@@ -300,25 +372,141 @@ namespace Common.Control
         {
             Trace.WriteLine("=>>>> LabeledControl::SetControl_Left()");
 
-            // ラベル位置設定
-            this.m_Label.Location = new Point(this.ControlMargin.Left, this.ControlMargin.Top);
+            // レイアウト一旦停止
+            this.m_Layout.SuspendLayout();
 
-            // 幅決定
-            this.Width = this.m_ControlMargin.Left + this.m_Label.Width + this.m_SeparateSize + this.m_Control.Width + this.m_ControlMargin.Right;
+            // コントロールクリア
+            this.m_Layout.Controls.Clear();
+            this.m_Layout.RowStyles.Clear();
+            this.m_Layout.ColumnStyles.Clear();
 
-            // 高さ決定
-            int _Height = this.m_Control.Height;
-            if (this.m_Label.Height > this.m_Control.Height)
-            {
-                _Height = this.m_Label.Height;
-            }
-            this.Height = this.ControlMargin.Top + _Height +  this.ControlMargin.Bottom;
+            // サイズ設定
+            this.Height = this.GetHeightMax();
+            this.Width = this.GetWidthTotal();
 
-            // コントロール位置設定
-            this.m_Control.Location = new Point(this.ControlMargin.Left + this.m_Label.Width + this.m_SeparateSize, this.ControlMargin.Top);
+            // コントロール追加
+            this.m_Layout.RowCount = 1;
+            this.m_Layout.ColumnCount = 2;
+            this.m_Layout.Controls.Add(this.m_Label, 0, 0);
+            this.m_Layout.Controls.Add(this.m_Control, 1, 0);
+
+            // コントロール設定
+            RowStyle rowStyle = new RowStyle(SizeType.Absolute, this.GetHeightMax());
+            ColumnStyle labelColumnStyle = new ColumnStyle(SizeType.Percent, this.m_LabelPercent);
+            ColumnStyle controlColumnStyle = new ColumnStyle(SizeType.Percent, this.m_ControlPercent);
+            this.m_Layout.RowStyles.Add(rowStyle);
+            this.m_Layout.ColumnStyles.Add(labelColumnStyle);
+            this.m_Layout.ColumnStyles.Add(controlColumnStyle);
+
+            // レイアウト再開
+            this.m_Layout.ResumeLayout();
 
             Trace.WriteLine("<<<<= LabeledControl::SetControl_Left()");
         }
+
+        #region サイズ取得
+        /// <summary>
+        /// 幅（Label）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetLabelWidth()
+        {
+            int _Width = this.m_LabelMargin.Left + this.m_LabelMargin.Right + this.m_Label.Width;
+            return _Width;
+        }
+
+        /// <summary>
+        /// 幅（Control）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetControlWidth()
+        {
+            int _Width = this.m_ControlMargin.Left + this.m_ControlMargin.Right + this.m_Control.Width;
+            return _Width;
+        }
+
+        /// <summary>
+        /// 高さ（Label）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetLabelHeight()
+        {
+            int _Height = this.m_LabelMargin.Top + this.m_LabelMargin.Bottom + this.m_Label.Height;
+            return _Height;
+        }
+
+        /// <summary>
+        /// 高さ（Control）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetControlHeight()
+        {
+            int _Height = this.m_ControlMargin.Top + this.m_ControlMargin.Bottom + this.m_Control.Height;
+            return _Height;
+        }
+        /// <summary>
+        /// 高さ（合計）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetWidthMax()
+        {
+            // 幅決定
+            int _LabelWidth = this.GetLabelWidth();
+            int _ControlWidth = this.GetControlWidth();
+
+            // 幅返却
+            if (_LabelWidth > _ControlWidth)
+            {
+                return _LabelWidth;
+            }
+            else
+            {
+                return _ControlWidth;
+            }
+        }
+
+        /// <summary>
+        /// 高さ（最大）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetHeightMax()
+        {
+            // 高さ決定
+            int _LabelHeight = this.GetLabelHeight();
+            int _ControlHeight = this.GetControlHeight();
+
+            // 高さ返却
+            if (_LabelHeight > _ControlHeight)
+            {
+                return _LabelHeight;
+            }
+            else
+            {
+                return _ControlHeight;
+            }
+        }
+
+        /// <summary>
+        /// 高さ（幅）取得
+        /// </summary>
+        /// <returns></returns>
+        private int GetWidthTotal()
+        {
+            // 幅決定
+            int _Width = this.GetLabelWidth() + this.GetControlWidth();
+
+            // 幅返却
+            return _Width;
+        }
+        private int GetHeightTotal()
+        {
+            // 高さ決定
+            int _Height = this.GetLabelHeight() + this.GetControlHeight();
+
+            // 高さ返却
+            return _Height;
+        }
+        #endregion
         #endregion
 
         #region イベント
@@ -360,14 +548,14 @@ namespace Common.Control
         private void OnResize_Top(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Top(object, EventArgs)");
-
+#if __DELETE__
             // コントロールサイズ決定
             this.m_Control.Width = this.Width - this.ControlMargin.Right - this.ControlMargin.Left;
             this.m_Control.Height = this.Height - this.m_ControlMargin.Top - this.m_Label.Height - this.m_SeparateSize;
 
             // コントロール設定
             this.SetControl();
-
+#endif
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Top(object, EventArgs)");
         }
 
@@ -379,14 +567,14 @@ namespace Common.Control
         private void OnResize_Bottom(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Bottom(object, EventArgs)");
-
+#if __DELETE__
             // コントロールサイズ決定
             this.m_Control.Width = this.Width - this.ControlMargin.Right - this.ControlMargin.Left;
             this.m_Control.Height = this.Height - this.m_SeparateSize - this.m_Label.Height - this.m_ControlMargin.Bottom;
 
             // コントロール設定
             this.SetControl();
-
+#endif
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Bottom(object, EventArgs)");
         }
 
@@ -398,14 +586,14 @@ namespace Common.Control
         private void OnResize_Right(object sender, EventArgs e)
         {
             Trace.WriteLine("=>>>> LabeledControl::OnResize_Right(object, EventArgs)");
-
+#if __DELETE__
             // コントロールサイズ決定
             this.m_Control.Width = this.Width - this.m_Label.Width - this.m_SeparateSize - this.ControlMargin.Right;
             this.m_Control.Height = this.Height - this.ControlMargin.Top - this.ControlMargin.Bottom;
 
             // コントロール設定
             this.SetControl();
-
+#endif
             Trace.WriteLine("<<<<= LabeledControl::OnResize_Right(object, EventArgs)");
         }
 
@@ -416,16 +604,16 @@ namespace Common.Control
         /// <param name="e"></param>
         private void OnResize_Left(object sender, EventArgs e)
         {
-            Trace.WriteLine("=>>>> LabeledTextBox::OnResize_Left(object, EventArgs)");
-
+            Trace.WriteLine("=>>>> LabeledControl::OnResize_Left(object, EventArgs)");
+#if __DELETE__
             // コントロールサイズ決定
             this.m_Control.Width = this.Width - this.ControlMargin.Left - this.m_Label.Width - this.m_SeparateSize;
             this.m_Control.Height = this.Height - this.ControlMargin.Top - this.ControlMargin.Bottom;
 
             // コントロール設定
             this.SetControl();
-
-            Trace.WriteLine("<<<<= LabeledTextBox::OnResize_Left(object, EventArgs)");
+#endif
+            Trace.WriteLine("<<<<= LabeledControl::OnResize_Left(object, EventArgs)");
         }
         #endregion
 

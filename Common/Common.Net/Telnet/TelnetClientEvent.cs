@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Diagnostics;
+using System.IO;
 using System.Net;
+using System.Net.Sockets;
 
 namespace Common.Net
 {
@@ -39,6 +35,7 @@ namespace Common.Net
     public delegate void TelnetClientDisonnectedEventHandler(object sender, TelnetClientDisconnectedEventArgs e);
     #endregion
 
+    #region イベントパラメータ
     /// <summary>
     /// 接続イベントパラメータ
     /// </summary>
@@ -69,6 +66,21 @@ namespace Common.Net
     public class TelnetClientReciveEventArgs : EventArgs
     {
         /// <summary>
+        /// 受信ソケット
+        /// </summary>
+        public Socket Socket = null;
+
+        /// <summary>
+        /// 受信サイズ
+        /// </summary>
+        public int Size = 0;
+
+        /// <summary>
+        /// 受信Stream
+        /// </summary>
+        public MemoryStream Stream = null;
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         public TelnetClientReciveEventArgs()
@@ -82,6 +94,21 @@ namespace Common.Net
     /// </summary>
     public class TelnetClientSendEventArgs : EventArgs
     {
+        /// <summary>
+        /// 送信ソケット
+        /// </summary>
+        public Socket Socket = null;
+
+        /// <summary>
+        /// 送信サイズ
+        /// </summary>
+        public int Size = 0;
+
+        /// <summary>
+        /// 送信Stream
+        /// </summary>
+        public MemoryStream Stream = null;
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -109,4 +136,5 @@ namespace Common.Net
         {
         }
     }
+    #endregion
 }

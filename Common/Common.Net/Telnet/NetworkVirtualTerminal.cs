@@ -1,391 +1,397 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Common.Net
 {
+    #region 仮想ネットワーク端末クラス
     /// <summary>
-    /// Telnetコマンド
+    /// 仮想ネットワーク端末クラス
     /// </summary>
-    public enum TelnetCommand : byte
+    public class NetworkVirtualTerminal : TelnetClient
     {
         /// <summary>
-        /// 不明
+        /// 端末速度
         /// </summary>
-        UN = 0x00,
-
-        /// <summary>
-        /// SE
-        /// 副交渉の終わり 
-        /// </summary>
-        SE = 0xf0,
-
-        /// <summary>
-        /// NOP
-        /// 無操作(Synch のデータストリーム部分)
-        /// </summary>
-        NOP = 0xf1,
-
-        /// <summary>
-        /// Data Mark
-        /// (これは常に TCP Urgent 通知を伴う べきである)
-        /// </summary>
-        DM = 0xf2,
-
-        /// <summary>
-        /// Break
-        /// NVT 文字 BRK 
-        /// </summary>
-        BRK = 0xf3,
-
-        /// <summary>
-        /// Interrupt Process
-        /// IP 機能 
-        /// </summary>
-        IP = 0xf4,
-
-        /// <summary>
-        /// Abort output
-        /// AO 機能
-        /// </summary>
-        AO = 0xf5,
-
-        /// <summary>
-        /// Are You There
-        /// AYT 機能 
-        /// </summary>
-        AYT = 0xf6,
-
-        /// <summary>
-        /// Erase character
-        /// EC 機能 
-        /// </summary>
-        EC = 0xf7,
-
-        /// <summary>
-        /// Erase Line
-        /// EL 機能
-        /// </summary>
-        EL = 0xf8,
-
-        /// <summary>
-        /// Go ahead
-        /// GA シグナル
-        /// </summary>
-        GA = 0xf9,
-
-        /// <summary>
-        /// SB
-        /// (後に続くのが示されたオプションの副 交渉であることを表す)
-        /// </summary>
-        SB = 0xfa,
-
-        /// <summary>
-        /// WILL (オプションコード)
-        /// (示されたオプションの実行開始、 または実行中かどうかの確認を望 むことを表す)
-        /// </summary>
-        WILL = 0xfb,
-
-        /// <summary>
-        /// WON'T (オプションコード)
-        /// (示されたオプションの実行拒否ま たは継続実行拒否を表す)
-        /// </summary>
-        WONT = 0xfc,
-
-        /// <summary>
-        /// DO (オプションコード)
-        /// (示されたオプションを実行すると いう相手側の要求、またはあなた がそれを実行することを期待して いるという確認を表す)
-        /// </summary>
-        DO = 0xfd,
-
-        /// <summary>
-        /// DO (オプションコード)
-        /// (示されたオプションを停止すると いう相手側の要求、またはあなた がそれを実行することをもはや期 待しないという確認を表す )
-        /// </summary>
-        DONT = 0xfe,
-
-        /// <summary>
-        /// IAC
-        /// (データバイト)
-        /// </summary>
-        IAC = 0xff,
-    };
-
-    /// <summary>
-    /// Telnetオプション
-    /// </summary>
-    public enum TelnetOption : byte
-    {
-        /// <summary>
-        /// 通常の7ビットデータではなく、8ビットバイナリとしてデータを受信する
-        /// </summary>
-        binary = 0x00,
-
-        /// <summary>
-        /// エコーバックを行う
-        /// </summary>
-        echo = 0x01,
-
-        /// <summary>
-        /// 送受信を切り替えるGO AHEADコマンドの送信を抑制する
-        /// </summary>
-        suppress_go_ahead = 0x03,
-
-        /// <summary>
-        /// Telnetオプション状態を送信する
-        /// </summary>
-        status = 0x05,
-
-        /// <summary>
-        /// コネクションの双方の同期を取る際に使用される
-        /// </summary>
-        timing_mark = 0x06,
-
-        /// <summary>
-        /// 端末タイプを送信する
-        /// （クライアント側のみに対して有効）
-        /// </summary>
-        terminal_type = 0x18,
-
-        /// <summary>
-        /// 端末ウィンドウの行と列の数を送る
-        /// （クライアント側のみに対して有効）
-        /// </summary>
-        window_size = 0x1f,
-
-        /// <summary>
-        /// 端末の送信速度と受信速度を送る
-        /// （クライアント側のみに対して有効）
-        /// </summary>
-        terminal_speed = 0x20,
-
-        /// <summary>
-        /// フロー制御を行う
-        /// </summary>
-        remote_flow_control = 0x21,
-
-        /// <summary>
-        /// リアルラインモードにてデータを行単位で送る
-        /// </summary>
-        linemode = 0x22,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        display_location = 0x23,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        environment_variables = 0x24,
-
-        /// <summary>
-        /// 
-        /// </summary>
-        environment_option = 0x27,
-
-        /// <summary>
-        /// 未使用(または不明)
-        /// </summary>
-        unkown = 0xff,
-    };
-
-    /// <summary>
-    /// ネゴシエーション情報クラス
-    /// </summary>
-    public class NegotiationInfomation
-    {
-        public TelnetCommand IAC = TelnetCommand.IAC;
-        public TelnetCommand Command = TelnetCommand.UN;
-        public TelnetOption Option = TelnetOption.unkown;
-        public MemoryStream Stream = null;
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
-        public NegotiationInfomation()
+        public class TerminalSpeed
         {
-        }
+            public int Input;
+            public int Output;
+        };
 
         /// <summary>
-        /// コピーコンストラクタ
+        /// 受信イベントパラメータ
         /// </summary>
-        /// <param name="info"></param>
-        public NegotiationInfomation(NegotiationInfomation info)
+        public class NetworkVirtualTerminalReadEventArgs : EventArgs
         {
-            this.IAC = info.IAC;
-            this.Command = info.Command;
-            this.Option = info.Option;
-            this.Stream = info.Stream;
-        }
+            public StringBuilder ReadStringBuilder = new StringBuilder();
 
-
-        public override string ToString()
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-
-            stringBuilder.Append("IAC ");
-            stringBuilder.Append(this.Command.ToString() + " ");
-            if (this.Option != TelnetOption.unkown)
+            /// <summary>
+            /// コンストラクタ
+            /// </summary>
+            public NetworkVirtualTerminalReadEventArgs()
+                : base()
             {
-                stringBuilder.Append(this.Option.ToString() + " ");
             }
-            if (this.Stream != null)
+        }
+
+        /// <summary>
+        /// 送信イベントパラメータ
+        /// </summary>
+        public class NetworkVirtualTerminalWriteEventArgs : EventArgs
+        {
+            /// <summary>
+            /// コンストラクタ
+            /// </summary>
+            public NetworkVirtualTerminalWriteEventArgs()
+                : base()
             {
-                foreach (byte data in this.Stream.ToArray())
-                {
-                    stringBuilder.Append(string.Format("{0,2:x2} ", data));
-                }
             }
-
-            return stringBuilder.ToString();
         }
-    };
-
-    public class NegotiationStatus
-    {
-        public bool DO = false;
-        public bool DONT = false;
-        public bool WILL = false;
-        public bool WONT = false;
-        public bool SB = false;
-        public bool SE = false;
-    };
-
-    public class TemplateStatus<T>
-    {
-        public NegotiationStatus Send = new NegotiationStatus();
-        public NegotiationStatus Recv = new NegotiationStatus();
-        public bool Negotiated = false;
-        public T Value;
-
-        public TemplateStatus()
-        {
-            this.Value = default(T);
-        }
-        public TemplateStatus(T value)
-        {
-            this.Value = value;
-        }
-    };
-
-    /// <summary>
-    /// 仮想端末クラス
-    /// </summary>
-    public class NetworkVirtualTerminal
-    {
-        #region 送信文字コード
-        /// <summary>
-        /// 送信文字コード
-        /// </summary>
-        private Encoding m_SendEncoding;
 
         /// <summary>
-        /// 送信文字コード
+        /// 受信イベント
         /// </summary>
-        public Encoding SendEncoging { get { return this.m_SendEncoding; } set { this.m_SendEncoding = value; } }
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void NetworkVirtualTerminalReadEventHandler(object sender, NetworkVirtualTerminalReadEventArgs e);
+
+        /// <summary>
+        /// 送信イベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void NetworkVirtualTerminalWriteEventHandler(object sender, NetworkVirtualTerminalWriteEventArgs e);
+
+        /// <summary>
+        /// 読込イベント
+        /// </summary>
+        public NetworkVirtualTerminalReadEventHandler OnRead;
+
+        /// <summary>
+        /// 書込イベント
+        /// </summary>
+        public NetworkVirtualTerminalWriteEventHandler OnWrite;
+
+        #region 受信タスク
+        /// <summary>
+        /// 受信タスクオブジェクト
+        /// </summary>
+        private Task m_ReciveTask = null;
+
+        /// <summary>
+        /// 受信タスクトークン
+        /// </summary>
+        private CancellationTokenSource m_CancellationTokenSource = null;
         #endregion
 
-        #region 受信文字コード
+        #region 端末情報
+        #region 文字コード(Local)
         /// <summary>
-        /// 受信文字コード
+        /// 文字コード(Local)
         /// </summary>
-        private Encoding m_RecvEncoding;
+        private Encoding m_LocalEncoding;
 
         /// <summary>
-        /// 受信文字コード
+        /// 文字コード(Local)
         /// </summary>
-        public Encoding RecvEncodin { get { return this.m_SendEncoding; } set { this.m_RecvEncoding = value; } }
+        public Encoding LocalEncoding { get { return this.m_LocalEncoding; } set { this.m_LocalEncoding = value; } }
+        #endregion
+
+        #region 文字コード(Remote)
+        /// <summary>
+        /// 文字コード(Remote)
+        /// </summary>
+        private Encoding m_RemoteEncoding;
+
+        /// <summary>
+        /// 文字コード(Remote)
+        /// </summary>
+        public Encoding RemoteEncoding { get { return this.m_RemoteEncoding; } set { this.m_RemoteEncoding = value; } }
+        #endregion
+
+        /// <summary>
+        /// エコーモード
+        /// </summary>
+        private bool m_TelEcho = false;
+
+        /// <summary>
+        /// ローカルエコー
+        /// </summary>
+        private int m_LocalEcho = 0;
+
+        #region 端末種別
+        /// <summary>
+        /// 端末種別
+        /// </summary>
+        private string m_TerminalType = "xterm";
         #endregion
 
         #region 端末サイズ
         /// <summary>
         /// 端末サイズ
         /// </summary>
-        private TemplateStatus<Size> TerminalSize = new TemplateStatus<Size>(new Size() { Width = 80, Height = 40 });
+        private Size m_WindowSize = new Size() { Width = 80, Height = 40 };
         #endregion
 
-        #region エコー
+        #region 端末速度
         /// <summary>
-        /// エコー
+        /// 端末速度
         /// </summary>
-        private TemplateStatus<bool> ServerEcho = new TemplateStatus<bool>(false);
+        private TerminalSpeed m_TerminalSpeed = new TerminalSpeed() { Input = 38400, Output = 38400 };
+        #endregion
+
         /// <summary>
-        /// エコー
+        /// バイナリ送信モード
         /// </summary>
-        private TemplateStatus<bool> LocalEcho = new TemplateStatus<bool>(false);
+        private bool m_TelBinSend = false;
+
+        /// <summary>
+        /// バイナリ受信モード
+        /// </summary>
+        private bool m_TelBinRecv = false;
+
+        /// <summary>
+        /// 行送信モード
+        /// </summary>
+        private bool m_TelLineMode = false;
+
+        /// <summary>
+        /// オプション定義(Local)
+        /// </summary>
+        private Dictionary<TelnetOption, NegotiationStatus> m_Local = new Dictionary<TelnetOption, NegotiationStatus>();
+
+        /// <summary>
+        /// オプション定義(Remote)
+        /// </summary>
+        private Dictionary<TelnetOption, NegotiationStatus> m_Remote = new Dictionary<TelnetOption, NegotiationStatus>();
         #endregion
 
-        #region go_ahead
-        private TemplateStatus<bool> GoAhead = new TemplateStatus<bool>(false);
-        #endregion
-
-        #region terminal_type
-        private TemplateStatus<string> TerminalType = new TemplateStatus<string>("xterm");
-        #endregion
-
-        #region terminal_speed
-        private TemplateStatus<Dictionary<string,int>> TerminalSpeed = new TemplateStatus<Dictionary<string, int>>(new Dictionary<string, int>());
-        #endregion
-
-        #region display_location
-        private TemplateStatus<Object> DisplayLocation = new TemplateStatus<Object>();
-        #endregion
-
-        #region environment_option
-        private TemplateStatus<Object> EnvironmentOption = new TemplateStatus<Object>();
-        #endregion
-
-        #region status
-        private TemplateStatus<bool> Status = new TemplateStatus<bool>(false);
-        #endregion
-
-        #region remote_flow_control
-        private TemplateStatus<bool> RemoteFlowControl = new TemplateStatus<bool>(false);
-        #endregion
+        #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        public NetworkVirtualTerminal(string host)
+            : base(host)
+        {
+            // 初期化
+            this.Initialization();
+        }
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public NetworkVirtualTerminal()
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        public NetworkVirtualTerminal(string host, int port)
+            : base(host, port)
+        {
+            // 初期化
+            this.Initialization();
+        }
+        #endregion
+
+        #region デストラクタ
+        /// <summary>
+        /// デストラクタ
+        /// </summary>
+        ~NetworkVirtualTerminal()
+        {
+        }
+        #endregion
+
+        #region 初期化
+        /// <summary>
+        /// 初期化
+        /// </summary>
+        private void Initialization()
         {
             // デフォルト設定
-            this.m_SendEncoding = Encoding.GetEncoding("UTF-8");
-            this.m_RecvEncoding = Encoding.GetEncoding("UTF-8");
-            this.TerminalSize.Value.Width = 124;
-            this.TerminalSize.Value.Height = 32;
-            this.ServerEcho.Value = true;
-            this.LocalEcho.Value = false;
-            this.GoAhead.Value = false;
-            this.TerminalSpeed.Value["min"] = 38400;
-            this.TerminalSpeed.Value["max"] = 38400;
+            this.m_LocalEncoding = Encoding.GetEncoding("UTF-8");
+            this.m_RemoteEncoding = Encoding.GetEncoding("UTF-8");
+
+            // Telnetオプション状態初期化
+            for (TelnetOption opt = TelnetOption.binary; opt < TelnetOption.max; opt++)
+            {
+                this.m_Local[opt] = new NegotiationStatus();
+                this.m_Remote[opt] = new NegotiationStatus();
+            }
+            this.m_Local[TelnetOption.binary].Accept = true;
+            this.m_Remote[TelnetOption.binary].Accept = true;
+            this.m_Local[TelnetOption.suppress_go_ahead].Accept = true;
+            this.m_Remote[TelnetOption.suppress_go_ahead].Accept = true;
+            this.m_Remote[TelnetOption.echo].Accept = true;
+            this.m_Local[TelnetOption.terminal_type].Accept = true;
+            this.m_Local[TelnetOption.terminal_speed].Accept = true;
+            this.m_Local[TelnetOption.window_size].Accept = true;
+            this.m_Remote[TelnetOption.window_size].Accept = true;
+
+            // イベントハンドラ設定
+            this.OnConnected += this.ConnectedEvent;
+            this.OnSend += this.SendEvent;
+            this.OnRecive += this.ReciveEvent;
+            this.OnDisconnected += this.DisonnectedEvent;
         }
+        #endregion
+
+        #region 非同期コールバックメソッド
+        /// <summary>
+        /// 非同期接続のコールバックメソッド
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConnectedEvent(object sender, TelnetClientConnectedEventArgs e)
+        {
+            // 受信タスクトークン生成
+            this.m_CancellationTokenSource = new CancellationTokenSource();
+
+            // 受信タスク開始
+            this.m_ReciveTask = Task.Factory.StartNew(() =>
+            {
+                this.ReciveTask();
+            }, this.m_CancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 非同期切断のコールバックメソッド
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DisonnectedEvent(object sender, TelnetClientDisconnectedEventArgs e)
+        {
+            // 受信タスクトークン破棄
+            if (this.m_CancellationTokenSource != null)
+            {
+                this.m_CancellationTokenSource.Cancel();
+            }
+
+            try
+            {
+                // 受信タスク終了待ち(10秒)
+                if (this.m_ReciveTask != null)
+                {
+                    this.m_ReciveTask.Wait(10000, this.m_CancellationTokenSource.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // ロギング
+                this.Logger.WarnFormat("受信タスク終了：[OperationCanceledException]");
+            }
+            catch (AggregateException)
+            {
+                // ロギング
+                this.Logger.WarnFormat("受信タスク終了：[AggregateException]");
+            }
+
+            // 受信タスクトークン破棄
+            if (this.m_CancellationTokenSource != null)
+            {
+                this.m_CancellationTokenSource.Dispose();
+                this.m_CancellationTokenSource = null;
+            }
+        }
+
+        /// <summary>
+        /// 非同期送信のコールバックメソッド
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SendEvent(object sender, TelnetClientSendEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// 非同期受信のコールバックメソッド
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReciveEvent(object sender, TelnetClientReciveEventArgs e)
+        {
+            // 受信判定
+            if (e.Size > 0)
+            {
+                // 受信データオブジェクト
+                MemoryStream memoryStream = new MemoryStream();
+
+                // ネゴシエーション
+                this.Negotiation(e.Stream, memoryStream);
+
+                if (memoryStream.Length > 0)
+                {
+                    // ロギング
+                    this.Logger.Info(this.RemoteEncoding.GetString(memoryStream.ToArray()));
+
+                    // 受信通知
+                    if (this.OnRead != null)
+                    {
+                        // パラメータ生成
+                        NetworkVirtualTerminalReadEventArgs args = new NetworkVirtualTerminalReadEventArgs();
+                        args.ReadStringBuilder.Append(this.RemoteEncoding.GetString(memoryStream.ToArray()));
+
+                        // イベント呼出し
+                        this.OnRead(this, args);
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region 受信タスク
+        /// <summary>
+        /// 受信タスク
+        /// </summary>
+        private void ReciveTask()
+        {
+            // 無限ループ
+            while (true)
+            {
+                // Taskキャンセル判定
+                if (this.m_CancellationTokenSource.IsCancellationRequested)
+                {
+                    // キャンセルされたらTaskを終了する.
+                    break;
+                }
+
+                // 受信
+                this.Recive();
+            }
+
+            // 切断
+            this.DisConnect();
+        }
+        #endregion
 
         #region ネゴシエーション
         /// <summary>
         /// ネゴシエーション
         /// </summary>
         /// <param name="recive"></param>
+        /// <param name="output"></param>
         /// <returns></returns>
-        public MemoryStream Negotiation(MemoryStream recive)
+        private void Negotiation(MemoryStream recive, MemoryStream output)
         {
-            //Debug.WriteLine(this.ToString(recive.ToArray(), (int)recive.Length));
+            // ロギング
+            this.Logger.Info("＜受信データ＞");
 
             // 解析
-            Debug.WriteLine("受信データ：");
-            List<NegotiationInfomation> parseResult = this.Parse(recive.ToArray());
+            List<NegotiationInfomation> parseResult = this.Parse(recive.ToArray(), output);
 
             // 応答作成
-            MemoryStream _NegotiationMemoryStream = this.Response(parseResult);
+            if (parseResult.Count > 0)
+            {
+                // ロギング
+                this.Logger.Info("＜送信データ＞");
 
-            // MemorStreamを返却する
-            return _NegotiationMemoryStream;
+                // 応答送信
+                this.Response(parseResult);
+            }
         }
         #endregion
 
@@ -397,33 +403,45 @@ namespace Common.Net
         /// <returns></returns>
         private List<NegotiationInfomation> Parse(byte[] parseData)
         {
+            // 解析
+            return this.Parse(parseData, new MemoryStream());
+        }
+
+        /// <summary>
+        /// 解析
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        private List<NegotiationInfomation> Parse(byte[] parseData, MemoryStream stream)
+        {
             // 返却オブジェクト生成
             List<NegotiationInfomation> negotiationInfomations = new List<NegotiationInfomation>();
 
+            // 解析データ分繰返し
             for (int i = 0; i < parseData.Length;)
             {
-                //Debug.WriteLine("解析データ：0x" + string.Format("{0,2:x2}", parseData[i]));
+                // データがIAC？
                 if (parseData[i] == (byte)TelnetCommand.IAC)
                 {
-                    // 解析
+                    // IAC解析
                     NegotiationInfomation negotiationInfomation = this.ParseIAC(parseData, ref i);
                     if (negotiationInfomation != null)
                     {
                         // リスト追加
-                        Debug.WriteLine("　" + negotiationInfomation.ToString());
+                        this.Logger.Info("　" + negotiationInfomation.ToString());
                         negotiationInfomations.Add(negotiationInfomation);
                     }
                     else
                     {
-                        // TODO:例外
-                        break;
+                        // 例外
+                        throw new NetworkVirtualTerminalException("IAC解析に失敗しました");
                     }
                 }
                 else
                 {
-                    // TODO:例外
-                    Debug.Fail("Illical Telnet Command(Not IAC).");
-                    break;
+                    // バッファに書込み
+                    stream.WriteByte(parseData[i++]);
                 }
             }
 
@@ -431,6 +449,12 @@ namespace Common.Net
             return negotiationInfomations;
         }
 
+        /// <summary>
+        /// 解析(IAC)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseIAC(byte[] parseData, ref int index)
         {
             // インデックス更新
@@ -440,24 +464,36 @@ namespace Common.Net
             switch (parseData[index])
             {
                 case (byte)TelnetCommand.DO:
+                    // 解析(DO)
                     return this.ParseDO(parseData, ref index);
                 case (byte)TelnetCommand.DONT:
+                    // 解析(DONT)
                     return this.ParseDONT(parseData, ref index);
                 case (byte)TelnetCommand.WILL:
+                    // 解析(WILL)
                     return this.ParseWILL(parseData, ref index);
                 case (byte)TelnetCommand.WONT:
+                    // 解析(WONT)
                     return this.ParseWONT(parseData, ref index);
                 case (byte)TelnetCommand.SB:
+                    // 解析(SB)
                     return this.ParseSB(parseData, ref index);
                 case (byte)TelnetCommand.SE:
+                    // 解析(SB)
                     return this.ParseSE(parseData, ref index);
                 default:
                     // TODO:異常終了
-                    Debug.WriteLine("[ParseIAC] UNKNOWN Telnet Command(0x" + string.Format("{0,2:x2}", parseData[index]) + ").");
+                    this.Logger.Error("[ParseIAC] UNKNOWN Telnet Command(0x" + string.Format("{0,2:x2}", parseData[index]) + ").");
                     return null;
             }
         }
 
+        /// <summary>
+        /// 解析(DO)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseDO(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -473,6 +509,12 @@ namespace Common.Net
             return negotiationInfomation;
         }
 
+        /// <summary>
+        /// 解析(DONT)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseDONT(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -488,6 +530,12 @@ namespace Common.Net
             return negotiationInfomation;
         }
 
+        /// <summary>
+        /// 解析(WILL)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseWILL(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -499,11 +547,16 @@ namespace Common.Net
             // Telnetオプション設定
             negotiationInfomation.Option = (TelnetOption)parseData[index++];
 
-
             // 返却
             return negotiationInfomation;
         }
 
+        /// <summary>
+        /// 解析(WONT)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseWONT(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -519,6 +572,12 @@ namespace Common.Net
             return negotiationInfomation;
         }
 
+        /// <summary>
+        /// 解析(SB)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseSB(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -530,13 +589,17 @@ namespace Common.Net
             // Telnetオプション設定
             negotiationInfomation.Option = (TelnetOption)parseData[index++];
 
-            // データ部格納
-            for (; ; index++)
+            // インデックス繰り返し
+            for (; index < parseData.Length; index++)
             {
-                if (parseData[index] == 0xff && parseData[index + 1] == 0xf0)
+                // 副交渉の終わり？
+                if (parseData[index] == (byte)TelnetCommand.IAC && parseData[index + 1] == (byte)TelnetCommand.SE)
                 {
+                    // 副交渉の終わりだった場合は繰り返し終了
                     break;
                 }
+
+                // データ部格納
                 if (negotiationInfomation.Stream == null)
                 {
                     negotiationInfomation.Stream = new MemoryStream();
@@ -548,6 +611,12 @@ namespace Common.Net
             return negotiationInfomation;
         }
 
+        /// <summary>
+        /// 解析(SE)
+        /// </summary>
+        /// <param name="parseData"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private NegotiationInfomation ParseSE(byte[] parseData, ref int index)
         {
             // 返却オブジェクト生成
@@ -561,476 +630,516 @@ namespace Common.Net
         }
         #endregion
 
-        #region 応答(Response)
+        #region 応答送信(Response)
         /// <summary>
-        /// 応答
+        /// 応答送信
         /// </summary>
         /// <param name="infoList"></param>
         /// <returns></returns>
-        private MemoryStream Response(List<NegotiationInfomation> infoList)
+        private void Response(List<NegotiationInfomation> infoList)
         {
-            // 返却オブジェクト生成
-            MemoryStream memoryStream = new MemoryStream();
-
-            this.ResponseServerEcho(memoryStream);
-            this.ResponseGoAhead(memoryStream);
-
             // リスト数分繰返し
             foreach (NegotiationInfomation info in infoList)
             {
                 // コマンド毎に分岐
-                switch(info.Command)
+                switch (info.Command)
                 {
                     case TelnetCommand.DO:
-                        this.ResponseDO(info, memoryStream);
+                        // 応答送信(DO)
+                        this.ResponseDO(info);
                         break;
                     case TelnetCommand.DONT:
-                        this.ResponseDONT(info, memoryStream);
+                        // 応答送信(DONT)
+                        this.ResponseDONT(info);
                         break;
                     case TelnetCommand.WILL:
-                        this.ResponseWILL(info, memoryStream);
+                        // 応答送信(WILL)
+                        this.ResponseWILL(info);
                         break;
                     case TelnetCommand.WONT:
-                        this.ResponseWONT(info, memoryStream);
+                        // 応答送信(WONT)
+                        this.ResponseWONT(info);
                         break;
                     case TelnetCommand.SB:
-                        this.ResponseSB(info, memoryStream);
+                        // 応答送信(SB)
+                        this.ResponseSB(info);
                         break;
                     case TelnetCommand.SE:
-                        this.ResponseSE(info, memoryStream);
+                        // 応答送信(SE)
+                        this.ResponseSE(info);
                         break;
                     default:
                         // 異常終了
-                        Debug.WriteLine("[Response] UNKNOWN Telnet Command(" + info.Command.ToString() + ").");
-                        return null;
+                        this.Logger.Error("[Response] UNKNOWN Telnet Command(" + info.Command.ToString() + ").");
+                        break;
                 }
-            }
-
-            // 返却
-            Debug.WriteLine("応答データ：");
-            this.Parse(memoryStream.ToArray());
-            return memoryStream;
-        }
-        private void ResponseServerEcho(MemoryStream stream)
-        {
-            if (this.ServerEcho.Send.DO == false)
-            {
-                stream.WriteByte((byte)TelnetCommand.IAC);
-                if (this.ServerEcho.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.DO);
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.DONT);
-                }
-                stream.WriteByte((byte)TelnetOption.echo);
-                this.ServerEcho.Send.DO = true;
-            }
-        }
-        private void ResponseGoAhead(MemoryStream stream)
-        {
-            if (this.GoAhead.Send.DO == false)
-            {
-                if (!this.GoAhead.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.DO);
-                    stream.WriteByte((byte)TelnetOption.suppress_go_ahead);
-                }
-                this.GoAhead.Send.DO = true;
-            }
-            if (this.GoAhead.Send.WILL == false)
-            {
-                if (!this.GoAhead.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WILL);
-                    stream.WriteByte((byte)TelnetOption.suppress_go_ahead);
-                }
-                this.GoAhead.Send.WILL = true;
             }
         }
 
-        #region ResponseDO
-        private void ResponseDO(NegotiationInfomation info, MemoryStream stream)
+        /// <summary>
+        /// 応答送信
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="option"></param>
+        private void SendBack(TelnetCommand command, TelnetOption option)
         {
-            // オプション毎に分岐
-            switch(info.Option)
+            // 送信メモリオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)command);
+            sendStream.WriteByte((byte)option);
+
+            // 送信
+            this.Parse(sendStream.ToArray());
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// ウィンドウサイズ送信
+        /// </summary>
+        private void SendWinSize()
+        {
+            // 送信メモリオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SB);
+            sendStream.WriteByte((byte)TelnetOption.window_size);
+
+            byte[] width = BitConverter.GetBytes(this.m_WindowSize.Width);
+            byte[] height = BitConverter.GetBytes(this.m_WindowSize.Height);
+            sendStream.WriteByte(width[1]);
+            sendStream.WriteByte(width[0]);
+            sendStream.WriteByte(height[1]);
+            sendStream.WriteByte(height[0]);
+
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SE);
+
+            // 送信
+            this.Parse(sendStream.ToArray());
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 端末種別送信
+        /// </summary>
+        private void SendTerminalType()
+        {
+            // 送信メモリオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SB);
+            sendStream.WriteByte((byte)TelnetOption.terminal_type);
+
+            // ASCII エンコード
+            byte[] byteData = System.Text.Encoding.ASCII.GetBytes(this.m_TerminalType);
+            sendStream.WriteByte(0x00);
+            sendStream.Write(byteData, 0, byteData.Length);
+
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SE);
+
+            // 送信
+            this.Parse(sendStream.ToArray());
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 端末速度送信
+        /// </summary>
+        private void SendTerminalSpeed()
+        {
+            // 送信メモリオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SB);
+            sendStream.WriteByte((byte)TelnetOption.terminal_speed);
+
+            // ASCII エンコード
+            byte[] byteInputData = System.Text.Encoding.ASCII.GetBytes(this.m_TerminalSpeed.Input.ToString());
+            byte[] byteOutputData = System.Text.Encoding.ASCII.GetBytes(this.m_TerminalSpeed.Output.ToString());
+
+            sendStream.WriteByte(0x00);
+            sendStream.Write(byteInputData, 0, byteInputData.Length);
+            sendStream.WriteByte(Convert.ToByte(','));
+            sendStream.Write(byteOutputData, 0, byteOutputData.Length);
+
+            sendStream.WriteByte((byte)TelnetCommand.IAC);
+            sendStream.WriteByte((byte)TelnetCommand.SE);
+
+            // 送信
+            this.Parse(sendStream.ToArray());
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 応答送信(DO)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseDO(NegotiationInfomation info)
+        {
+            if (info.Option <= TelnetOption.max)
+            {
+                // オプション状態で分岐
+                switch (this.m_Local[info.Option].Status)
+                {
+                    case TelnetOptionStatus.No:
+                        if (this.m_Local[info.Option].Accept)
+                        {
+                            this.m_Local[info.Option].Status = TelnetOptionStatus.Yes;
+                            SendBack(TelnetCommand.WILL, info.Option);
+                        }
+                        else
+                        {
+                            SendBack(TelnetCommand.WONT, info.Option);
+                        }
+                        break;
+                    case TelnetOptionStatus.WantNo:
+                        switch (this.m_Local[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.Yes;
+                                break;
+                        }
+                        break;
+                    case TelnetOptionStatus.WantYes:
+                        switch (this.m_Local[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.Yes;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.WantNo;
+                                this.m_Local[info.Option].Queue = TelnetOptionQueue.Empty;
+                                SendBack(TelnetCommand.WONT, info.Option);
+                                break;
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                SendBack(TelnetCommand.WONT, info.Option);
+            }
+
+            switch (info.Option)
+            {
+                case TelnetOption.binary:
+                    switch (this.m_Local[TelnetOption.binary].Status)
+                    {
+                        case TelnetOptionStatus.Yes:
+                            this.m_TelBinSend = true;
+                            break;
+                        case TelnetOptionStatus.No:
+                            this.m_TelBinSend = false;
+                            break;
+                    }
+                    break;
+
+                case TelnetOption.window_size:
+                    if (this.m_Local[TelnetOption.window_size].Status == TelnetOptionStatus.Yes)
+                    {
+                        SendWinSize();
+                    }
+                    break;
+
+                case TelnetOption.suppress_go_ahead:
+                    if (this.m_Local[TelnetOption.suppress_go_ahead].Status == TelnetOptionStatus.Yes)
+                    {
+                        this.m_TelLineMode = false;
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 応答送信(DONT)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseDONT(NegotiationInfomation info)
+        {
+            if (info.Option <= TelnetOption.max)
+            {
+                switch (this.m_Local[info.Option].Status)
+                {
+                    case TelnetOptionStatus.Yes:
+                        this.m_Local[info.Option].Status = TelnetOptionStatus.No;
+                        SendBack(TelnetCommand.WONT, info.Option);
+                        break;
+
+                    case TelnetOptionStatus.WantNo:
+                        switch (this.m_Local[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.WantYes;
+                                this.m_Local[info.Option].Queue = TelnetOptionQueue.Empty;
+                                SendBack(TelnetCommand.WILL, info.Option);
+                                break;
+                        }
+                        break;
+
+                    case TelnetOptionStatus.WantYes:
+                        switch (this.m_Local[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Local[info.Option].Status = TelnetOptionStatus.No;
+                                this.m_Local[info.Option].Queue = TelnetOptionQueue.Empty;
+                                break;
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                SendBack(TelnetCommand.WONT, info.Option);
+            }
+
+            switch (info.Option)
+            {
+                case TelnetOption.binary:
+                    switch (this.m_Local[TelnetOption.binary].Status)
+                    {
+                        case TelnetOptionStatus.Yes:
+                            this.m_TelBinSend = true;
+                            break;
+                        case TelnetOptionStatus.No:
+                            this.m_TelBinSend = false;
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 応答送信(WILL)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseWILL(NegotiationInfomation info)
+        {
+            if (info.Option <= TelnetOption.max)
+            {
+                switch (this.m_Remote[info.Option].Status)
+                {
+                    case TelnetOptionStatus.No:
+                        if (this.m_Remote[info.Option].Accept)
+                        {
+                            SendBack(TelnetCommand.DO, info.Option);
+                            this.m_Remote[info.Option].Status = TelnetOptionStatus.Yes;
+                        }
+                        else
+                        {
+                            SendBack(TelnetCommand.DONT, info.Option);
+                        }
+                        break;
+
+                    case TelnetOptionStatus.WantNo:
+                        switch (this.m_Remote[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.Yes;
+                                break;
+                        }
+                        break;
+
+                    case TelnetOptionStatus.WantYes:
+                        switch (this.m_Remote[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.Yes;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.WantNo;
+                                this.m_Remote[info.Option].Queue = TelnetOptionQueue.Empty;
+                                SendBack(TelnetCommand.DONT, info.Option);
+                                break;
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                SendBack(TelnetCommand.DONT, info.Option);
+            }
+
+            switch (info.Option)
             {
                 case TelnetOption.echo:
-                    this.ResponseDO_echo(info, stream);
+                    if (this.m_TelEcho)
+                    {
+                        switch (this.m_Remote[TelnetOption.echo].Status)
+                        {
+                            case TelnetOptionStatus.Yes:
+                                this.m_LocalEcho = 0;
+                                break;
+                            case TelnetOptionStatus.No:
+                                this.m_LocalEcho = 1;
+                                break;
+                        }
+                    }
+                    if (this.m_Remote[TelnetOption.echo].Status == TelnetOptionStatus.Yes)
+                    {
+                        this.m_TelLineMode = false;
+                    }
                     break;
+
+                case TelnetOption.suppress_go_ahead:
+                    if (this.m_Remote[TelnetOption.suppress_go_ahead].Status == TelnetOptionStatus.Yes)
+                    {
+                        this.m_TelLineMode = false;
+                    }
+                    break;
+
+                case TelnetOption.binary:
+                    switch (this.m_Remote[TelnetOption.binary].Status)
+                    {
+                        case TelnetOptionStatus.Yes:
+                            this.m_TelBinRecv = true;
+                            break;
+                        case TelnetOptionStatus.No:
+                            this.m_TelBinRecv = true;
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 応答送信(WONT)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseWONT(NegotiationInfomation info)
+        {
+            if (info.Option <= TelnetOption.max)
+            {
+                switch (this.m_Remote[info.Option].Status)
+                {
+                    case TelnetOptionStatus.Yes:
+                        this.m_Remote[info.Option].Status = TelnetOptionStatus.No;
+                        SendBack(TelnetCommand.DONT, info.Option);
+                        break;
+
+                    case TelnetOptionStatus.WantNo:
+                        switch (this.m_Remote[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.WantYes;
+                                this.m_Remote[info.Option].Queue = TelnetOptionQueue.Empty;
+                                SendBack(TelnetCommand.DO, info.Option);
+                                break;
+                        }
+                        break;
+
+                    case TelnetOptionStatus.WantYes:
+                        switch (this.m_Remote[info.Option].Queue)
+                        {
+                            case TelnetOptionQueue.Empty:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.No;
+                                break;
+                            case TelnetOptionQueue.Opposite:
+                                this.m_Remote[info.Option].Status = TelnetOptionStatus.No;
+                                this.m_Remote[info.Option].Queue = TelnetOptionQueue.Empty;
+                                break;
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                SendBack(TelnetCommand.DONT, info.Option);
+            }
+
+            switch (info.Option)
+            {
+                case TelnetOption.echo:
+                    if (this.m_TelEcho)
+                    {
+                        switch (this.m_Remote[TelnetOption.echo].Status)
+                        {
+                            case TelnetOptionStatus.Yes:
+                                this.m_LocalEcho = 0;
+                                break;
+                            case TelnetOptionStatus.No:
+                                this.m_LocalEcho = 1;
+                                break;
+                        }
+                    }
+                    if (this.m_Remote[TelnetOption.echo].Status == TelnetOptionStatus.Yes)
+                    {
+                        this.m_TelLineMode = false;
+                    }
+                    break;
+
+                case TelnetOption.binary:
+                    switch (this.m_Remote[TelnetOption.binary].Status)
+                    {
+                        case TelnetOptionStatus.Yes:
+                            this.m_TelBinRecv = true;
+                            break;
+                        case TelnetOptionStatus.No:
+                            this.m_TelBinRecv = false;
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 応答送信(SB)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseSB(NegotiationInfomation info)
+        {
+            // オプション毎に分岐
+            switch (info.Option)
+            {
                 case TelnetOption.terminal_type:
-                    this.ResponseDO_terminal_type(info, stream);
-                    break;
-                case TelnetOption.terminal_speed:
-                    this.ResponseDO_terminal_speed(info, stream);
+                    // TODO:未実装
+                    if (info.Stream.Length > 0 && info.Stream.ToArray()[0] == 0x01)
+                    {
+                        this.SendTerminalType();
+                    }
                     break;
                 case TelnetOption.window_size:
-                    this.ResponseDO_window_size(info, stream);
-                    break;
-                case TelnetOption.display_location:
-                    this.ResponseDO_display_location(info, stream);
-                    break;
-                case TelnetOption.environment_option:
-                    this.ResponseDO_environment_option(info, stream);
-                    break;
-                case TelnetOption.suppress_go_ahead:
-                    this.ResponseDO_suppress_go_ahead(info, stream);
-                    break;
-                case TelnetOption.remote_flow_control:
-                    this.ResponseDO_remote_flow_control(info, stream);
-                    break;
-                default:
-                    // TODO:異常終了
-                    Debug.WriteLine("Response [DO] UNKNOWN Telnet Option(" + info.Option.ToString() + ").");
-                    break;
-            }
-        }
-        private void ResponseDO_echo(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.LocalEcho.Recv.DO)
-            {
-                if (this.LocalEcho.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WILL);
-                    stream.WriteByte((byte)TelnetOption.echo);
-                    this.LocalEcho.Recv.DO = true;
-                    this.LocalEcho.Send.WILL = true;
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WONT);
-                    stream.WriteByte((byte)TelnetOption.echo);
-                    this.LocalEcho.Recv.DO = true;
-                    this.LocalEcho.Send.WONT = true;
-                }
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_terminal_type(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.TerminalType.Recv.DO)
-            {
-                stream.WriteByte((byte)TelnetCommand.IAC);
-                stream.WriteByte((byte)TelnetCommand.WILL);
-                stream.WriteByte((byte)TelnetOption.terminal_type);
-                this.TerminalType.Recv.DO = true;
-                this.TerminalType.Send.WILL = true;
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_terminal_speed(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.TerminalSpeed.Recv.DO)
-            {
-                stream.WriteByte((byte)TelnetCommand.IAC);
-                stream.WriteByte((byte)TelnetCommand.WILL);
-                stream.WriteByte((byte)TelnetOption.terminal_speed);
-                this.TerminalSpeed.Recv.DO = true;
-                this.TerminalSpeed.Send.WILL = true;
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_window_size(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.TerminalSize.Recv.DO)
-            {
-                stream.WriteByte((byte)TelnetCommand.IAC);
-                stream.WriteByte((byte)TelnetCommand.SB);
-                stream.WriteByte((byte)TelnetOption.window_size);
-
-                byte[] width = BitConverter.GetBytes(this.TerminalSize.Value.Width);
-                byte[] height = BitConverter.GetBytes(this.TerminalSize.Value.Height);
-                stream.WriteByte(width[1]);
-                stream.WriteByte(width[0]);
-                stream.WriteByte(height[1]);
-                stream.WriteByte(height[0]);
-
-                stream.WriteByte((byte)TelnetCommand.IAC);
-                stream.WriteByte((byte)TelnetCommand.SE);
-
-                this.TerminalSize.Recv.DO = true;
-                this.TerminalSize.Send.SB = true;
-                this.TerminalSize.Send.SE = true;
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_display_location(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.DisplayLocation.Recv.DO)
-            {
-                this.DisplayLocation.Recv.DO = true;
-
-                if (this.DisplayLocation.Value == null)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WONT);
-                    stream.WriteByte((byte)TelnetOption.display_location);
-                    this.DisplayLocation.Send.WONT = true;
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WILL);
-                    stream.WriteByte((byte)TelnetOption.display_location);
-                    this.DisplayLocation.Send.WILL = true;
-                }
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_environment_option(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.EnvironmentOption.Recv.DO)
-            {
-                this.EnvironmentOption.Recv.DO = true;
-
-                if (this.EnvironmentOption.Value == null)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WONT);
-                    stream.WriteByte((byte)TelnetOption.environment_option);
-                    this.EnvironmentOption.Send.WONT = true;
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WILL);
-                    stream.WriteByte((byte)TelnetOption.environment_option);
-                    this.EnvironmentOption.Send.WILL = true;
-                }
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        private void ResponseDO_suppress_go_ahead(NegotiationInfomation info, MemoryStream stream)
-        {
-            this.ResponseGoAhead(stream);
-        }
-        private void ResponseDO_remote_flow_control(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.RemoteFlowControl.Recv.DO)
-            {
-                if (this.RemoteFlowControl.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WILL);
-                    stream.WriteByte((byte)TelnetOption.remote_flow_control);
-                    this.RemoteFlowControl.Recv.DO = true;
-                    this.RemoteFlowControl.Send.WILL = true;
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.WONT);
-                    stream.WriteByte((byte)TelnetOption.remote_flow_control);
-                    this.RemoteFlowControl.Recv.DO = true;
-                    this.RemoteFlowControl.Send.WONT = true;
-                }
-            }
-            else
-            {
-                // TODO:既に受信していた場合どうする？
-            }
-        }
-        #endregion
-
-        #region ResponseDONT
-        private void ResponseDONT(NegotiationInfomation info, MemoryStream stream)
-        {
-            // オプション毎に分岐
-            switch (info.Option)
-            {
-                default:
-                    // TODO:異常終了
-                    Debug.WriteLine("Response [DONT] UNKNOWN Telnet Option(" + info.Option.ToString() + ").");
-                    break;
-            }
-        }
-        #endregion
-
-        #region ResponseWILL
-        private void ResponseWILL(NegotiationInfomation info, MemoryStream stream)
-        {
-            // オプション毎に分岐
-            switch (info.Option)
-            {
-                case TelnetOption.echo:
-                    this.ResponseWILL_server_echo(info, stream);
-                    break;
-                case TelnetOption.suppress_go_ahead:
-                    this.ResponseWILL_suppress_go_ahead(info, stream);
-                    break;
-                case TelnetOption.status:
-                    this.ResponseWILL_status(info, stream);
-                    break;
-                default:
-                    // TODO:異常終了
-                    Debug.WriteLine("Response [WILL] UNKNOWN Telnet Option(" + info.Option.ToString() + ").");
-                    break;
-            }
-        }
-        private void ResponseWILL_server_echo(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (this.ServerEcho.Send.DO)
-            {
-                this.ServerEcho.Recv.WILL = true;
-                this.ServerEcho.Negotiated = true;
-            }
-            else
-            {
-                // TODO:異常終了?
-                Debug.Fail("ネゴシエーション失敗(echo)");
-            }
-        }
-        private void ResponseWILL_suppress_go_ahead(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (this.GoAhead.Send.DO)
-            {
-                this.GoAhead.Recv.WILL = true;
-                this.GoAhead.Negotiated = true;
-            }
-            else
-            {
-                // TODO:異常終了?
-                Debug.Fail("ネゴシエーション失敗(go ahead)");
-            }
-        }
-        private void ResponseWILL_status(NegotiationInfomation info, MemoryStream stream)
-        {
-            if (!this.Status.Recv.WILL)
-            {
-                this.Status.Recv.WILL = true;
-
-                if (this.Status.Value)
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.DO);
-                    stream.WriteByte((byte)TelnetOption.status);
-                    this.Status.Send.DO = true;
-                }
-                else
-                {
-                    stream.WriteByte((byte)TelnetCommand.IAC);
-                    stream.WriteByte((byte)TelnetCommand.DONT);
-                    stream.WriteByte((byte)TelnetOption.status);
-                    this.Status.Send.DONT = true;
-                }
-            }
-            else
-            {
-                // WILL受信済みならどうするか？
-            }
-        }
-        #endregion
-
-        #region ResponseWONT
-        private void ResponseWONT(NegotiationInfomation info, MemoryStream stream)
-        {
-            // オプション毎に分岐
-            switch (info.Option)
-            {
-                default:
-                    // TODO:異常終了
-                    Debug.WriteLine("Response [WONT] UNKNOWN Telnet Option(" + info.Option.ToString() + ").");
-                    break;
-            }
-        }
-        #endregion
-
-        #region ResponseSB
-        private void ResponseSB(NegotiationInfomation info, MemoryStream stream)
-        {
-            // オプション毎に分岐
-            switch (info.Option)
-            {
-                case TelnetOption.terminal_type:
-                    this.ResponseSB_terminal_type(info, stream);
+                    // TODO:未実装
+                    this.SendWinSize();
                     break;
                 case TelnetOption.terminal_speed:
-                    this.ResponseSB_terminal_speed(info, stream);
+                    // TODO:未実装
+                    if (info.Stream.Length > 0 && info.Stream.ToArray()[0] == 0x01)
+                    {
+                        this.SendTerminalSpeed();
+                    }
                     break;
                 default:
-                    // TODO:異常終了
-                    Debug.WriteLine("Response [DO] UNKNOWN Telnet Option(" + info.Option.ToString() + ").");
                     break;
             }
         }
-        private void ResponseSB_terminal_type(NegotiationInfomation info, MemoryStream stream)
+
+        /// <summary>
+        /// 応答送信(SE)
+        /// </summary>
+        /// <param name="info"></param>
+        private void ResponseSE(NegotiationInfomation info)
         {
-            stream.WriteByte((byte)TelnetCommand.IAC);
-            stream.WriteByte((byte)TelnetCommand.SB);
-            stream.WriteByte((byte)TelnetOption.terminal_type);
-
-            if (info.Stream != null && info.Stream.ToArray()[0] == 0x01)
-            {
-                // ASCII エンコード
-                byte[] byteData = System.Text.Encoding.ASCII.GetBytes(this.TerminalType.Value);
-                stream.WriteByte(0x00);
-                stream.Write(byteData, 0, byteData.Length);
-            }
-            else
-            {
-                Debug.Fail("ResponseSB_terminal_type");
-            }
-
-            stream.WriteByte((byte)TelnetCommand.IAC);
-            stream.WriteByte((byte)TelnetCommand.SE);
         }
-        private void ResponseSB_terminal_speed(NegotiationInfomation info, MemoryStream stream)
-        {
-            stream.WriteByte((byte)TelnetCommand.IAC);
-            stream.WriteByte((byte)TelnetCommand.SB);
-            stream.WriteByte((byte)TelnetOption.terminal_speed);
-
-            if (info.Stream != null && info.Stream.ToArray()[0] == 0x01)
-            {
-                // ASCII エンコード
-                byte[] byteMinData = System.Text.Encoding.ASCII.GetBytes(this.TerminalSpeed.Value["min"].ToString());
-                byte[] byteMaxData = System.Text.Encoding.ASCII.GetBytes(this.TerminalSpeed.Value["max"].ToString());
-
-                stream.WriteByte(0x00);
-                stream.Write(byteMinData, 0, byteMinData.Length);
-                stream.WriteByte(Convert.ToByte(','));
-                stream.Write(byteMaxData, 0, byteMaxData.Length);
-            }
-            else
-            {
-                Debug.Fail("ResponseSB_terminal_speed");
-            }
-
-            stream.WriteByte((byte)TelnetCommand.IAC);
-            stream.WriteByte((byte)TelnetCommand.SE);
-        }
-        #endregion
-
-        #region ResponseSE
-        private void ResponseSE(NegotiationInfomation info, MemoryStream stream)
-        {
-            // 終端なので何もしない
-        }
-        #endregion
-
         #endregion
     }
+    #endregion
 }

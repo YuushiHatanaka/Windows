@@ -111,11 +111,8 @@
     <Compile Include="FileListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IpV4AddressControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="IpV4AddressControl.designer.cs">
-      <DependentUpon>IpV4AddressControl.cs</DependentUpon>
+    <Compile Include="IpAddressTextbox.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="LabeledComboBox.cs">
       <SubType>LabeledControl</SubType>
@@ -136,11 +133,11 @@
     <Compile Include="StringPanel.designer.cs">
       <DependentUpon>StringPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="TimeTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="IpV4AddressControl.resx">
-      <DependentUpon>IpV4AddressControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="LabeledControl.resx">
       <DependentUpon>LabeledControl.cs</DependentUpon>
     </EmbeddedResource>
