@@ -61,6 +61,22 @@ namespace Common.Net
         public TcpTimeout Timeout { get { return this.m_Timeout; } }
         #endregion
 
+        #region 送信バッファサイズ
+        /// <summary>
+        /// 送信バッファサイズ
+        /// </summary>
+        private int m_SendBufferCapacity = 8192;
+
+        /// <summary>
+        /// 送信バッファサイズ
+        /// </summary>
+        public int SendBufferCapacity
+        {
+            get { return this.m_SendBufferCapacity; }
+            set { this.m_SendBufferCapacity = value; }
+        }
+        #endregion
+
         #region 受信バッファサイズ
         /// <summary>
         /// 受信バッファサイズ
@@ -275,6 +291,7 @@ namespace Common.Net
             // ソケット生成
             this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.m_Socket.ReceiveBufferSize = this.m_ReciveBufferCapacity;
+            this.m_Socket.SendBufferSize = this.m_SendBufferCapacity;
             this.m_Socket.ReceiveTimeout = this.m_Timeout.Recv;
             this.m_Socket.SendTimeout = this.m_Timeout.Send;
             this.m_Socket.Blocking = false;
@@ -516,11 +533,22 @@ namespace Common.Net
         /// <returns></returns>
         public MemoryStream Recive()
         {
+            // 受信
+            return this.Recive(this.m_ReciveBufferCapacity);
+        }
+
+        /// <summary>
+        /// 受信
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public MemoryStream Recive(int size)
+        {
             // 受信用Stream生成
             TelnetClientReciveStream _TelnetClientReciveStream = new TelnetClientReciveStream();
             _TelnetClientReciveStream.Socket = this.m_Socket;
-            _TelnetClientReciveStream.Buffer = new byte[this.m_ReciveBufferCapacity];
-            _TelnetClientReciveStream.Stream = new MemoryStream(this.m_ReciveBufferCapacity);
+            _TelnetClientReciveStream.Buffer = new byte[size];
+            _TelnetClientReciveStream.Stream = new MemoryStream(size);
 
             // 結果受信待ち
             IAsyncResult _result = this.m_Socket.BeginReceive(_TelnetClientReciveStream.Buffer, 0, _TelnetClientReciveStream.Buffer.Length, SocketFlags.None, this.OnReciveCallback, _TelnetClientReciveStream);

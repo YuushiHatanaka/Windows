@@ -98,11 +98,12 @@
     <Compile Include="Ftp\FtpClientSendStream.cs" />
     <Compile Include="Ftp\FtpResponse.cs" />
     <Compile Include="Ftp\FtpTransferMode.cs" />
-    <Compile Include="Telnet\Telenet.cs" />
+    <Compile Include="Telnet\Telnet.cs" />
     <Compile Include="Telnet\TelnetClientStream.cs" />
     <Compile Include="Telnet\TelnetClientEvent.cs" />
     <Compile Include="Telnet\TelnetClientException.cs" />
     <Compile Include="Telnet\NegotiationInfomation.cs" />
+    <Compile Include="Telnet\TelnetException.cs" />
     <Compile Include="Telnet\TelnetOption.cs" />
     <Compile Include="Telnet\TelnetCommand.cs" />
     <Compile Include="Telnet\NetworkVirtualTerminalException.cs" />

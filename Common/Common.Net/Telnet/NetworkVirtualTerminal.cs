@@ -3,79 +3,127 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Common.Net
 {
+    #region 端末速度
+    /// <summary>
+    /// 端末速度
+    /// </summary>
+    public class TerminalSpeed
+    {
+        public int Input;
+        public int Output;
+    };
+    #endregion
+
+    #region イベントパラメータ
+    /// <summary>
+    /// 受信イベントパラメータ
+    /// </summary>
+    public class NetworkVirtualTerminalReadEventArgs : EventArgs
+    {
+        /// <summary>
+        /// バッファ
+        /// </summary>
+        public StringBuilder StringBuilder = new StringBuilder();
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public NetworkVirtualTerminalReadEventArgs()
+            : base()
+        {
+        }
+    }
+
+    /// <summary>
+    /// 送信イベントパラメータ
+    /// </summary>
+    public class NetworkVirtualTerminalWriteEventArgs : EventArgs
+    {
+        /// <summary>
+        /// バッファ
+        /// </summary>
+        public StringBuilder StringBuilder = new StringBuilder();
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public NetworkVirtualTerminalWriteEventArgs()
+            : base()
+        {
+        }
+    }
+
+    /// <summary>
+    /// 例外イベントパラメータ
+    /// </summary>
+    public class NetworkVirtualTerminalExceptionEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 例外
+        /// </summary>
+        public Exception Exception = null;
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public NetworkVirtualTerminalExceptionEventArgs()
+            : base()
+        {
+        }
+    }
+    #endregion
+
+    #region イベントdelega
+    /// <summary>
+    /// 受信イベントdelegate
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void NetworkVirtualTerminalReadEventHandler(object sender, NetworkVirtualTerminalReadEventArgs e);
+
+    /// <summary>
+    /// 送信イベントdelegate
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void NetworkVirtualTerminalWriteEventHandler(object sender, NetworkVirtualTerminalWriteEventArgs e);
+
+    /// <summary>
+    /// 例外イベントdelegate
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void NetworkVirtualTerminalExceptionEventHandler(object sender, NetworkVirtualTerminalExceptionEventArgs e);
+    #endregion
+
     #region 仮想ネットワーク端末クラス
     /// <summary>
     /// 仮想ネットワーク端末クラス
     /// </summary>
     public class NetworkVirtualTerminal : TelnetClient
     {
+        #region イベントハンドラ
         /// <summary>
-        /// 端末速度
-        /// </summary>
-        public class TerminalSpeed
-        {
-            public int Input;
-            public int Output;
-        };
-
-        /// <summary>
-        /// 受信イベントパラメータ
-        /// </summary>
-        public class NetworkVirtualTerminalReadEventArgs : EventArgs
-        {
-            public StringBuilder ReadStringBuilder = new StringBuilder();
-
-            /// <summary>
-            /// コンストラクタ
-            /// </summary>
-            public NetworkVirtualTerminalReadEventArgs()
-                : base()
-            {
-            }
-        }
-
-        /// <summary>
-        /// 送信イベントパラメータ
-        /// </summary>
-        public class NetworkVirtualTerminalWriteEventArgs : EventArgs
-        {
-            /// <summary>
-            /// コンストラクタ
-            /// </summary>
-            public NetworkVirtualTerminalWriteEventArgs()
-                : base()
-            {
-            }
-        }
-
-        /// <summary>
-        /// 受信イベント
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public delegate void NetworkVirtualTerminalReadEventHandler(object sender, NetworkVirtualTerminalReadEventArgs e);
-
-        /// <summary>
-        /// 送信イベント
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public delegate void NetworkVirtualTerminalWriteEventHandler(object sender, NetworkVirtualTerminalWriteEventArgs e);
-
-        /// <summary>
-        /// 読込イベント
+        /// 読込イベントハンドラ
         /// </summary>
         public NetworkVirtualTerminalReadEventHandler OnRead;
 
         /// <summary>
-        /// 書込イベント
+        /// 書込イベントハンドラ
         /// </summary>
         public NetworkVirtualTerminalWriteEventHandler OnWrite;
+
+        /// <summary>
+        /// 例外イベントハンドラ
+        /// </summary>
+        public NetworkVirtualTerminalExceptionEventHandler OnException;
+        #endregion
 
         #region 受信タスク
         /// <summary>
@@ -88,6 +136,16 @@ namespace Common.Net
         /// </summary>
         private CancellationTokenSource m_CancellationTokenSource = null;
         #endregion
+
+        /// <summary>
+        /// 受信イベント通知
+        /// </summary>
+        private ManualResetEvent OnReadNotify = new ManualResetEvent(false);
+
+        /// <summary>
+        /// 受信バッファ
+        /// </summary>
+        private StringBuilder m_ReadString = new StringBuilder();
 
         #region 端末情報
         #region 文字コード(Local)
@@ -112,6 +170,30 @@ namespace Common.Net
         /// 文字コード(Remote)
         /// </summary>
         public Encoding RemoteEncoding { get { return this.m_RemoteEncoding; } set { this.m_RemoteEncoding = value; } }
+        #endregion
+
+        #region 改行コード(送信)
+        /// <summary>
+        /// 改行コード(送信)
+        /// </summary>
+        private string m_WriteNewLine = string.Empty;
+
+        /// <summary>
+        /// 改行コード(送信)
+        /// </summary>
+        public string WriteNewLine { get { return this.m_WriteNewLine; } set { this.m_WriteNewLine = value; } }
+        #endregion
+
+        #region 改行コード(受信)
+        /// <summary>
+        /// 改行コード(受信)
+        /// </summary>
+        private string m_ReadNewLine = string.Empty;
+
+        /// <summary>
+        /// 改行コード(受信)
+        /// </summary>
+        public string ReadNewLine { get { return this.m_ReadNewLine; } set { this.m_ReadNewLine = value; } }
         #endregion
 
         /// <summary>
@@ -175,8 +257,17 @@ namespace Common.Net
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        public NetworkVirtualTerminal()
+            : base("localhost")
+        {
+            // 初期化
+            this.Initialization();
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         /// <param name="host"></param>
-        /// <param name="port"></param>
         public NetworkVirtualTerminal(string host)
             : base(host)
         {
@@ -215,6 +306,8 @@ namespace Common.Net
             // デフォルト設定
             this.m_LocalEncoding = Encoding.GetEncoding("UTF-8");
             this.m_RemoteEncoding = Encoding.GetEncoding("UTF-8");
+            this.m_ReadNewLine = "\n";
+            this.m_WriteNewLine = "\n";
 
             // Telnetオプション状態初期化
             for (TelnetOption opt = TelnetOption.binary; opt < TelnetOption.max; opt++)
@@ -222,6 +315,8 @@ namespace Common.Net
                 this.m_Local[opt] = new NegotiationStatus();
                 this.m_Remote[opt] = new NegotiationStatus();
             }
+
+            // 各Telnetオプション初期設定
             this.m_Local[TelnetOption.binary].Accept = true;
             this.m_Remote[TelnetOption.binary].Accept = true;
             this.m_Local[TelnetOption.suppress_go_ahead].Accept = true;
@@ -240,7 +335,50 @@ namespace Common.Net
         }
         #endregion
 
-        #region 非同期コールバックメソッド
+        #region 受信タスク
+        /// <summary>
+        /// 受信タスク
+        /// </summary>
+        private void ReciveTask()
+        {
+            // 無限ループ
+            while (true)
+            {
+                // Taskキャンセル判定
+                if (this.m_CancellationTokenSource.IsCancellationRequested)
+                {
+                    // キャンセルされたらTaskを終了する.
+                    break;
+                }
+
+                try
+                {
+                    // 受信
+                    this.Recive();
+                }
+                catch (Exception ex)
+                {
+                    // イベント呼出し判定
+                    if (this.OnException != null)
+                    {
+                        // イベントパラメータ生成
+                        NetworkVirtualTerminalExceptionEventArgs eventArgs = new NetworkVirtualTerminalExceptionEventArgs()
+                        {
+                            Exception = ex
+                        };
+
+                        // イベント呼出し
+                        this.OnException(this, eventArgs);
+                    }
+                }
+            }
+
+            // 切断
+            this.DisConnect();
+        }
+        #endregion
+
+        #region 非同期関連コールバックメソッド
         /// <summary>
         /// 非同期接続のコールバックメソッド
         /// </summary>
@@ -254,6 +392,7 @@ namespace Common.Net
             // 受信タスク開始
             this.m_ReciveTask = Task.Factory.StartNew(() =>
             {
+                // 受信タスク実行
                 this.ReciveTask();
             }, this.m_CancellationTokenSource.Token);
         }
@@ -273,10 +412,10 @@ namespace Common.Net
 
             try
             {
-                // 受信タスク終了待ち(10秒)
+                // 受信タスク終了待ち
                 if (this.m_ReciveTask != null)
                 {
-                    this.m_ReciveTask.Wait(10000, this.m_CancellationTokenSource.Token);
+                    this.m_ReciveTask.Wait(this.Timeout.Disconnect, this.m_CancellationTokenSource.Token);
                 }
             }
             catch (OperationCanceledException)
@@ -305,6 +444,16 @@ namespace Common.Net
         /// <param name="e"></param>
         private void SendEvent(object sender, TelnetClientSendEventArgs e)
         {
+            // 送信通知
+            if (this.OnWrite != null)
+            {
+                // パラメータ生成
+                NetworkVirtualTerminalWriteEventArgs args = new NetworkVirtualTerminalWriteEventArgs();
+                args.StringBuilder.Append(this.LocalEncoding.GetString(e.Stream.ToArray()));
+
+                // イベント呼出し
+                this.OnWrite(this, args);
+            }
         }
 
         /// <summary>
@@ -323,6 +472,7 @@ namespace Common.Net
                 // ネゴシエーション
                 this.Negotiation(e.Stream, memoryStream);
 
+                // MemorySteramのサイズ判定
                 if (memoryStream.Length > 0)
                 {
                     // ロギング
@@ -333,38 +483,13 @@ namespace Common.Net
                     {
                         // パラメータ生成
                         NetworkVirtualTerminalReadEventArgs args = new NetworkVirtualTerminalReadEventArgs();
-                        args.ReadStringBuilder.Append(this.RemoteEncoding.GetString(memoryStream.ToArray()));
+                        args.StringBuilder.Append(this.RemoteEncoding.GetString(memoryStream.ToArray()));
 
                         // イベント呼出し
                         this.OnRead(this, args);
                     }
                 }
             }
-        }
-        #endregion
-
-        #region 受信タスク
-        /// <summary>
-        /// 受信タスク
-        /// </summary>
-        private void ReciveTask()
-        {
-            // 無限ループ
-            while (true)
-            {
-                // Taskキャンセル判定
-                if (this.m_CancellationTokenSource.IsCancellationRequested)
-                {
-                    // キャンセルされたらTaskを終了する.
-                    break;
-                }
-
-                // 受信
-                this.Recive();
-            }
-
-            // 切断
-            this.DisConnect();
         }
         #endregion
 
@@ -1138,6 +1263,187 @@ namespace Common.Net
         /// <param name="info"></param>
         private void ResponseSE(NegotiationInfomation info)
         {
+        }
+        #endregion
+
+        #region 書込
+        /// <summary>
+        /// 書込
+        /// </summary>
+        /// <param name="str"></param>
+        public void Write(string str)
+        {
+            // MemoryStreamオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+
+            // エンコード
+            byte[] data = this.RemoteEncoding.GetBytes(str);
+
+            // MemoryStreamオブジェクト書込
+            sendStream.Write(data, 0, data.Length);
+
+            // 送信
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 書込
+        /// </summary>
+        /// <param name="str"></param>
+        public void WriteLine(string str)
+        {
+            // 書込(文字列+改行)
+            this.Write(str + this.m_WriteNewLine);
+        }
+        #endregion
+
+        #region 読込
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <returns></returns>
+        public StringBuilder Read()
+        {
+            // 結果オブジェクト生成
+            StringBuilder result = new StringBuilder();
+
+            //　イベント登録
+            this.OnRead += this.ReadEventHandler;
+
+            // 受信イベント待ち
+            if (!this.OnReadNotify.WaitOne())
+            {
+                // 通知解除
+                this.OnReadNotify.Reset();
+
+                // TODO:例外
+                return null;
+            }
+
+            // 通知解除
+            this.OnReadNotify.Reset();
+
+            // 結果登録
+            result.Append(this.m_ReadString);
+
+            // クリア
+            lock (this.m_ReadString)
+            {
+                this.m_ReadString.Length = 0;
+                this.m_ReadString.Clear();
+            }
+
+            //　イベント解除
+            this.OnRead -= this.ReadEventHandler;
+
+            // 結果返却
+            return result;
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public StringBuilder Read(string str)
+        {
+            // 結果オブジェクト生成
+            StringBuilder result = new StringBuilder();
+
+            // 文字列受信まで繰り返す
+            while (true)
+            {
+                // 読込
+                StringBuilder readString = this.Read();
+
+                // 結果登録
+                result.Append(readString.ToString());
+
+                // 文字列比較
+                Regex regex = new Regex(str, RegexOptions.Compiled | RegexOptions.Multiline);
+                if (regex.IsMatch(readString.ToString()))
+                {
+                    break;
+                }
+            }
+
+            // 結果返却
+            return result;
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public StringBuilder Read(string str, int timeout)
+        {
+            // 結果オブジェクト生成
+            StringBuilder result = new StringBuilder();
+
+            // Taskオブジェクト生成
+            using (CancellationTokenSource source = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                source.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 読込
+                    StringBuilder readString = this.Read(str);
+
+                    // 結果登録
+                    result.Append(readString.ToString());
+                }, source.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(source.Token);
+                    Console.WriteLine("＜タスク終了＞");
+                    return result;
+                }
+                catch (OperationCanceledException)
+                {
+                    Console.WriteLine("OperationCanceledExceptionが発生しました。");
+                    return null;
+                }
+                catch (AggregateException)
+                {
+                    Console.WriteLine("AggregateExceptionが発生しました。");
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <returns></returns>
+        public StringBuilder ReadLine()
+        {
+            // TODO:未実装
+            return null;
+        }
+
+        /// <summary>
+        /// 読込イベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReadEventHandler(object sender, NetworkVirtualTerminalReadEventArgs e)
+        {
+            // 受信文字列追加
+            lock (this.m_ReadString)
+            {
+                // 受信文字列追加
+                this.m_ReadString.Append(e.StringBuilder.ToString());
+
+                // 受信通知
+                this.OnReadNotify.Set();
+            }
         }
         #endregion
     }

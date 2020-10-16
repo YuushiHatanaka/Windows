@@ -22,5 +22,17 @@ namespace Common.Net
             this.Multiline = true;
             this.ScrollBars = ScrollBars.Both;
         }
+
+        /// <summary>
+        /// テキスト追加
+        /// </summary>
+        /// <param name="text"></param>
+        public void AddText(string text)
+        {
+            // TODO:エスケープ文字をどうするか？
+
+            // テキスト追加
+            this.AppendText(text);
+        }
     }
 }
