@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Diagnostics;
-using System.Windows.Forms;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace Common.Control
 {
@@ -24,20 +16,5 @@ namespace Common.Control
         /// 背景色
         /// </summary>
         public Color BackColor = SystemColors.Control;
-
-        /// <summary>
-        /// 外観指定
-        /// </summary>
-        public BlinkAppearance FlatAppearance = new BlinkAppearance();
-
-        /// <summary>
-        /// 描写スタイル
-        /// </summary>
-        public FlatStyle FlatStyle = FlatStyle.Standard;
-
-        /// <summary>
-        /// Visial Style使用フラグ
-        /// </summary>
-        public bool UseVisualStyleBackColor = true;
     }
 }

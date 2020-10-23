@@ -4,15 +4,15 @@ using System.Diagnostics;
 namespace Common.Net
 {
     /// <summary>
-    /// Telnet例外クラス
+    /// SSHクライアント例外クラス
     /// </summary>
-    public class TelnetException : Exception
+    public class SshClientExceptions : Exception
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="message"></param>
-        public TelnetException(string message)
+        public SshClientExceptions(string message)
             : base(message)
         {
             Debug.WriteLine(message);
@@ -23,7 +23,7 @@ namespace Common.Net
         /// </summary>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public TelnetException(string message, Exception innerException)
+        public SshClientExceptions(string message, Exception innerException)
             : base(message, innerException)
         {
             Debug.WriteLine(message);

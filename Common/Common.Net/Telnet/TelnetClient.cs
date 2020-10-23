@@ -22,7 +22,7 @@ namespace Common.Net
         /// <summary>
         /// ポート番号
         /// </summary>
-        private int m_Port = 0;
+        private int m_Port = 23;
 
         /// <summary>
         /// IPアドレス
@@ -588,12 +588,12 @@ namespace Common.Net
             // 非同期読込が終了しているか？
             int bytesRead = _TelnetClientReciveStream.Socket.EndReceive(asyncResult);
 
-            // ロギング
-            this.Logger.InfoFormat("受信データ - {0:#,0} byte：\n{1}", bytesRead, Debug.Dump(1, _TelnetClientReciveStream.Buffer, bytesRead));
-
             // 受信データサイズ判定
             if (bytesRead > 0)
             {
+                // ロギング
+                this.Logger.InfoFormat("受信データ - {0:#,0} byte：\n{1}", bytesRead, Debug.Dump(1, _TelnetClientReciveStream.Buffer, bytesRead));
+
                 // 残りがある場合にはデータ保持する
                 if (_TelnetClientReciveStream.Stream != null)
                 {

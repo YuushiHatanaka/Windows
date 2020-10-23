@@ -79,7 +79,7 @@ namespace Common.Net
     }
     #endregion
 
-    #region イベントdelega
+    #region イベントdelegate
     /// <summary>
     /// 受信イベントdelegate
     /// </summary>
@@ -210,7 +210,7 @@ namespace Common.Net
         /// <summary>
         /// 端末種別
         /// </summary>
-        private string m_TerminalType = "xterm";
+        private string m_TerminalType = "vt100";
         #endregion
 
         #region 端末サイズ
@@ -386,10 +386,10 @@ namespace Common.Net
         /// <param name="e"></param>
         private void ConnectedEvent(object sender, TelnetClientConnectedEventArgs e)
         {
-            // 受信タスクトークン生成
+            // 非同期処理をCancelするためのTokenを取得.
             this.m_CancellationTokenSource = new CancellationTokenSource();
 
-            // 受信タスク開始
+            // 非同期処理開始
             this.m_ReciveTask = Task.Factory.StartNew(() =>
             {
                 // 受信タスク実行

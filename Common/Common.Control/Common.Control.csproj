@@ -96,10 +96,11 @@
     </Compile>
     <Compile Include="BlinkAppearance.cs" />
     <Compile Include="BlinkButton.cs">
-      <SubType>Component</SubType>
+      <SubType>BlinkControl</SubType>
     </Compile>
     <Compile Include="BlinkInfomation.cs" />
     <Compile Include="BlinkListViewItem.cs" />
+    <Compile Include="ButtonBlinkInfomation.cs" />
     <Compile Include="ControlMargin.cs" />
     <Compile Include="ControlPositions.cs" />
     <Compile Include="DirectoryTreeView.cs">

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Common.Net
 {
@@ -18,7 +15,19 @@ namespace Common.Net
         public PingClientException(string message)
             : base(message)
         {
+            Debug.WriteLine(message);
+        }
 
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        public PingClientException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+            Debug.WriteLine(message);
+            Debug.WriteLine(innerException.Message);
         }
     }
 }

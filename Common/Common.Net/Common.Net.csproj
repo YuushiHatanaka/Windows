@@ -75,6 +75,9 @@
     <Reference Include="log4net, Version=2.0.11.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\..\..\hataTools\packages\log4net.2.0.11\lib\net45\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\..\..\hataTools\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -98,6 +101,13 @@
     <Compile Include="Ftp\FtpClientSendStream.cs" />
     <Compile Include="Ftp\FtpResponse.cs" />
     <Compile Include="Ftp\FtpTransferMode.cs" />
+    <Compile Include="Ssh\SshClientExceptions.cs" />
+    <Compile Include="Ssh\SshNetworkVirtualTerminalException.cs" />
+    <Compile Include="Ssh\SshNetworkVirtualTerminal.cs" />
+    <Compile Include="Ssh\Ssh.cs" />
+    <Compile Include="Ssh\SshClientEvent.cs" />
+    <Compile Include="Ssh\SshClientWrap.cs" />
+    <Compile Include="Ssh\SshExceptions.cs" />
     <Compile Include="Telnet\Telnet.cs" />
     <Compile Include="Telnet\TelnetClientStream.cs" />
     <Compile Include="Telnet\TelnetClientEvent.cs" />
@@ -128,6 +138,10 @@
     <ProjectReference Include="..\Common.Diagnostics\Common.Diagnostics.csproj">
       <Project>{a7f55740-fa5f-45cf-9169-3abb104e0ba6}</Project>
       <Name>Common.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common.Text\Common.Text.csproj">
+      <Project>{f6f74523-c544-4722-9d92-e88656f8cb17}</Project>
+      <Name>Common.Text</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

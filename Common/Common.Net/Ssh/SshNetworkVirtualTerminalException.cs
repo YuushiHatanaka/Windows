@@ -3,16 +3,17 @@ using System.Diagnostics;
 
 namespace Common.Net
 {
+    #region SSH仮想ネットワーク端末例外クラス
     /// <summary>
-    /// Telnet例外クラス
+    /// SSH仮想ネットワーク端末例外クラス
     /// </summary>
-    public class TelnetException : Exception
+    public class SshNetworkVirtualTerminalException : Exception
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="message"></param>
-        public TelnetException(string message)
+        public SshNetworkVirtualTerminalException(string message)
             : base(message)
         {
             Debug.WriteLine(message);
@@ -23,11 +24,12 @@ namespace Common.Net
         /// </summary>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public TelnetException(string message, Exception innerException)
+        public SshNetworkVirtualTerminalException(string message, Exception innerException)
             : base(message, innerException)
         {
             Debug.WriteLine(message);
             Debug.WriteLine(innerException.Message);
         }
     }
+    #endregion
 }

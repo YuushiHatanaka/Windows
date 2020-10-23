@@ -1,104 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Common.Net
 {
     /// <summary>
-    /// Telnetクラス
+    /// SSHクラス
     /// </summary>
-    public class Telnet : NetworkVirtualTerminal
+    public class Ssh : SshNetworkVirtualTerminal
     {
-        #region ログイン情報
-        #region ユーザ名
-        /// <summary>
-        /// ユーザ名
-        /// </summary>
-        private string m_UserName = string.Empty;
-
-        /// <summary>
-        /// ユーザ名
-        /// </summary>
-        public string UserName { get { return this.m_UserName; } set { this.m_UserName = value; } }
-        #endregion
-
-        #region ユーザパスワード
-        /// <summary>
-        /// ユーザパスワード
-        /// </summary>
-        private string m_UserPassword = string.Empty;
-
-        /// <summary>
-        /// ユーザパスワード
-        /// </summary>
-        public string UserPassword { get { return this.m_UserPassword; } set { this.m_UserPassword = value; } }
-        #endregion
-
-        #region ログインプロンプト
-        /// <summary>
-        /// ログインプロンプト
-        /// </summary>
-        private string m_LoginPrompt = @"^login: ";
-
-        /// <summary>
-        /// ログインプロンプト
-        /// </summary>
-        public string LoginPrompt { get { return this.m_LoginPrompt; } set { this.m_LoginPrompt = value; } }
-        #endregion
-
-        #region パスワードプロンプト
-        /// <summary>
-        /// パスワードプロンプト
-        /// </summary>
-        private string m_PasswordPrompt = @"^Password:";
-
-        /// <summary>
-        /// パスワードプロンプト
-        /// </summary>
-        public string PasswordPrompt { get { return this.m_PasswordPrompt; } set { this.m_PasswordPrompt = value; } }
-        #endregion
-
-        #region コマンドプロンプト
         /// <summary>
         /// コマンドプロンプト
         /// </summary>
         private string m_CommandPrompt = @"\$ $";
 
         /// <summary>
-        /// コマンドプロンプト
-        /// </summary>
-        public string CommandPrompt { get { return this.m_CommandPrompt; } set { this.m_CommandPrompt = value; } }
-        #endregion
-        #endregion
-
-        #region ログアウト情報
-        #region exitコマンド
-        /// <summary>
         /// exitコマンド
         /// </summary>
         private string m_ExitCommand = "exit";
-
-        /// <summary>
-        /// exitコマンド
-        /// </summary>
-        public string ExitCommand { get { return this.m_ExitCommand; } set { this.m_ExitCommand = value; } }
-        #endregion
-
-        #region logoutメッセージ
-        /// <summary>
-        /// logoutメッセージ
-        /// </summary>
-        private string m_LogoutMsg = "exit";
-
-        /// <summary>
-        /// logoutメッセージ
-        /// </summary>
-        public string LogoutMsg { get { return this.m_LogoutMsg; } set { this.m_LogoutMsg = value; } }
-        #endregion
-        #endregion
 
         #region コンストラクタ
         /// <summary>
@@ -106,7 +30,7 @@ namespace Common.Net
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
-        public Telnet(string userName, string userPasword)
+        public Ssh(string userName, string userPasword)
             : base("localhost")
         {
             // 初期化
@@ -119,7 +43,7 @@ namespace Common.Net
         /// <param name="host"></param>
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
-        public Telnet(string host, string userName, string userPasword)
+        public Ssh(string host, string userName, string userPasword)
             : base(host)
         {
             // 初期化
@@ -133,7 +57,7 @@ namespace Common.Net
         /// <param name="port"></param>
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
-        public Telnet(string host, int port, string userName, string userPasword)
+        public Ssh(string host, int port, string userName, string userPasword)
             : base(host, port)
         {
             // 初期化
@@ -145,7 +69,7 @@ namespace Common.Net
         /// <summary>
         /// デストラクタ
         /// </summary>
-        ~Telnet()
+        ~Ssh()
         {
         }
         #endregion
@@ -171,50 +95,19 @@ namespace Common.Net
         /// </summary>
         public string Login()
         {
-            StringBuilder read = null;                  // 読込用
             StringBuilder result = new StringBuilder(); // 結果用
 
             // 接続
             this.Connect();
 
-            // ログインプロンプト受信待ち
-            read = this.Read(this.m_LoginPrompt);
-            if (read == null)
+            // プロンプト取得待ち
+            List<string> waitResult = this.Wait(this.m_CommandPrompt);
+
+            // 結果格納
+            foreach (string str in waitResult)
             {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[ログインプロンプト受信待ち]");
+                result.AppendLine(str);
             }
-
-            // 結果追加
-            result.Append(read.ToString());
-
-            // ユーザ名送信
-            this.WriteLine(this.m_UserName);
-
-            // パスワードプロンプト受信待ち
-            read = this.Read(this.m_PasswordPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[パスワードプロンプト受信待ち]");
-            }
-
-            // 結果追加
-            result.Append(read.ToString());
-
-            // パスワード送信
-            this.WriteLine(this.m_UserPassword);
-
-            // コマンドプロンプト待ち
-            read = this.Read(this.m_CommandPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[コマンドプロンプト待ち]");
-            }
-
-            // 結果追加
-            result.Append(read.ToString());
 
             // 結果返却
             return result.ToString();
@@ -268,18 +161,18 @@ namespace Common.Net
         /// </summary>
         public string Logout()
         {
-            StringBuilder read = null;                  // 読込用
             StringBuilder result = new StringBuilder(); // 結果用
 
             // exitコマンド送信
-            this.WriteLine(this.m_ExitCommand);
+            this.m_ShellStream.WriteLine(this.m_ExitCommand);
 
             // 受信待ち
-            read = this.Read(this.m_LogoutMsg, 100);
-            if (read != null)
+            List<string> waitResult = this.Wait();
+
+            // 結果格納
+            foreach (string str in waitResult)
             {
-                // 結果追加
-                result.Append(read.ToString());
+                result.AppendLine(str);
             }
 
             // 切断
@@ -401,13 +294,138 @@ namespace Common.Net
         }
         #endregion
 
+        #region 待合せ
+        /// <summary>
+        /// 待合せ
+        /// </summary>
+        /// <returns></returns>
+        public List<string> Wait()
+        {
+            return this.Wait(this.m_CommandPrompt);
+        }
+
+        /// <summary>
+        /// ShellStream待合せ
+        /// </summary>
+        /// <param name="regex"></param>
+        /// <returns></returns>
+        public List<string> Wait(string regex)
+        {
+            // 返却用オブジェクト生成
+            List<string> lines = new List<string>();
+
+            // 無限ループ
+            while (true)
+            {
+                // ShellStreamにバッファ長が0以上になるまで待合せ
+                while (this.m_ShellStream.Length == 0)
+                {
+                    Thread.Sleep(100);
+                }
+
+                // 読込
+                byte[] _readbuffer = new byte[this.m_ShellStream.Length];
+                if (this.m_ShellStream.Read(_readbuffer, 0, (int)this.m_ShellStream.Length) == 0)
+                {
+                    break;
+                }
+
+                // 文字コード変換
+                System.Text.Encoding src = Common.Text.Encoding.GetCode(_readbuffer);
+                System.Text.Encoding dest = System.Text.Encoding.GetEncoding("Shift_JIS");
+                byte[] temp = System.Text.Encoding.Convert(src, dest, _readbuffer);
+                string readLines = dest.GetString(temp);
+
+                // 結果格納
+                foreach (string line in Regex.Split(readLines, @"\n"))
+                {
+                    string _line = Regex.Replace(line, @"\r", "");
+                    lines.Add(_line);
+                }
+
+                // 正規表現で比較
+                if ((regex != string.Empty) && (Regex.IsMatch(readLines, regex, RegexOptions.Multiline)))
+                {
+                    // 一致
+                    break;
+                }
+            }
+
+            // 先頭(入力行)と最後(待合せ文字列)を削除
+            if (lines.Count > 0)
+            {
+                lines.RemoveAt(lines.Count - 1);
+            }
+            if (lines.Count > 0)
+            {
+                lines.RemoveAt(0);
+            }
+
+            // 一致
+            this.m_ShellStream.Flush();
+            return lines;
+        }
+
+        /// <summary>
+        /// 待合せ
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public List<string> Wait(int timeout)
+        {
+            return this.Wait(this.m_CommandPrompt, timeout);
+        }
+
+        /// <summary>
+        /// 待合せ
+        /// </summary>
+        /// <param name="regex"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public List<string> Wait(string regex, int timeout)
+        {
+            // 返却用オブジェクト生成
+            List<string> lines = new List<string>();
+
+            // Taskオブジェクト生成
+            using (CancellationTokenSource source = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                source.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 待合せ
+                    lines = this.Wait(regex);
+                }, source.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(source.Token);
+                    return lines;
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("待合せに失敗しました", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("待合せに失敗しました", ex);
+                }
+            }
+        }
+
         #region 例外イベントハンドラ
         /// <summary>
         /// 例外イベントハンドラ
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ExceptionEventHandler(object sender, NetworkVirtualTerminalExceptionEventArgs e)
+        private void ExceptionEventHandler(object sender, SshNetworkVirtualTerminalExceptionEventArgs e)
         {
             Debug.WriteLine("★★★★★ {0}受信:[{1}]", e.Exception.GetType().ToString(), e.Exception.Message);
 
@@ -430,4 +448,5 @@ namespace Common.Net
         }
         #endregion
     }
+    #endregion
 }

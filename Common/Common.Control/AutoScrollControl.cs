@@ -1,15 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using System.Diagnostics;
-using Common.Control;
 
 namespace Common.Control
 {
@@ -152,10 +144,9 @@ namespace Common.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <param name="control"></param>
         public AutoScrollControl(System.Windows.Forms.Control control)
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::AutoScrollControl()");
-
             // 初期設定
             this.m_Control = control;
             this.Width = control.Width;
@@ -172,8 +163,6 @@ namespace Common.Control
 
             // スクロールリセット
             this.Reset();
-
-            Trace.WriteLine("<<<<= AutoScrollControl::AutoScrollControl()");
         }
         #endregion
 
@@ -183,12 +172,8 @@ namespace Common.Control
         /// </summary>
         ~AutoScrollControl()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::~AutoScrollControl()");
-
             // タイマー停止
             this.Stop();
-
-            Trace.WriteLine("<<<<= AutoScrollControl::~AutoScrollControl()");
         }
         #endregion
 
@@ -198,20 +183,18 @@ namespace Common.Control
         /// </summary>
         private void Initialization()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::Initialization()");
-
             // スクロールパネル生成
             this.m_ScrollPanel = new Panel();
             this.m_ScrollPanel.AutoScroll = false;
             this.m_ScrollPanel.AutoSize = false;
             this.Controls.Add(this.m_ScrollPanel);
-            this.Size.ToString();
 
             //　タイマーイベント登録
             this.m_IntervalTimer.Tick += this.OnIntervalTimer;
             this.m_WaitTimer.Tick += this.OnWaitTimer;
 
-            Trace.WriteLine("<<<<= AutoScrollControl::Initialization()");
+            // リセット
+            this.Reset();
         }
         #endregion
 
@@ -220,16 +203,12 @@ namespace Common.Control
         /// </summary>
         public void Start()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::Start()");
-
             // スクロールされているか？
             if (!this.m_IntervalTimer.Enabled)
             {
                 // スクロール開始
                 this.m_IntervalTimer.Start();
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::Start()");
         }
 
         /// <summary>
@@ -237,8 +216,6 @@ namespace Common.Control
         /// </summary>
         public void Reset()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::Reset()");
-
             // 横スクロール有効か？
             if (this.m_AllowScroll.HasFlag(AllowScroll.SideWay))
             {
@@ -252,8 +229,6 @@ namespace Common.Control
                 // 縦スクロールリセット
                 this.ResetVirticalScroll();
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::Reset()");
         }
 
 
@@ -262,13 +237,11 @@ namespace Common.Control
         /// </summary>
         private void ResetSideWayScroll()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::ResetSideWayScroll()");
-
             // 右方向スクロールの場合
             if (this.m_ScrollSize.Width > 0)
             {
                 // ポジションリセット
-                this.m_Control.Left = 0 - this.m_Control.Width;
+                this.m_Control.Left = 0;
             }
             // 左方向スクロールの場合
             else if (this.m_ScrollSize.Width < 0)
@@ -276,8 +249,6 @@ namespace Common.Control
                 // ポジションリセット
                 this.m_Control.Left = this.Width;
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::ResetSideWayScroll()");
         }
 
         /// <summary>
@@ -285,13 +256,11 @@ namespace Common.Control
         /// </summary>
         private void ResetVirticalScroll()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::ResetVirticalScroll()");
-
             // 下方向スクロールの場合
             if (this.m_ScrollSize.Height > 0)
             {
                 // ポジションリセット
-                this.m_Control.Top = 0 - this.m_Control.Height;
+                this.m_Control.Top = 0;
             }
             // 上方向スクロールの場合
             else if (this.m_ScrollSize.Height < 0)
@@ -299,8 +268,6 @@ namespace Common.Control
                 // ポジションリセット
                 this.m_Control.Top = this.Height;
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::ResetVirticalScroll()");
         }
 
         /// <summary>
@@ -308,8 +275,6 @@ namespace Common.Control
         /// </summary>
         public void Stop()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::Stop()");
-
             // 休止タイマー動作中？
             if (this.m_WaitTimer.Enabled)
             {
@@ -323,8 +288,6 @@ namespace Common.Control
                 // スクロール停止
                 this.m_IntervalTimer.Stop();
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::Stop()");
         }
 
         /// <summary>
@@ -334,10 +297,6 @@ namespace Common.Control
         /// <param name="e"></param>
         private void OnIntervalTimer(object sender, EventArgs e)
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::OnIntervalTimer(object, EventArgs)");
-            Debug.WriteLine("タイマ間隔：{0}", this.m_IntervalTimer.Interval);
-            Debug.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss.fff"));
-
             // 休止タイマー動作中は動作させない
             if (this.m_WaitTimer.Enabled)
             {
@@ -357,8 +316,6 @@ namespace Common.Control
                 // 縦スクロール実行
                 this.VirticalScroll();
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::OnIntervalTimer(object, EventArgs)");
         }
 
         /// <summary>
@@ -366,10 +323,6 @@ namespace Common.Control
         /// </summary>
         private void SideWayScroll()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::SideWayScroll()");
-            Debug.WriteLine("タイマ間隔：{0}", this.m_IntervalTimer.Interval);
-            Debug.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss.fff"));
-
             // コントロール移動
             this.m_Control.Left += this.m_ScrollSize.Width;
 
@@ -391,8 +344,6 @@ namespace Common.Control
                     this.m_WaitTimer.Start();
                 }
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::SideWayScroll()");
         }
 
         /// <summary>
@@ -400,10 +351,6 @@ namespace Common.Control
         /// </summary>
         private void VirticalScroll()
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::VirticalScroll()");
-            Debug.WriteLine("タイマ間隔：{0}", this.m_IntervalTimer.Interval);
-            Debug.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss.fff"));
-
             // コントロール移動
             this.m_Control.Top += this.m_ScrollSize.Height;
 
@@ -425,8 +372,6 @@ namespace Common.Control
                     this.m_WaitTimer.Start();
                 }
             }
-
-            Trace.WriteLine("<<<<= AutoScrollControl::VirticalScroll()");
         }
 
         /// <summary>
@@ -436,18 +381,11 @@ namespace Common.Control
         /// <param name="e"></param>
         private void OnWaitTimer(object sender, EventArgs e)
         {
-            Trace.WriteLine("=>>>> AutoScrollControl::OnWaitTimer(object, EventArgs)");
-            Debug.WriteLine("タイマ間隔：{0}", this.m_WaitTimer.Interval);
-            Debug.WriteLine(DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss.fff"));
-
             // ウェイト完了なのでタイマー停止
             this.m_WaitTimer.Stop();
 
             // リセット
             this.Reset();
-
-            Trace.WriteLine("<<<<= AutoScrollControl::OnWaitTimer(object, EventArgs)");
         }
-
     }
 }

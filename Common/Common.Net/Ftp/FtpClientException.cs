@@ -25,7 +25,6 @@ namespace Common.Net
         public FtpClientException(string message)
             : base(message)
         {
-            Trace.WriteLine("FtpClientException::FtpClientException(string)");
             Debug.WriteLine(message);
         }
 
@@ -36,9 +35,20 @@ namespace Common.Net
         public FtpClientException(FtpResponse response)
             : base(response.ToString())
         {
-            Trace.WriteLine("FtpClientException::FtpClientException(FtpResponse)");
-            Debug.WriteLine("レスポンスコード：[" + response.ToString() + "]");
+            Debug.WriteLine(response.ToString());
             this.Response = response;
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
+        public FtpClientException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+            Debug.WriteLine(message);
+            Debug.WriteLine(innerException.Message);
         }
     }
 }

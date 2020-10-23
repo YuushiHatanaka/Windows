@@ -1,16 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Common.Control
 {
@@ -50,15 +41,11 @@ namespace Common.Control
         public AutoScrollLabel()
             : base(new Label())
         {
-            Trace.WriteLine("=>>>> LabeledTextBox::LabeledTextBox()");
-
             // コンポーネント初期化
             InitializeComponent();
 
             // 初期化
             this.Initialization();
-
-            Trace.WriteLine("<<<<= LabeledTextBox::LabeledTextBox()");
         }
         #endregion
 
@@ -68,12 +55,8 @@ namespace Common.Control
         /// </summary>
         private void InitializeComponent()
         {
-            Trace.WriteLine("=>>>> AutoScrollLabel::InitializeComponent()");
-
             // 自動サイズデフォルト
             ((Label)(this.Control)).AutoSize = true;
-
-            Trace.WriteLine("<<<<= AutoScrollLabel::InitializeComponent()");
         }
 
         /// <summary>
@@ -81,9 +64,6 @@ namespace Common.Control
         /// </summary>
         private void Initialization()
         {
-            Trace.WriteLine("=>>>> AutoScrollLabel::Initialization()");
-
-            Trace.WriteLine("<<<<= AutoScrollLabel::Initialization()");
         }
         #endregion
     }
