@@ -92,6 +92,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\TcpCancellationTokenSource.cs" />
+    <Compile Include="Common\TcpClientAbstract.cs" />
+    <Compile Include="Common\TcpClientInterface.cs" />
+    <Compile Include="Common\TcpInterface .cs" />
+    <Compile Include="Common\TcpNetworkVirtualTerminalAbstract.cs" />
     <Compile Include="Common\TcpTimeout.cs" />
     <Compile Include="Ftp\FtpClient.cs" />
     <Compile Include="Ftp\FtpClientDataConnection.cs" />
@@ -101,32 +106,35 @@
     <Compile Include="Ftp\FtpClientSendStream.cs" />
     <Compile Include="Ftp\FtpResponse.cs" />
     <Compile Include="Ftp\FtpTransferMode.cs" />
-    <Compile Include="Ssh\SshClientExceptions.cs" />
-    <Compile Include="Ssh\SshNetworkVirtualTerminalException.cs" />
-    <Compile Include="Ssh\SshNetworkVirtualTerminal.cs" />
-    <Compile Include="Ssh\Ssh.cs" />
-    <Compile Include="Ssh\SshClientEvent.cs" />
-    <Compile Include="Ssh\SshClientWrap.cs" />
-    <Compile Include="Ssh\SshExceptions.cs" />
-    <Compile Include="Telnet\Telnet.cs" />
-    <Compile Include="Telnet\TelnetClientStream.cs" />
-    <Compile Include="Telnet\TelnetClientEvent.cs" />
-    <Compile Include="Telnet\TelnetClientException.cs" />
-    <Compile Include="Telnet\NegotiationInfomation.cs" />
-    <Compile Include="Telnet\TelnetException.cs" />
-    <Compile Include="Telnet\TelnetOption.cs" />
-    <Compile Include="Telnet\TelnetCommand.cs" />
-    <Compile Include="Telnet\NetworkVirtualTerminalException.cs" />
     <Compile Include="Ntp\NtpClient.cs" />
     <Compile Include="Ntp\NtpPacket.cs" />
     <Compile Include="Ping\PingClient.cs" />
     <Compile Include="Ping\PingClientException.cs" />
     <Compile Include="Ping\PingStatistics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Telnet\NetworkVirtualTerminal.cs" />
+    <Compile Include="Ssh\Ssh.cs" />
+    <Compile Include="Ssh\SshClient.cs" />
+    <Compile Include="Ssh\SshClientEvent.cs" />
+    <Compile Include="Ssh\SshClientException.cs" />
+    <Compile Include="Ssh\SshCancellationTokenSource.cs" />
+    <Compile Include="Ssh\SshClientSendStream.cs" />
+    <Compile Include="Ssh\SshException.cs" />
+    <Compile Include="Ssh\SshNetworkVirtualTerminal.cs" />
+    <Compile Include="Ssh\SshNetworkVirtualTerminalException.cs" />
+    <Compile Include="Telnet\TelnetNegotiationStatus.cs" />
+    <Compile Include="Telnet\TelnetNetworkVirtualTerminalException.cs" />
+    <Compile Include="Telnet\TelnetCommand.cs" />
+    <Compile Include="Telnet\TelnetNegotiationInfomation.cs" />
+    <Compile Include="Telnet\TelnetClientEvent.cs" />
+    <Compile Include="Telnet\TelnetClientStream.cs" />
+    <Compile Include="Telnet\Telnet.cs" />
+    <Compile Include="Telnet\TelnetCancellationTokenSource.cs" />
     <Compile Include="Telnet\TelnetClient.cs" />
+    <Compile Include="Telnet\TelnetClientException.cs" />
+    <Compile Include="Telnet\TelnetException.cs" />
+    <Compile Include="Telnet\TelnetNetworkVirtualTerminal.cs" />
+    <Compile Include="Telnet\TelnetOption.cs" />
     <Compile Include="Telnet\TelnetOptionStatus.cs" />
-    <Compile Include="Telnet\NegotiationStatus.cs" />
     <Compile Include="Telnet\TelnetTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -144,5 +152,6 @@
       <Name>Common.Text</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

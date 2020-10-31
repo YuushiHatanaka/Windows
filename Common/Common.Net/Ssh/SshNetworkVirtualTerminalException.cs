@@ -3,9 +3,8 @@ using System.Diagnostics;
 
 namespace Common.Net
 {
-    #region SSH仮想ネットワーク端末例外クラス
     /// <summary>
-    /// SSH仮想ネットワーク端末例外クラス
+    /// 仮想ネットワーク端末例外クラス
     /// </summary>
     public class SshNetworkVirtualTerminalException : Exception
     {
@@ -31,5 +30,4 @@ namespace Common.Net
             Debug.WriteLine(innerException.Message);
         }
     }
-    #endregion
 }

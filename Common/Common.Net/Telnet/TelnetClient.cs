@@ -1,118 +1,21 @@
-﻿using log4net;
-using log4net.Config;
-using System;
+﻿using System;
 using System.IO;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Common.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Common.Net
 {
     /// <summary>
-    /// Telnetクライアントクラス
+    /// TELNETクライアントクラス
     /// </summary>
-    public class TelnetClient : IDisposable
+    public class TelnetClient : TcpClientAbstract, TcpClientInterface, IDisposable
     {
-        /// <summary>
-        /// ホスト名
-        /// </summary>
-        private string m_Host = string.Empty;
-
-        /// <summary>
-        /// ポート番号
-        /// </summary>
-        private int m_Port = 23;
-
-        /// <summary>
-        /// IPアドレス
-        /// </summary>
-        private string m_IpAddress = string.Empty;
-
-        /// <summary>
-        /// サーバエンドポイント
-        /// </summary>
-        private IPEndPoint m_IPEndPoint = null;
-
+        #region ソケット
         /// <summary>
         /// ソケット
         /// </summary>
-        private Socket m_Socket = null;
-
-        /// <summary>
-        /// 破棄フラグ
-        /// </summary>
-        private bool m_Disposed = false;
-
-        /// <summary>
-        /// ロガー
-        /// </summary>
-        protected ILog Logger = null;
-
-        #region タイムアウト
-        /// <summary>
-        /// TCPタイムアウト
-        /// </summary>
-        private TcpTimeout m_Timeout = new TcpTimeout();
-
-        /// <summary>
-        /// TCPタイムアウト
-        /// </summary>
-        public TcpTimeout Timeout { get { return this.m_Timeout; } }
-        #endregion
-
-        #region 送信バッファサイズ
-        /// <summary>
-        /// 送信バッファサイズ
-        /// </summary>
-        private int m_SendBufferCapacity = 8192;
-
-        /// <summary>
-        /// 送信バッファサイズ
-        /// </summary>
-        public int SendBufferCapacity
-        {
-            get { return this.m_SendBufferCapacity; }
-            set { this.m_SendBufferCapacity = value; }
-        }
-        #endregion
-
-        #region 受信バッファサイズ
-        /// <summary>
-        /// 受信バッファサイズ
-        /// </summary>
-        private int m_ReciveBufferCapacity = 8192;
-
-        /// <summary>
-        /// 受信バッファサイズ
-        /// </summary>
-        public int ReciveBufferCapacity
-        {
-            get { return this.m_ReciveBufferCapacity; }
-            set { this.m_ReciveBufferCapacity = value; }
-        }
-        #endregion
-
-        #region 通知イベント
-        /// <summary>
-        /// 接続通知イベント
-        /// </summary>
-        private ManualResetEvent OnConnectNotify = new ManualResetEvent(false);
-
-        /// <summary>
-        /// 受信完了通知イベント
-        /// </summary>
-        private ManualResetEvent OnReciveNotify = new ManualResetEvent(false);
-
-        /// <summary>
-        /// 送信完了通知イベント
-        /// </summary>
-        private ManualResetEvent OnSendNotify = new ManualResetEvent(false);
-
-        /// <summary>
-        /// 切断通知イベント
-        /// </summary>
-        private ManualResetEvent OnDisconnectNotify = new ManualResetEvent(false);
+        protected Socket m_Socket = null;
         #endregion
 
         #region イベント定義
@@ -137,32 +40,11 @@ namespace Common.Net
         public TelnetClientDisonnectedEventHandler OnDisconnected;
         #endregion
 
-        #region IPアドレス取得
+        #region 破棄済みフラグ
         /// <summary>
-        /// IPアドレス取得
+        /// 破棄済みフラグ
         /// </summary>
-        /// <param name="host"></param>
-        /// <param name="addressFamily"></param>
-        /// <returns></returns>
-        private string GetIPAddress(string host, AddressFamily addressFamily)
-        {
-            // ホスト名（またはIPアドレス）解決
-            IPHostEntry ipentry = Dns.GetHostEntry(host);
-
-            // IPアドレスを繰り返す
-            foreach (IPAddress ip in ipentry.AddressList)
-            {
-                // アドレスファミリーが一致するか？
-                if (ip.AddressFamily == addressFamily)
-                {
-                    // 一致したIPアドレス(文字列)を返却
-                    return ip.ToString();
-                }
-            }
-
-            // 該当なし(空文字)を返却
-            return string.Empty;
-        }
+        private bool m_Disposed = false;
         #endregion
 
         #region コンストラクタ
@@ -170,70 +52,13 @@ namespace Common.Net
         /// コンストラクタ
         /// </summary>
         /// <param name="host"></param>
-        public TelnetClient(string host)
-            : this(host, 23)
-        {
-            // 初期化
-            this.Initialization();
-        }
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
-        /// <param name="host"></param>
         /// <param name="port"></param>
-        public TelnetClient(string host, int port)
+        /// <param name="userName"></param>
+        /// <param name="userPasword"></param>
+        public TelnetClient(string host, int port, string userName, string userPasword)
         {
             // 初期化
-            this.Initialization();
-
-            // ホスト名設定
-            this.m_Host = host;
-
-            //　ポート番号設定
-            this.m_Port = port;
-
-            try
-            {
-                // ホスト名がIPアドレスとみなしてIPアドレスの解析
-                IPAddress hostAddress = IPAddress.Parse(host);
-
-                // ホストIPアドレス設定
-                this.m_IpAddress = host;
-
-                // エンドポイント設定
-                this.m_IPEndPoint = new IPEndPoint(hostAddress, port);
-            }
-            catch
-            {
-                // DNSに問合せ(IPv4)
-                this.m_IpAddress = this.GetIPAddress(host, AddressFamily.InterNetwork);
-
-                // エンドポイント設定
-                this.m_IPEndPoint = new IPEndPoint(IPAddress.Parse(this.m_IpAddress), port);
-            }
-        }
-        #endregion
-
-        #region 初期化
-        /// <summary>
-        /// 初期化
-        /// </summary>
-        private void Initialization()
-        {
-            #region ロギング設定
-            // ログ設定があるxmlのパス
-            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log4Net.xml");
-
-            // Fileinfoタイプに宣言する。
-            FileInfo file = new FileInfo(logPath);
-
-            // LogManagerに設定する。
-            XmlConfigurator.Configure(file);
-
-            // ログ設定
-            this.Logger = LogManager.GetLogger(typeof(TelnetClient));
-            #endregion
+            this.Initialization(host, port, userName, userPasword);
         }
         #endregion
 
@@ -244,7 +69,30 @@ namespace Common.Net
         ~TelnetClient()
         {
             // 破棄
-            this.Dispose(false);
+            this.Dispose();
+        }
+        #endregion
+
+        #region 初期化
+        /// <summary>
+        /// 初期化
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="userName"></param>
+        /// <param name="userPasword"></param>
+        protected override void Initialization(string host, int port, string userName, string userPasword)
+        {
+            // 基底クラス初期化
+            base.Initialization(host, port, userName, userPasword);
+
+            // ソケット生成
+            this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.m_Socket.ReceiveBufferSize = this.m_ReciveBufferCapacity;
+            this.m_Socket.SendBufferSize = this.m_SendBufferCapacity;
+            this.m_Socket.ReceiveTimeout = this.m_Timeout.Recv;
+            this.m_Socket.SendTimeout = this.m_Timeout.Send;
+            this.m_Socket.Blocking = true;
         }
         #endregion
 
@@ -272,8 +120,6 @@ namespace Common.Net
                 // マネージドリソース解放
                 if (isDisposing)
                 {
-                    // 切断
-                    this.DisConnect();
                 }
 
                 // 破棄済みを設定
@@ -288,140 +134,108 @@ namespace Common.Net
         /// </summary>
         public void Connect()
         {
-            // ソケット生成
-            this.m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.m_Socket.ReceiveBufferSize = this.m_ReciveBufferCapacity;
-            this.m_Socket.SendBufferSize = this.m_SendBufferCapacity;
-            this.m_Socket.ReceiveTimeout = this.m_Timeout.Recv;
-            this.m_Socket.SendTimeout = this.m_Timeout.Send;
-            this.m_Socket.Blocking = false;
+            // 接続
+            this.m_Socket.Connect(this.m_IPEndPoint.Address, this.m_Port);
 
-            // 非同期で接続を待機
-            IAsyncResult _result = this.m_Socket.BeginConnect(this.m_IPEndPoint, new AsyncCallback(this.OnConnectCallBack), this.m_Socket);
-
-            // 接続待ち
-            if (!this.OnConnectNotify.WaitOne(this.m_Timeout.Connect))
-            {
-                // 接続完了通知リセット
-                this.OnConnectNotify.Reset();
-
-                // 例外
-                throw new TelnetClientException("接続タイムアウト:[" + this.m_Timeout.Connect + "]");
-            }
-
-            // 接続完了通知リセット
-            this.OnConnectNotify.Reset();
+            // ロギング
+            this.Logger.InfoFormat("接続：[{0} ⇒ {1}]", this.m_Socket.LocalEndPoint.ToString(), this.m_Socket.RemoteEndPoint.ToString());
         }
 
         /// <summary>
-        /// 非同期接続のコールバックメソッド(別スレッドで実行される)
+        /// 接続
         /// </summary>
-        /// <param name="asyncResult"></param>
-        private void OnConnectCallBack(IAsyncResult asyncResult)
+        /// <param name="timeout"></param>
+        public void Connect(int timeout)
         {
-            try
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Connect = new CancellationTokenSource())
             {
-                // ソケット取得
-                Socket _Socket = (Socket)(asyncResult.AsyncState);
+                // タイムアウト設定
+                this.CancellationTokenSource.Connect.CancelAfter(timeout);
 
-                // ロギング
-                this.Logger.InfoFormat("接続：[{0} ⇒ {1}]", _Socket.LocalEndPoint.ToString(), _Socket.RemoteEndPoint.ToString());
-
-                // ソケットが切断されているか？
-                if (_Socket == null || !_Socket.Connected)
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
                 {
-                    return;
-                }
+                    // 接続
+                    this.Connect();
+                }, this.CancellationTokenSource.Connect.Token);
 
-                // 接続完了通知を設定
-                this.OnConnectNotify.Set();
-
-                // イベント呼出判定
-                if (this.OnConnected != null)
+                try
                 {
-                    // イベントパラメータ設定
-                    TelnetClientConnectedEventArgs _TelnetClientConnectedEventArgs = new TelnetClientConnectedEventArgs()
-                    {
-                        LocalEndPoint = _Socket.LocalEndPoint,
-                        RemoteEndPoint = _Socket.RemoteEndPoint,
-                    };
-
-                    // イベント呼出し
-                    this.OnConnected(this, _TelnetClientConnectedEventArgs);
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Connect.Token);
                 }
-            }
-            catch
-            {
-                // 接続完了通知リセット
-                this.OnConnectNotify.Reset();
-                return;
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("接続(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("接続(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Connect = null;
+                }
             }
         }
         #endregion
 
         #region 切断
         /// <summary>
-        // ソケット通信接続の切断
+        /// 切断
         /// </summary>
-        public void DisConnect()
+        public void Disconnect()
         {
-            // 切断判定
-            if (!(this.m_Socket != null && this.m_Socket.Connected))
-            {
-                // 切断済みなので処理を終了
-                return;
-            }
+            // 切断
+            this.m_Socket.Disconnect(true);
 
-            // 切断開始
-            IAsyncResult _result = this.m_Socket.BeginDisconnect(false, new AsyncCallback(this.OnDisconnectCallBack), this.m_Socket);
-
-            // 切断待ち
-            if (!this.OnDisconnectNotify.WaitOne(this.m_Timeout.Disconnect))
-            {
-                // 切断完了通知リセット
-                this.OnDisconnectNotify.Reset();
-
-                // 例外
-                throw new TelnetClientException("切断タイムアウト:[" + this.m_Timeout.Disconnect + "]");
-            }
-
-            // 切断完了通知リセット
-            this.OnDisconnectNotify.Reset();
+            // ロギング
+            this.Logger.InfoFormat("切断：[{0}]", this.m_Socket.RemoteEndPoint.ToString());
         }
 
         /// <summary>
-        /// 非同期切断のコールバックメソッド(別スレッドで実行される)
+        /// 切断
         /// </summary>
-        /// <param name="asyncResult"></param>
-        private void OnDisconnectCallBack(IAsyncResult asyncResult)
+        /// <param name="timeout"></param>
+        public void Disconnect(int timeout)
         {
-            // ソケット取得
-            Socket _Socket = (Socket)(asyncResult.AsyncState);
-
-            // ロギング
-            this.Logger.InfoFormat("切断：[{0} ⇒ {1}]", _Socket.LocalEndPoint.ToString(), _Socket.RemoteEndPoint.ToString());
-
-            // 切断・破棄
-            if (_Socket != null)
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Disconnect = new CancellationTokenSource())
             {
-                _Socket.Disconnect(false);
-                _Socket.Dispose();
-            }
+                // タイムアウト設定
+                this.CancellationTokenSource.Disconnect.CancelAfter(timeout);
 
-            // 切断通知
-            this.OnDisconnectNotify.Set();
-
-            // イベント呼出判定
-            if (this.OnDisconnected != null)
-            {
-                // イベントパラメータ設定
-                TelnetClientDisconnectedEventArgs _TelnetClientDisconnectedEventArgs = new TelnetClientDisconnectedEventArgs()
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
                 {
-                    RemoteEndPoint = this.m_IPEndPoint,
-                };
+                    // 切断
+                    this.Disconnect();
+                }, this.CancellationTokenSource.Disconnect.Token);
 
-                // イベント呼出
-                this.OnDisconnected(this, _TelnetClientDisconnectedEventArgs);
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Disconnect.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("切断(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("切断(Telnet)切断に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Disconnect = null;
+                }
             }
         }
         #endregion
@@ -456,72 +270,139 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void Send(MemoryStream stream)
         {
-            // 送信サイズ判定
-            if (stream.Length == 0)
-            {
-                // 送信するものがないので、何もしない
-                return;
-            }
+            // 送信
+            this.m_Socket.Send(stream.ToArray(), (int)stream.Length, SocketFlags.None);
 
-            // 送信用Stream生成
-            TelnetClientSendStream _TelnetClientSendStream = new TelnetClientSendStream();
-            _TelnetClientSendStream.Stream = stream;
-            _TelnetClientSendStream.Socket = this.m_Socket;
-
-            // 送信開始
-            IAsyncResult _result = this.m_Socket.BeginSend(stream.ToArray(), 0, stream.ToArray().Length, SocketFlags.None, new AsyncCallback(this.OnSendCallBack), _TelnetClientSendStream);
-
-            // 送信応答待ち
-            if (!this.OnSendNotify.WaitOne(this.m_Timeout.Send))
-            {
-                // 通知リセット
-                this.OnSendNotify.Reset();
-
-                // 例外
-                throw new TelnetClientException("送信タイムアウト:[" + this.m_Timeout.Send + "]");
-            }
-
-            // 通知リセット
-            this.OnSendNotify.Reset();
+            // ロギング
+            this.Logger.InfoFormat("送信 - {0:#,0} byte：\n{1}", stream.Length, Common.Diagnostics.Debug.Dump(1, stream));
         }
 
         /// <summary>
-        /// 非同期送信のコールバックメソッド(別スレッドで実行される)
+        /// 送信
         /// </summary>
-        /// <param name="asyncResult"></param>
-        private void OnSendCallBack(IAsyncResult asyncResult)
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        public void Send(byte data, int timeout)
         {
-            // オブジェクト変換
-            TelnetClientSendStream _TelnetClientSendStream = (TelnetClientSendStream)asyncResult.AsyncState;
-
-            // ソケットが切断されているか？
-            if (_TelnetClientSendStream.Socket == null || !_TelnetClientSendStream.Socket.Connected)
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Send = new CancellationTokenSource())
             {
-                return;
-            }
+                // タイムアウト設定
+                this.CancellationTokenSource.Send.CancelAfter(timeout);
 
-            // 送信完了
-            int bytesSent = _TelnetClientSendStream.Socket.EndSend(asyncResult);
-
-            // ロギング
-            this.Logger.InfoFormat("送信データ - {0:#,0} byte：\n{1}", _TelnetClientSendStream.Stream.Length, Debug.Dump(1, _TelnetClientSendStream.Stream));
-
-            // 送信完了通知
-            this.OnSendNotify.Set();
-
-            // イベント呼出
-            if (this.OnSend != null)
-            {
-                // イベントパラメータ生成
-                TelnetClientSendEventArgs _TelnetClientSendEventArgs = new TelnetClientSendEventArgs()
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
                 {
-                    Socket = _TelnetClientSendStream.Socket,
-                    Size = bytesSent,
-                    Stream = _TelnetClientSendStream.Stream,
-                };
+                    // 送信
+                    this.Send(data);
+                }, this.CancellationTokenSource.Send.Token);
 
-                // イベント呼出し
-                this.OnSend(this, _TelnetClientSendEventArgs);
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Send.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Send = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 送信
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        public void Send(byte[] data, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Send = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.CancellationTokenSource.Send.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 送信
+                    this.Send(data);
+                }, this.CancellationTokenSource.Send.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Send.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Send = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 送信
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="timeout"></param>
+        public void Send(MemoryStream stream, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Send = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.CancellationTokenSource.Send.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 送信
+                    this.Send(stream);
+                }, this.CancellationTokenSource.Send.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Send.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetClientException("送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Send = null;
+                }
             }
         }
         #endregion
@@ -544,109 +425,215 @@ namespace Common.Net
         /// <returns></returns>
         public MemoryStream Recive(int size)
         {
-            // 受信用Stream生成
-            TelnetClientReciveStream _TelnetClientReciveStream = new TelnetClientReciveStream();
-            _TelnetClientReciveStream.Socket = this.m_Socket;
-            _TelnetClientReciveStream.Buffer = new byte[size];
-            _TelnetClientReciveStream.Stream = new MemoryStream(size);
+            // 受信バッファイサイズ生成
+            byte[] reciveBuffer = new byte[size];
 
-            // 結果受信待ち
-            IAsyncResult _result = this.m_Socket.BeginReceive(_TelnetClientReciveStream.Buffer, 0, _TelnetClientReciveStream.Buffer.Length, SocketFlags.None, this.OnReciveCallback, _TelnetClientReciveStream);
+            // 受信
+            int reciveSize = this.m_Socket.Receive(reciveBuffer, size, SocketFlags.None);
 
-            // データ受信待ち
-            if (!this.OnReciveNotify.WaitOne(this.m_Timeout.Recv))
+            // 受信バッファ
+            MemoryStream readStream = new MemoryStream(reciveSize);
+
+            // 受信バッファに保存
+            readStream.Write(reciveBuffer, 0, reciveSize);
+
+            // ロギング
+            this.Logger.InfoFormat("受信データ - {0:#,0} byte：\n{1}", readStream.Length, Common.Diagnostics.Debug.Dump(1, readStream));
+
+            // MemoryStreamを返却
+            return readStream;
+        }
+
+        /// <summary>
+        /// 受信
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public MemoryStream Recive(int size, int timeout)
+        {
+            // 受信バッファ
+            MemoryStream readStream = new MemoryStream(size);
+
+            // Taskオブジェクト生成
+            using (this.CancellationTokenSource.Recv = new CancellationTokenSource())
             {
-                // 受信通知リセット
-                this.OnReciveNotify.Reset();
+                // タイムアウト設定
+                this.CancellationTokenSource.Recv.CancelAfter(timeout);
 
-                // 例外
-                throw new TelnetClientException("受信タイムアウト:[" + this.m_Timeout.Recv + "]");
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 受信
+                    readStream = this.Recive(size);
+                }, this.CancellationTokenSource.Recv.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.CancellationTokenSource.Recv.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("受信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("受信(Telnet)切断に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.CancellationTokenSource.Recv = null;
+                }
+            }
+
+            // MemoryStreamを返却
+            return readStream;
+        }
+        #endregion
+
+        #region 非同期送信
+        /// <summary>
+        /// 非同期送信
+        /// </summary>
+        /// <param name="data"></param>
+        public void SendAsync(byte data)
+        {
+            // 送信データ生成
+            byte[] senddata = new byte[1] { data };
+
+            // 非同期送信
+            this.SendAsync(new MemoryStream(senddata));
+        }
+
+        /// <summary>
+        /// 非同期送信
+        /// </summary>
+        /// <param name="data"></param>
+        public void SendAsync(byte[] data)
+        {
+            // 非同期送信
+            this.SendAsync(new MemoryStream(data));
+        }
+
+        /// <summary>
+        /// 非同期送信
+        /// </summary>
+        /// <param name="stream"></param>
+        public void SendAsync(MemoryStream stream)
+        {
+            // 送信用Stream生成
+            TelnetClientSendStream sendStream = new TelnetClientSendStream();
+            sendStream.Socket = this.m_Socket;
+            sendStream.Stream = stream;
+
+            // 非同期送信
+            IAsyncResult _result = this.m_Socket.BeginSend(stream.ToArray(), 0, stream.ToArray().Length, SocketFlags.None, new AsyncCallback(this.SendCallBack), sendStream);
+        }
+
+        /// <summary>
+        /// 非同期送信コールバック
+        /// </summary>
+        /// <param name="ar"></param>
+        private void SendCallBack(IAsyncResult ar)
+        {
+            // オブジェクト変換
+            TelnetClientSendStream stream = (TelnetClientSendStream)ar.AsyncState;
+
+            // 送信完了
+            int bytesSent = stream.Socket.EndSend(ar);
+
+            // ロギング
+            this.Logger.InfoFormat("送信データ - {0:#,0} byte：\n{1}", stream.Stream.Length, Common.Diagnostics.Debug.Dump(1, stream.Stream));
+
+            // 送信通知
+            this.OnSendNotify.Set();
+
+            // イベント呼出
+            if (this.OnSend != null)
+            {
+                // イベントパラメータ生成
+                TelnetClientSendEventArgs eventArgs = new TelnetClientSendEventArgs()
+                {
+                    Socket = stream.Socket,
+                    Size = bytesSent,
+                    Stream = stream.Stream,
+                };
+
+                // イベント呼出し
+                this.OnSend(this, eventArgs);
+            }
+
+            // 送信通知リセット
+            this.OnSendNotify.Reset();
+        }
+        #endregion
+
+        #region 非同期受信
+        /// <summary>
+        /// 非同期受信
+        /// </summary>
+        /// <returns></returns>
+        public void ReciveAsync()
+        {
+            // 非同期受信
+            this.ReciveAsync(this.m_ReciveBufferCapacity);
+        }
+
+        /// <summary>
+        /// 非同期受信
+        /// </summary>
+        /// <param name="size"></param>
+        public void ReciveAsync(int size)
+        {
+            // 受信用Stream生成
+            TelnetClientReciveStream stream = new TelnetClientReciveStream();
+            stream.Buffer = new byte[size];
+            stream.Socket = this.m_Socket;
+            stream.Stream = new MemoryStream(size);
+
+            // 非同期受信
+            IAsyncResult result = this.m_Socket.BeginReceive(stream.Buffer, 0, stream.Buffer.Length, SocketFlags.None, this.ReciveAsyncCallback, stream);
+        }
+
+        /// <summary>
+        /// 非同期受信コールバック
+        /// </summary>
+        /// <param name="ar"></param>
+        private void ReciveAsyncCallback(IAsyncResult ar)
+        {
+            // オブジェクト変換
+            TelnetClientReciveStream stream = (TelnetClientReciveStream)ar.AsyncState;
+
+            // 非同期読込が終了
+            int bytesRead = stream.Socket.EndReceive(ar);
+
+            // ロギング
+            this.Logger.InfoFormat("受信(非同期)データ - {0:#,0} byte：\n{1}", bytesRead, Common.Diagnostics.Debug.Dump(1, stream.Buffer, bytesRead));
+
+            // 受信通知
+            this.OnReciveNotify.Set();
+
+            // イベント呼出
+            if (this.OnRecive != null)
+            {
+                // イベントパラメータ生成
+                TelnetClientReciveEventArgs eventArgs = new TelnetClientReciveEventArgs()
+                {
+                    Socket = stream.Socket,
+                    Size = bytesRead,
+                    Stream = stream.Stream,
+                };
+
+                // イベント呼出し
+                this.OnRecive(this, eventArgs);
             }
 
             // 受信通知リセット
             this.OnReciveNotify.Reset();
-
-            // MemoryStreamを返却
-            return _TelnetClientReciveStream.Stream;
-        }
-
-        /// <summary>
-        /// 非同期受信のコールバックメソッド(別スレッドで実行される)
-        /// </summary>
-        /// <param name="asyncResult"></param>
-        private void OnReciveCallback(IAsyncResult asyncResult)
-        {
-            // オブジェクト変換
-            TelnetClientReciveStream _TelnetClientReciveStream = (TelnetClientReciveStream)asyncResult.AsyncState;
-
-            // ソケットが切断されているか？
-            if (_TelnetClientReciveStream.Socket == null || !_TelnetClientReciveStream.Socket.Connected)
-            {
-                return;
-            }
-
-            // 非同期読込が終了しているか？
-            int bytesRead = _TelnetClientReciveStream.Socket.EndReceive(asyncResult);
-
-            // 受信データサイズ判定
-            if (bytesRead > 0)
-            {
-                // ロギング
-                this.Logger.InfoFormat("受信データ - {0:#,0} byte：\n{1}", bytesRead, Debug.Dump(1, _TelnetClientReciveStream.Buffer, bytesRead));
-
-                // 残りがある場合にはデータ保持する
-                if (_TelnetClientReciveStream.Stream != null)
-                {
-                    _TelnetClientReciveStream.Stream.Write(_TelnetClientReciveStream.Buffer, 0, bytesRead);
-                }
-
-                // バッファ全て受信したら残りがある場合があるので、再受信実施
-                if (bytesRead >= _TelnetClientReciveStream.Socket.ReceiveBufferSize)
-                {
-                    // 再度受信待ちを実施
-                    _TelnetClientReciveStream.Socket.BeginReceive(_TelnetClientReciveStream.Buffer, 0, _TelnetClientReciveStream.Buffer.Length, SocketFlags.None, new AsyncCallback(this.OnReciveCallback), _TelnetClientReciveStream);
-                }
-                else
-                {
-                    // 受信通知設定
-                    this.OnReciveNotify.Set();
-
-                    // イベント呼出
-                    if (this.OnRecive != null)
-                    {
-                        // イベントパラメータ生成
-                        TelnetClientReciveEventArgs _TelnetClientReciveEventArgs = new TelnetClientReciveEventArgs()
-                        {
-                            Socket = _TelnetClientReciveStream.Socket,
-                            Size = bytesRead,
-                            Stream = _TelnetClientReciveStream.Stream,
-                        };
-
-                        // イベント呼出し
-                        this.OnRecive(this, _TelnetClientReciveEventArgs);
-                    }
-                }
-            }
-            else
-            {
-                // 受信通知設定
-                this.OnReciveNotify.Set();
-
-                // イベント呼出
-                if (this.OnRecive != null)
-                {
-                    // イベントパラメータ生成
-                    TelnetClientReciveEventArgs _TelnetClientReciveEventArgs = new TelnetClientReciveEventArgs()
-                    {
-                        Socket = _TelnetClientReciveStream.Socket,
-                        Size = 0,
-                        Stream = null,
-                    };
-
-                    // イベント呼出し
-                    this.OnRecive(this, _TelnetClientReciveEventArgs);
-                }
-            }
         }
         #endregion
     }

@@ -54,6 +54,21 @@ namespace Common.Net
                     }
                     Debug.WriteLine("");
                 }
+                else
+                {
+                    // TODO:0x0dが連続する場合がるので暫定対処
+                    if (i > 0)
+                    {
+                        if (text.ToCharArray()[i - 1] != '\r')
+                        {
+                            stringBuilder.Append(text.ToCharArray()[i]);
+                        }
+                    }
+                    else
+                    {
+                        stringBuilder.Append(text.ToCharArray()[i]);
+                    }
+                }
                 /*
                 // ANSIエスケープコード判定
                 if (textByte[i] == 0x1b)
@@ -78,7 +93,7 @@ namespace Common.Net
             }
 
             // テキスト追加
-            this.AppendText(text);
+            this.AppendText(stringBuilder.ToString());
         }
     }
 }

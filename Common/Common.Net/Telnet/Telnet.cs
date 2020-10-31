@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Net.Sockets;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,94 +11,27 @@ namespace Common.Net
     /// <summary>
     /// Telnetクラス
     /// </summary>
-    public class Telnet : NetworkVirtualTerminal
+    public class Telnet : Common.Net.TelnetClient, TcpInterface, IDisposable
     {
-        #region ログイン情報
-        #region ユーザ名
+        #region 仮想端末クラスオブジェクト
         /// <summary>
-        /// ユーザ名
+        /// 仮想端末クラスオブジェクト
         /// </summary>
-        private string m_UserName = string.Empty;
-
-        /// <summary>
-        /// ユーザ名
-        /// </summary>
-        public string UserName { get { return this.m_UserName; } set { this.m_UserName = value; } }
+        protected TelnetNetworkVirtualTerminal NetworkVirtualTerminal = new TelnetNetworkVirtualTerminal();
         #endregion
 
-        #region ユーザパスワード
+        #region TELNETタスクキャンセルトークン
         /// <summary>
-        /// ユーザパスワード
+        /// TELNETタスクキャンセルトークン
         /// </summary>
-        private string m_UserPassword = string.Empty;
-
-        /// <summary>
-        /// ユーザパスワード
-        /// </summary>
-        public string UserPassword { get { return this.m_UserPassword; } set { this.m_UserPassword = value; } }
+        protected TelnetCancellationTokenSource TelnetCancellationTokenSource = new TelnetCancellationTokenSource();
         #endregion
 
-        #region ログインプロンプト
+        #region 破棄済みフラグ
         /// <summary>
-        /// ログインプロンプト
+        /// 破棄済みフラグ
         /// </summary>
-        private string m_LoginPrompt = @"^login: ";
-
-        /// <summary>
-        /// ログインプロンプト
-        /// </summary>
-        public string LoginPrompt { get { return this.m_LoginPrompt; } set { this.m_LoginPrompt = value; } }
-        #endregion
-
-        #region パスワードプロンプト
-        /// <summary>
-        /// パスワードプロンプト
-        /// </summary>
-        private string m_PasswordPrompt = @"^Password:";
-
-        /// <summary>
-        /// パスワードプロンプト
-        /// </summary>
-        public string PasswordPrompt { get { return this.m_PasswordPrompt; } set { this.m_PasswordPrompt = value; } }
-        #endregion
-
-        #region コマンドプロンプト
-        /// <summary>
-        /// コマンドプロンプト
-        /// </summary>
-        private string m_CommandPrompt = @"\$ $";
-
-        /// <summary>
-        /// コマンドプロンプト
-        /// </summary>
-        public string CommandPrompt { get { return this.m_CommandPrompt; } set { this.m_CommandPrompt = value; } }
-        #endregion
-        #endregion
-
-        #region ログアウト情報
-        #region exitコマンド
-        /// <summary>
-        /// exitコマンド
-        /// </summary>
-        private string m_ExitCommand = "exit";
-
-        /// <summary>
-        /// exitコマンド
-        /// </summary>
-        public string ExitCommand { get { return this.m_ExitCommand; } set { this.m_ExitCommand = value; } }
-        #endregion
-
-        #region logoutメッセージ
-        /// <summary>
-        /// logoutメッセージ
-        /// </summary>
-        private string m_LogoutMsg = "exit";
-
-        /// <summary>
-        /// logoutメッセージ
-        /// </summary>
-        public string LogoutMsg { get { return this.m_LogoutMsg; } set { this.m_LogoutMsg = value; } }
-        #endregion
+        private bool m_Disposed = false;
         #endregion
 
         #region コンストラクタ
@@ -107,10 +41,8 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Telnet(string userName, string userPasword)
-            : base("localhost")
+            : this("localhost", 23, userName, userPasword)
         {
-            // 初期化
-            this.Initialization(userName, userPasword);
         }
 
         /// <summary>
@@ -120,10 +52,8 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Telnet(string host, string userName, string userPasword)
-            : base(host)
+            : this(host, 23, userName, userPasword)
         {
-            // 初期化
-            this.Initialization(userName, userPasword);
         }
 
         /// <summary>
@@ -134,10 +64,10 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Telnet(string host, int port, string userName, string userPasword)
-            : base(host, port)
+            : base(host, port, userName, userPasword)
         {
             // 初期化
-            this.Initialization(userName, userPasword);
+            this.Initialization(host, port, userName, userPasword);
         }
         #endregion
 
@@ -147,6 +77,8 @@ namespace Common.Net
         /// </summary>
         ~Telnet()
         {
+            // 破棄
+            this.Dispose();
         }
         #endregion
 
@@ -154,14 +86,49 @@ namespace Common.Net
         /// <summary>
         /// 初期化
         /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
-        private void Initialization(string userName, string userPasword)
+        protected override void Initialization(string host, int port, string userName, string userPasword)
         {
-            // 初期設定
-            this.m_UserName = userName;
-            this.m_UserPassword = userPasword;
-            this.OnException += this.ExceptionEventHandler;
+            // 基底クラス初期化
+            base.Initialization(host, port, userName, userPasword);
+
+            // TODO:未実装
+        }
+        #endregion
+
+        #region 破棄
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        public new void Dispose()
+        {
+            this.Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        /// <param name="isDisposing"></param>
+        protected override void Dispose(bool isDisposing)
+        {
+            // 破棄しているか？
+            if (!this.m_Disposed)
+            {
+                // アンマネージドリソース解放
+
+                // マネージドリソース解放
+                if (isDisposing)
+                {
+                }
+
+                // 破棄済みを設定
+                this.m_Disposed = true;
+            }
         }
         #endregion
 
@@ -169,96 +136,96 @@ namespace Common.Net
         /// <summary>
         /// ログイン
         /// </summary>
+        /// <returns></returns>
         public string Login()
         {
-            StringBuilder read = null;                  // 読込用
-            StringBuilder result = new StringBuilder(); // 結果用
+            StringBuilder result = new StringBuilder();
+            string expectResult = string.Empty;
 
             // 接続
             this.Connect();
 
-            // ログインプロンプト受信待ち
-            read = this.Read(this.m_LoginPrompt);
-            if (read == null)
+            // 接続判定
+            if (!this.m_Socket.Connected)
             {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[ログインプロンプト受信待ち]");
+                // 異常終了(例外)
+                throw new TelnetException("接続に失敗しました：[{" + this.m_IPEndPoint.ToString() + "]");
             }
 
+            // ログインプロンプト受信待ち
+            expectResult = this.Expect(this.m_LoginPrompt);
+
             // 結果追加
-            result.Append(read.ToString());
+            result.Append(expectResult);
 
             // ユーザ名送信
             this.WriteLine(this.m_UserName);
 
             // パスワードプロンプト受信待ち
-            read = this.Read(this.m_PasswordPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[パスワードプロンプト受信待ち]");
-            }
+            expectResult = this.Expect(this.m_PasswordPrompt);
 
             // 結果追加
-            result.Append(read.ToString());
+            result.Append(expectResult);
 
             // パスワード送信
             this.WriteLine(this.m_UserPassword);
 
             // コマンドプロンプト待ち
-            read = this.Read(this.m_CommandPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("ログインに失敗しました:[コマンドプロンプト待ち]");
-            }
+            expectResult = this.Expect(this.m_CommandPrompt);
 
             // 結果追加
-            result.Append(read.ToString());
+            result.Append(expectResult);
 
             // 結果返却
             return result.ToString();
         }
 
         /// <summary>
-        /// ログイン
+        /// ログアウト
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public string Login(int timeout)
         {
-            string result = string.Empty;   // 結果用
+            string _result = string.Empty;
 
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.TelnetCancellationTokenSource.Login = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.TelnetCancellationTokenSource.Login.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // ログイン
-                    result = this.Login();
-                }, source.Token);
+                    _result = this.Login();
+                }, this.TelnetCancellationTokenSource.Login.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.TelnetCancellationTokenSource.Login.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログインに失敗しました", ex);
+                    throw new TelnetException("ログイン(Telnet)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログインに失敗しました", ex);
+                    throw new TelnetException("ログイン(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.Login = null;
                 }
             }
+
+            // 結果返却
+            return _result;
         }
         #endregion
 
@@ -266,27 +233,14 @@ namespace Common.Net
         /// <summary>
         /// ログアウト
         /// </summary>
-        public string Logout()
+        /// <returns></returns>
+        public void Logout()
         {
-            StringBuilder read = null;                  // 読込用
-            StringBuilder result = new StringBuilder(); // 結果用
-
             // exitコマンド送信
-            this.WriteLine(this.m_ExitCommand);
-
-            // 受信待ち
-            read = this.Read(this.m_LogoutMsg, 100);
-            if (read != null)
-            {
-                // 結果追加
-                result.Append(read.ToString());
-            }
+            this.WriteLine("exit");
 
             // 切断
-            this.DisConnect();
-
-            // 結果返却
-            return result.ToString();
+            this.Disconnect();
         }
 
         /// <summary>
@@ -294,38 +248,160 @@ namespace Common.Net
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public string Logout(int timeout)
+        public void Logout(int timeout)
         {
-            string result = string.Empty;   // 結果用
-
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.TelnetCancellationTokenSource.Logout = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.TelnetCancellationTokenSource.Logout.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // ログアウト
-                    result = this.Logout();
-                }, source.Token);
+                    this.Logout();
+                }, this.TelnetCancellationTokenSource.Logout.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.TelnetCancellationTokenSource.Logout.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログアウトに失敗しました", ex);
+                    throw new TelnetException("ログアウト(Telnet)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログアウトに失敗しました", ex);
+                    throw new TelnetException("ログアウト(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.Logout = null;
+                }
+            }
+        }
+
+        #endregion
+
+        #region 文字列送信
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public void Write(string str)
+        {
+            // MemoryStreamオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+
+            // エンコード
+            byte[] data = this.NetworkVirtualTerminal.RemoteEncoding.GetBytes(str);
+
+            // MemoryStreamオブジェクト書込
+            sendStream.Write(data, 0, data.Length);
+
+            // 送信
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public void Write(string str, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.TelnetCancellationTokenSource.WriteLine = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.TelnetCancellationTokenSource.WriteLine.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 文字列送信
+                    this.Write(str);
+                }, this.TelnetCancellationTokenSource.WriteLine.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.TelnetCancellationTokenSource.WriteLine.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("文字列送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("文字列送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.WriteLine = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="line"></param>
+        public void WriteLine(string line)
+        {
+            // 書込(文字列+改行)
+            this.Write(line + this.NetworkVirtualTerminal.WriteNewLine);
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="timeout"></param>
+        public void WriteLine(string line, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.TelnetCancellationTokenSource.WriteLine = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.TelnetCancellationTokenSource.WriteLine.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 文字列送信
+                    this.WriteLine(line);
+                }, this.TelnetCancellationTokenSource.WriteLine.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.TelnetCancellationTokenSource.WriteLine.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("文字列送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("文字列送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.WriteLine = null;
                 }
             }
         }
@@ -335,24 +411,21 @@ namespace Common.Net
         /// <summary>
         /// コマンド実行
         /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public string Execute(string command)
         {
-            StringBuilder read = null;                  // 読込用
-            StringBuilder result = new StringBuilder(); // 結果用
+            StringBuilder result = new StringBuilder();
+            string expectResult = string.Empty;
 
             // コマンド送信
             this.WriteLine(command);
 
             // コマンドプロンプト待ち
-            read = this.Read(this.m_CommandPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("コマンド実行に失敗しました:[コマンドプロンプト待ち]");
-            }
+            expectResult = this.Expect(this.m_CommandPrompt);
 
             // 結果追加
-            result.Append(read.ToString());
+            result.Append(expectResult);
 
             // 結果返却
             return result.ToString();
@@ -366,67 +439,148 @@ namespace Common.Net
         /// <returns></returns>
         public string Execute(string command, int timeout)
         {
-            string result = string.Empty;   // 結果用
+            string _result = string.Empty;
 
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.TelnetCancellationTokenSource.Execute = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.TelnetCancellationTokenSource.Execute.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // コマンド実行
-                    result = this.Execute(command);
-                }, source.Token);
+                    _result = this.Execute(command);
+                }, this.TelnetCancellationTokenSource.Execute.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.TelnetCancellationTokenSource.Execute.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("コマンド実行に失敗しました", ex);
+                    throw new TelnetException("コマンド実行(Telnet)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("コマンド実行に失敗しました", ex);
+                    throw new TelnetException("コマンド実行(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.Execute = null;
                 }
             }
+
+            // 結果返却
+            return _result;
         }
         #endregion
 
-        #region 例外イベントハンドラ
+        #region 結果待ち
         /// <summary>
-        /// 例外イベントハンドラ
+        /// 結果待ち
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExceptionEventHandler(object sender, NetworkVirtualTerminalExceptionEventArgs e)
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public string Expect(string text)
         {
-            Debug.WriteLine("★★★★★ {0}受信:[{1}]", e.Exception.GetType().ToString(), e.Exception.Message);
+            StringBuilder result = new StringBuilder();
 
-            // 例外発行判定
-            if (e.Exception.GetType() == typeof(TelnetClientException))
+            // 一致するまで繰り返し
+            while (true)
             {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
+                // 受信
+                using (MemoryStream inputStream = this.Recive())
+                {
+                    // 出力MemoryStreamオブジェクト生成
+                    MemoryStream outputStream = new MemoryStream();
+
+                    // ネゴシエーション
+                    List<TelnetNegotiationInfomation> negotiationInfomationList = this.NetworkVirtualTerminal.Negotiation(inputStream, outputStream);
+
+                    // ネゴシエーション応答送信
+                    if (negotiationInfomationList.Count > 0)
+                    {
+                        this.NetworkVirtualTerminal.NegotiationResponse(this, negotiationInfomationList);
+                    }
+
+                    // 文字列比較
+                    if (outputStream.Length == 0)
+                    {
+                        // 文字列を受信してないので繰り返しに戻る
+                        continue;
+                    }
+
+                    // 文字コード変換
+                    string resultRecive = this.NetworkVirtualTerminal.LocalEncoding.GetString(outputStream.ToArray());
+
+                    // 結果格納
+                    result.Append(resultRecive);
+
+                    // 文字列比較
+                    Regex regex = new Regex(text, RegexOptions.Compiled | RegexOptions.Multiline);
+                    if (regex.IsMatch(resultRecive.ToString()))
+                    {
+                        break;
+                    }
+                }
             }
-            else if (e.Exception.GetType() == typeof(NetworkVirtualTerminalException))
+
+            // 結果を返却する
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// 結果待ち
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public string Expect(string text, int timeout)
+        {
+            string _result = string.Empty;
+
+            // Taskオブジェクト生成
+            using (this.TelnetCancellationTokenSource.Expect = new CancellationTokenSource())
             {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
+                // タイムアウト設定
+                this.TelnetCancellationTokenSource.Expect.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 結果待ち
+                    _result = this.Expect(text);
+                }, this.TelnetCancellationTokenSource.Expect.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.TelnetCancellationTokenSource.Expect.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new TelnetException("結果待ち(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new TelnetException("結果待ち(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.TelnetCancellationTokenSource.Expect = null;
+                }
             }
-            else if (e.Exception.GetType() == typeof(SocketException))
-            {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
-            }
+
+            // 結果返却
+            return _result;
         }
         #endregion
     }

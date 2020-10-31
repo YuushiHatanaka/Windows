@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Sockets;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -12,17 +10,28 @@ namespace Common.Net
     /// <summary>
     /// SSHクラス
     /// </summary>
-    public class Ssh : SshNetworkVirtualTerminal
+    public class Ssh : Common.Net.SshClient, TcpInterface, IDisposable
     {
+        #region 仮想端末クラスオブジェクト
         /// <summary>
-        /// コマンドプロンプト
+        /// 仮想端末クラスオブジェクト
         /// </summary>
-        private string m_CommandPrompt = @"\$ $";
+        protected SshNetworkVirtualTerminal NetworkVirtualTerminal = new SshNetworkVirtualTerminal();
+        #endregion
 
+        #region SSHタスクキャンセルトークン
         /// <summary>
-        /// exitコマンド
+        /// SSHタスクキャンセルトークン
         /// </summary>
-        private string m_ExitCommand = "exit";
+        protected SshCancellationTokenSource SshCancellationTokenSource = new SshCancellationTokenSource();
+        #endregion
+
+        #region 破棄済みフラグ
+        /// <summary>
+        /// 破棄済みフラグ
+        /// </summary>
+        private bool m_Disposed = false;
+        #endregion
 
         #region コンストラクタ
         /// <summary>
@@ -31,10 +40,8 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Ssh(string userName, string userPasword)
-            : base("localhost")
+            : this("localhost", 22, userName, userPasword)
         {
-            // 初期化
-            this.Initialization(userName, userPasword);
         }
 
         /// <summary>
@@ -44,10 +51,8 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Ssh(string host, string userName, string userPasword)
-            : base(host)
+            : this(host, 22, userName, userPasword)
         {
-            // 初期化
-            this.Initialization(userName, userPasword);
         }
 
         /// <summary>
@@ -58,10 +63,10 @@ namespace Common.Net
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
         public Ssh(string host, int port, string userName, string userPasword)
-            : base(host, port)
+            : base(host, port, userName, userPasword)
         {
             // 初期化
-            this.Initialization(userName, userPasword);
+            this.Initialization(host, port, userName, userPasword);
         }
         #endregion
 
@@ -71,6 +76,8 @@ namespace Common.Net
         /// </summary>
         ~Ssh()
         {
+            // 破棄
+            this.Dispose();
         }
         #endregion
 
@@ -78,14 +85,75 @@ namespace Common.Net
         /// <summary>
         /// 初期化
         /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
         /// <param name="userName"></param>
         /// <param name="userPasword"></param>
-        private void Initialization(string userName, string userPasword)
+        protected override void Initialization(string host, int port, string userName, string userPasword)
         {
-            // 初期設定
-            this.m_UserName = userName;
-            this.m_UserPassword = userPasword;
-            this.OnException += this.ExceptionEventHandler;
+            // 基底クラス初期化
+            base.Initialization(host, port, userName, userPasword);
+
+            // TODO:未実装
+        }
+        #endregion
+
+        #region 破棄
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        public new void Dispose()
+        {
+            this.Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 破棄
+        /// </summary>
+        /// <param name="isDisposing"></param>
+        protected override void Dispose(bool isDisposing)
+        {
+            // 破棄しているか？
+            if (!this.m_Disposed)
+            {
+                // アンマネージドリソース解放
+
+                // マネージドリソース解放
+                if (isDisposing)
+                {
+                }
+
+                // 破棄済みを設定
+                this.m_Disposed = true;
+            }
+        }
+        #endregion
+
+        #region ShellStreamオブジェクト取得
+        /// <summary>
+        /// ShellStreamオブジェクト取得
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="SshNetworkVirtualTerminalException"></exception>
+        protected Renci.SshNet.ShellStream GetShellStream()
+        {
+            // SSHクライアントオブジェクト判定
+            if (this.m_Client == null)
+            {
+                // 異常終了(例外)
+                throw new SshException("SSHクライアントオブジェクトが生成されていません：[{" + this.m_IPEndPoint.ToString() + "]");
+            }
+
+            // ShellStreamオブジェクト取得
+            return this.m_Client.CreateShellStream(
+                this.NetworkVirtualTerminal.TerminalType,
+                (uint)this.NetworkVirtualTerminal.Pixel.Width,
+                (uint)this.NetworkVirtualTerminal.Pixel.Height,
+                (uint)this.NetworkVirtualTerminal.Size.Width,
+                (uint)this.NetworkVirtualTerminal.Size.Height,
+                this.NetworkVirtualTerminal.ShellStreamBufferSize);
         }
         #endregion
 
@@ -93,21 +161,30 @@ namespace Common.Net
         /// <summary>
         /// ログイン
         /// </summary>
+        /// <returns></returns>
         public string Login()
         {
-            StringBuilder result = new StringBuilder(); // 結果用
+            StringBuilder result = new StringBuilder();
+            string expectResult = string.Empty;
 
             // 接続
             this.Connect();
 
-            // プロンプト取得待ち
-            List<string> waitResult = this.Wait(this.m_CommandPrompt);
-
-            // 結果格納
-            foreach (string str in waitResult)
+            // 接続判定
+            if (!this.m_Client.IsConnected)
             {
-                result.AppendLine(str);
+                // 異常終了(例外)
+                throw new SshException("接続に失敗しました：[{" + this.m_IPEndPoint.ToString() + "]");
             }
+
+            // ShellStreamオブジェクト取得
+            this.m_ShellStream = this.GetShellStream();
+
+            // コマンドプロンプト待ち
+            expectResult = this.Expect(this.m_CommandPrompt);
+
+            // 結果追加
+            result.Append(expectResult);
 
             // 結果返却
             return result.ToString();
@@ -120,38 +197,45 @@ namespace Common.Net
         /// <returns></returns>
         public string Login(int timeout)
         {
-            string result = string.Empty;   // 結果用
+            string _result = string.Empty;
 
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.SshCancellationTokenSource.Login = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.SshCancellationTokenSource.Login.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // ログイン
-                    result = this.Login();
-                }, source.Token);
+                    _result = this.Login();
+                }, this.SshCancellationTokenSource.Login.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.SshCancellationTokenSource.Login.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログインに失敗しました", ex);
+                    throw new TelnetException("ログイン(Ssh)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログインに失敗しました", ex);
+                    throw new TelnetException("ログイン(Ssh)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.Login = null;
                 }
             }
+
+            // 結果返却
+            return _result;
         }
         #endregion
 
@@ -159,27 +243,14 @@ namespace Common.Net
         /// <summary>
         /// ログアウト
         /// </summary>
-        public string Logout()
+        /// <returns></returns>
+        public void Logout()
         {
-            StringBuilder result = new StringBuilder(); // 結果用
-
             // exitコマンド送信
-            this.m_ShellStream.WriteLine(this.m_ExitCommand);
-
-            // 受信待ち
-            List<string> waitResult = this.Wait();
-
-            // 結果格納
-            foreach (string str in waitResult)
-            {
-                result.AppendLine(str);
-            }
+            this.WriteLine("exit");
 
             // 切断
-            this.DisConnect();
-
-            // 結果返却
-            return result.ToString();
+            this.Disconnect();
         }
 
         /// <summary>
@@ -187,65 +258,184 @@ namespace Common.Net
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public string Logout(int timeout)
+        public void Logout(int timeout)
         {
-            string result = string.Empty;   // 結果用
-
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.SshCancellationTokenSource.Logout = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.SshCancellationTokenSource.Logout.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // ログアウト
-                    result = this.Logout();
-                }, source.Token);
+                    this.Logout();
+                }, this.SshCancellationTokenSource.Logout.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.SshCancellationTokenSource.Logout.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログアウトに失敗しました", ex);
+                    throw new TelnetException("ログアウト(Ssh)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("ログアウトに失敗しました", ex);
+                    throw new TelnetException("ログアウト(Ssh)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.Logout = null;
                 }
             }
         }
         #endregion
 
+        #region 文字列送信
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public void Write(string str)
+        {
+            // MemoryStreamオブジェクト生成
+            MemoryStream sendStream = new MemoryStream();
+
+            // エンコード
+            byte[] data = this.NetworkVirtualTerminal.RemoteEncoding.GetBytes(str);
+
+            // MemoryStreamオブジェクト書込
+            sendStream.Write(data, 0, data.Length);
+
+            // 送信
+            this.Send(sendStream);
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public void Write(string str, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.SshCancellationTokenSource.WriteLine = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.SshCancellationTokenSource.WriteLine.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 文字列送信
+                    this.Write(str);
+                }, this.SshCancellationTokenSource.WriteLine.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.SshCancellationTokenSource.WriteLine.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new SshException("文字列送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new SshException("文字列送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.WriteLine = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="line"></param>
+        public void WriteLine(string line)
+        {
+            // 書込(文字列+改行)
+            this.Write(line);
+            this.Write(this.NetworkVirtualTerminal.WriteNewLine);
+        }
+
+        /// <summary>
+        /// 文字列送信
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="timeout"></param>
+        public void WriteLine(string line, int timeout)
+        {
+            // Taskオブジェクト生成
+            using (this.SshCancellationTokenSource.WriteLine = new CancellationTokenSource())
+            {
+                // タイムアウト設定
+                this.SshCancellationTokenSource.WriteLine.CancelAfter(timeout);
+
+                // Task開始
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    // 文字列送信
+                    this.WriteLine(line);
+                }, this.SshCancellationTokenSource.WriteLine.Token);
+
+                try
+                {
+                    // タスク待ち
+                    task.Wait(this.SshCancellationTokenSource.WriteLine.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // 例外
+                    throw new SshException("文字列送信(Telnet)に失敗しました(OperationCanceledException)", ex);
+                }
+                catch (AggregateException ex)
+                {
+                    // 例外
+                    throw new SshException("文字列送信(Telnet)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.WriteLine = null;
+                }
+            }
+        }
+        #endregion
+ 
         #region コマンド実行
         /// <summary>
         /// コマンド実行
         /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
         public string Execute(string command)
         {
-            StringBuilder read = null;                  // 読込用
-            StringBuilder result = new StringBuilder(); // 結果用
+            StringBuilder result = new StringBuilder();
+            string expectResult = string.Empty;
 
             // コマンド送信
             this.WriteLine(command);
 
             // コマンドプロンプト待ち
-            read = this.Read(this.m_CommandPrompt);
-            if (read == null)
-            {
-                // 例外
-                throw new TelnetException("コマンド実行に失敗しました:[コマンドプロンプト待ち]");
-            }
+            expectResult = this.Expect(this.m_CommandPrompt);
 
             // 結果追加
-            result.Append(read.ToString());
+            result.Append(expectResult);
 
             // 結果返却
             return result.ToString();
@@ -259,194 +449,130 @@ namespace Common.Net
         /// <returns></returns>
         public string Execute(string command, int timeout)
         {
-            string result = string.Empty;   // 結果用
+            string _result = string.Empty;
 
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.SshCancellationTokenSource.Execute = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.SshCancellationTokenSource.Execute.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
                     // コマンド実行
-                    result = this.Execute(command);
-                }, source.Token);
+                    _result = this.Execute(command);
+                }, this.SshCancellationTokenSource.Execute.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return result;
+                    task.Wait(this.SshCancellationTokenSource.Execute.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("コマンド実行に失敗しました", ex);
+                    throw new TelnetException("コマンド実行(Ssh)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("コマンド実行に失敗しました", ex);
+                    throw new TelnetException("コマンド実行(Ssh)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.Execute = null;
                 }
             }
+            
+            // 結果返却
+            return _result;
         }
         #endregion
 
-        #region 待合せ
+        #region 結果待ち
         /// <summary>
-        /// 待合せ
+        /// 結果待ち
         /// </summary>
+        /// <param name="text"></param>
         /// <returns></returns>
-        public List<string> Wait()
+        public string Expect(string text)
         {
-            return this.Wait(this.m_CommandPrompt);
-        }
+            StringBuilder result = new StringBuilder();
 
-        /// <summary>
-        /// ShellStream待合せ
-        /// </summary>
-        /// <param name="regex"></param>
-        /// <returns></returns>
-        public List<string> Wait(string regex)
-        {
-            // 返却用オブジェクト生成
-            List<string> lines = new List<string>();
-
-            // 無限ループ
+            // 一致するまで繰り返し
             while (true)
             {
-                // ShellStreamにバッファ長が0以上になるまで待合せ
-                while (this.m_ShellStream.Length == 0)
+                // 受信
+                using (MemoryStream stream = this.Recive())
                 {
-                    Thread.Sleep(100);
-                }
+                    // 文字コード変換
+                    string resultRecive = this.NetworkVirtualTerminal.LocalEncoding.GetString(stream.ToArray());
 
-                // 読込
-                byte[] _readbuffer = new byte[this.m_ShellStream.Length];
-                if (this.m_ShellStream.Read(_readbuffer, 0, (int)this.m_ShellStream.Length) == 0)
-                {
-                    break;
-                }
+                    // 結果格納
+                    result.Append(resultRecive);
 
-                // 文字コード変換
-                System.Text.Encoding src = Common.Text.Encoding.GetCode(_readbuffer);
-                System.Text.Encoding dest = System.Text.Encoding.GetEncoding("Shift_JIS");
-                byte[] temp = System.Text.Encoding.Convert(src, dest, _readbuffer);
-                string readLines = dest.GetString(temp);
-
-                // 結果格納
-                foreach (string line in Regex.Split(readLines, @"\n"))
-                {
-                    string _line = Regex.Replace(line, @"\r", "");
-                    lines.Add(_line);
-                }
-
-                // 正規表現で比較
-                if ((regex != string.Empty) && (Regex.IsMatch(readLines, regex, RegexOptions.Multiline)))
-                {
-                    // 一致
-                    break;
+                    // 文字列比較
+                    Regex regex = new Regex(text, RegexOptions.Compiled | RegexOptions.Multiline);
+                    if (regex.IsMatch(resultRecive.ToString()))
+                    {
+                        break;
+                    }
                 }
             }
 
-            // 先頭(入力行)と最後(待合せ文字列)を削除
-            if (lines.Count > 0)
-            {
-                lines.RemoveAt(lines.Count - 1);
-            }
-            if (lines.Count > 0)
-            {
-                lines.RemoveAt(0);
-            }
-
-            // 一致
-            this.m_ShellStream.Flush();
-            return lines;
+            // 結果を返却する
+            return result.ToString();
         }
 
         /// <summary>
-        /// 待合せ
+        /// 結果待ち
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="text"></param>
         /// <returns></returns>
-        public List<string> Wait(int timeout)
+        public string Expect(string text, int timeout)
         {
-            return this.Wait(this.m_CommandPrompt, timeout);
-        }
-
-        /// <summary>
-        /// 待合せ
-        /// </summary>
-        /// <param name="regex"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public List<string> Wait(string regex, int timeout)
-        {
-            // 返却用オブジェクト生成
-            List<string> lines = new List<string>();
+            string _result = string.Empty;
 
             // Taskオブジェクト生成
-            using (CancellationTokenSource source = new CancellationTokenSource())
+            using (this.SshCancellationTokenSource.Expect = new CancellationTokenSource())
             {
                 // タイムアウト設定
-                source.CancelAfter(timeout);
+                this.SshCancellationTokenSource.Expect.CancelAfter(timeout);
 
                 // Task開始
                 Task task = Task.Factory.StartNew(() =>
                 {
-                    // 待合せ
-                    lines = this.Wait(regex);
-                }, source.Token);
+                    // 結果待ち
+                    _result = this.Expect(text);
+                }, this.SshCancellationTokenSource.Expect.Token);
 
                 try
                 {
                     // タスク待ち
-                    task.Wait(source.Token);
-                    return lines;
+                    task.Wait(this.SshCancellationTokenSource.Expect.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 例外
-                    throw new TelnetException("待合せに失敗しました", ex);
+                    throw new SshException("結果待ち(Ssh)に失敗しました(OperationCanceledException)", ex);
                 }
                 catch (AggregateException ex)
                 {
                     // 例外
-                    throw new TelnetException("待合せに失敗しました", ex);
+                    throw new SshException("結果待ち(Ssh)に失敗しました(AggregateException)", ex);
+                }
+                finally
+                {
+                    // Taskオブジェクト破棄
+                    this.SshCancellationTokenSource.Expect = null;
                 }
             }
-        }
 
-        #region 例外イベントハンドラ
-        /// <summary>
-        /// 例外イベントハンドラ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExceptionEventHandler(object sender, SshNetworkVirtualTerminalExceptionEventArgs e)
-        {
-            Debug.WriteLine("★★★★★ {0}受信:[{1}]", e.Exception.GetType().ToString(), e.Exception.Message);
-
-            // 例外発行判定
-            if (e.Exception.GetType() == typeof(TelnetClientException))
-            {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
-            }
-            else if (e.Exception.GetType() == typeof(NetworkVirtualTerminalException))
-            {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
-            }
-            else if (e.Exception.GetType() == typeof(SocketException))
-            {
-                // 例外発行
-                throw new TelnetException(e.Exception.Message);
-            }
+            // 結果返却
+            return _result;
         }
         #endregion
     }
-    #endregion
 }
