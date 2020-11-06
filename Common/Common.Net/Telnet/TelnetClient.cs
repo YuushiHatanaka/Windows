@@ -190,6 +190,13 @@ namespace Common.Net
         /// </summary>
         public void Disconnect()
         {
+            // 接続中か？
+            if (!this.m_Socket.Connected)
+            {
+                // 接続中ではないのでなにもしない
+                return;
+            }
+
             // 切断
             this.m_Socket.Disconnect(true);
 
@@ -270,6 +277,13 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void Send(MemoryStream stream)
         {
+            // 接続中か？
+            if (!this.m_Socket.Connected)
+            {
+                // 例外
+                throw new TelnetClientException("接続状態(Telnet)ではありません");
+            }
+
             // 送信
             this.m_Socket.Send(stream.ToArray(), (int)stream.Length, SocketFlags.None);
 
@@ -425,6 +439,13 @@ namespace Common.Net
         /// <returns></returns>
         public MemoryStream Recive(int size)
         {
+            // 接続中か？
+            if (!this.m_Socket.Connected)
+            {
+                // 例外
+                throw new TelnetClientException("接続状態(Telnet)ではありません");
+            }
+
             // 受信バッファイサイズ生成
             byte[] reciveBuffer = new byte[size];
 
@@ -525,6 +546,13 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void SendAsync(MemoryStream stream)
         {
+            // 接続中か？
+            if (!this.m_Socket.Connected)
+            {
+                // 例外
+                throw new TelnetClientException("接続状態(Telnet)ではありません");
+            }
+
             // 送信用Stream生成
             TelnetClientSendStream sendStream = new TelnetClientSendStream();
             sendStream.Socket = this.m_Socket;
@@ -589,6 +617,13 @@ namespace Common.Net
         /// <param name="size"></param>
         public void ReciveAsync(int size)
         {
+            // 接続中か？
+            if (!this.m_Socket.Connected)
+            {
+                // 例外
+                throw new TelnetClientException("接続状態(Telnet)ではありません");
+            }
+
             // 受信用Stream生成
             TelnetClientReciveStream stream = new TelnetClientReciveStream();
             stream.Buffer = new byte[size];

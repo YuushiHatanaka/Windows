@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -191,7 +192,16 @@ namespace Common.Net
                     stream.WriteByte(parseData[i++]);
                 }
             }
-
+#if DEBUG
+            if (negotiationInfomations != null)
+            {
+                foreach (TelnetNegotiationInfomation info in negotiationInfomations)
+                {
+                    Debug.WriteLine("＜解析情報＞");
+                    Debug.WriteLine(" └ {0} {1} {2}", info.IAC.ToString(), info.Command.ToString(), info.Option.ToString());
+                }
+            }
+#endif
             // 返却
             return negotiationInfomations;
         }

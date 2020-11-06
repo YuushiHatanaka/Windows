@@ -213,6 +213,13 @@ namespace Common.Net
         /// </summary>
         public void Disconnect()
         {
+            // 接続中か？
+            if (!this.m_Client.IsConnected)
+            {
+                // 接続中ではないのでなにもしない
+                return;
+            }
+
             // 切断
             this.m_Client.Disconnect();
 
@@ -293,6 +300,13 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void Send(MemoryStream stream)
         {
+            // 接続中か？
+            if(!this.m_Client.IsConnected)
+            {
+                // 例外
+                throw new SshClientException("接続状態(SSH)ではありません");
+            }
+
             // 送信(書込み)
             this.m_ShellStream.Write(stream.ToArray(), 0, (int)stream.Length);
 
@@ -451,6 +465,13 @@ namespace Common.Net
         /// <returns></returns>
         public MemoryStream Recive(int size)
         {
+            // 接続中か？
+            if (!this.m_Client.IsConnected)
+            {
+                // 例外
+                throw new SshClientException("接続状態(SSH)ではありません");
+            }
+
             // 受信が可能になるまで待合せ
             while (this.m_ShellStream.Length == 0)
             {
@@ -561,6 +582,13 @@ namespace Common.Net
         /// <param name="stream"></param>
         public void SendAsync(MemoryStream stream)
         {
+            // 接続中か？
+            if (!this.m_Client.IsConnected)
+            {
+                // 例外
+                throw new SshClientException("接続状態(SSH)ではありません");
+            }
+
             // 送信用Stream生成
             SshClientSendStream sendStream = new SshClientSendStream();
             sendStream.ConnectionInfo = this.m_ConnectionInfo;
@@ -632,6 +660,13 @@ namespace Common.Net
         /// <param name="size"></param>
         public void ReciveAsync(int size)
         {
+            // 接続中か？
+            if (!this.m_Client.IsConnected)
+            {
+                // 例外
+                throw new SshClientException("接続状態(SSH)ではありません");
+            }
+
             // 受信用Stream生成
             SshClientReciveStream stream = new SshClientReciveStream();
             stream.Buffer = new byte[size];
