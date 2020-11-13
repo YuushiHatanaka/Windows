@@ -109,9 +109,14 @@
     <Compile Include="DragAndDropPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DragDropFileListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DragDropFileListViewItem.cs" />
     <Compile Include="FileListView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="FileListViewItem.cs" />
     <Compile Include="IpAddressTextbox.cs">
       <SubType>Component</SubType>
     </Compile>
