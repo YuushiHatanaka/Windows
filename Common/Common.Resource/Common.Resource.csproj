@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A7F55740-FA5F-45CF-9169-3ABB104E0BA6}</ProjectGuid>
+    <ProjectGuid>{6F42A40F-FE3D-4728-AACD-EB0BD16A1848}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common.Diagnostics</RootNamespace>
-    <AssemblyName>Common.Diagnostics</AssemblyName>
+    <RootNamespace>Common.Resource</RootNamespace>
+    <AssemblyName>Common.Resource</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -51,6 +51,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,7 +61,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Debug.cs" />
+    <Compile Include="control\CpuListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\LogicalDiskListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\MemoryListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\NetworkAdapterListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\ProcessListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\Task\CpuListViewTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\Task\LogicalDiskListViewTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\Task\MemoryListViewTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\Task\NetworkAdapterListViewTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="control\Task\ProcessListViewTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

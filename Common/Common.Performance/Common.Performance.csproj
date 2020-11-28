@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{693B529D-4B7D-4D2B-8123-974D0B7C8135}</ProjectGuid>
+    <ProjectGuid>{EADF80B7-7D2E-4533-ACE6-95010BCA2EE6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common.Control</RootNamespace>
-    <AssemblyName>Common.Control</AssemblyName>
+    <RootNamespace>Common.Performance</RootNamespace>
+    <AssemblyName>Common.Performance</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,7 +36,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -47,27 +45,6 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -75,7 +52,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -84,76 +63,71 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AllowScroll.cs" />
-    <Compile Include="AutoScrollControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="AutoScrollControl.designer.cs">
-      <DependentUpon>AutoScrollControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="AutoScrollLabel.cs">
-      <SubType>AutoScrollControl</SubType>
-    </Compile>
-    <Compile Include="BlinkAppearance.cs" />
-    <Compile Include="BlinkButton.cs">
-      <SubType>BlinkControl</SubType>
-    </Compile>
-    <Compile Include="BlinkInfomation.cs" />
-    <Compile Include="BlinkListViewItem.cs" />
-    <Compile Include="ButtonBlinkInfomation.cs" />
-    <Compile Include="ControlMargin.cs" />
-    <Compile Include="ControlPositions.cs" />
-    <Compile Include="DirectoryTreeView.cs">
+    <Compile Include="Chart\LogicalDiskPerformanceChart.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragAndDropPictureBox.cs">
+    <Compile Include="Chart\MemoryPerformanceChart.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropFileListView.cs">
+    <Compile Include="Chart\Task\MemoryPerformanceChartTask.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropFileListViewItem.cs" />
-    <Compile Include="FileListView.cs">
+    <Compile Include="Chart\NetworkPerformanceChart.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="FileListViewItem.cs" />
-    <Compile Include="FileTreeView.cs">
+    <Compile Include="Chart\PerformanceChart.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IpAddressTextbox.cs">
+    <Compile Include="Chart\PerformanceChartList.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="LabeledComboBox.cs">
-      <SubType>LabeledControl</SubType>
+    <Compile Include="Chart\PerformanceChartStack.cs">
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="LabeledControl.cs">
-      <SubType>UserControl</SubType>
+    <Compile Include="Chart\ProcessorPerformanceChart.cs">
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="LabeledControl.designer.cs">
-      <DependentUpon>LabeledControl.cs</DependentUpon>
+    <Compile Include="Chart\ProcessPerformanceChart.cs">
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="LabeledTextBox.cs">
-      <SubType>LabeledControl</SubType>
+    <Compile Include="Chart\Task\LogicalDiskPerformanceChartTask.cs">
+      <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Chart\Task\NetworkPerformanceChartTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Chart\Task\PerformanceChartListTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Chart\Task\PerformanceChartStackTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Chart\Task\PerformanceChartTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Chart\Task\ProcessorPerformanceChartTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Chart\Task\ProcessPerformanceChartTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Counter\LogicalDiskPerformanceCounter.cs" />
+    <Compile Include="Counter\MemoryPerformanceCounter.cs" />
+    <Compile Include="Counter\NetworkInterfacePerformanceCounter.cs" />
+    <Compile Include="Counter\PerformanceCounterException.cs" />
+    <Compile Include="Counter\PerformanceCounterObject.cs" />
+    <Compile Include="Counter\PhysicalDiskPerformanceCounter.cs" />
+    <Compile Include="Counter\ProcessorPerformanceCounter.cs" />
+    <Compile Include="Counter\ProcessPerformanceCounter.cs" />
+    <Compile Include="Counter\ServerPerformanceCounter.cs" />
+    <Compile Include="Counter\SystemPerformanceCounter.cs" />
+    <Compile Include="History\PerformanceHistory.cs" />
+    <Compile Include="Item\PerformanceItem.cs" />
+    <Compile Include="Item\PerformanceItemList.cs" />
+    <Compile Include="Item\PerformanceItemStack.cs" />
+    <Compile Include="Log\PerformanceLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScreeanSize.cs" />
-    <Compile Include="StringPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="StringPanel.designer.cs">
-      <DependentUpon>StringPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TimeTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="LabeledControl.resx">
-      <DependentUpon>LabeledControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="StringPanel.resx">
-      <DependentUpon>StringPanel.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
