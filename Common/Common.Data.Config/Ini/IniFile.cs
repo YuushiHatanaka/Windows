@@ -127,8 +127,7 @@ namespace Common.Data.Config
         public string GetStringValue(string section, string key)
         {
             StringBuilder sb = new StringBuilder(this.m_Capacity);
-            GetPrivateProfileString(section, key,
-                "default", sb, (uint)sb.Capacity, this.m_FileName);
+            GetPrivateProfileString(section, key, "", sb, (uint)sb.Capacity, this.m_FileName);
             return sb.ToString();
         }
         #endregion

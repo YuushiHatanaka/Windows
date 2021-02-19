@@ -224,12 +224,12 @@ namespace Common.Resource
                         _ListViewItem.SubItems[_SubItemsIndex + 1].Text += _IPv4InterfaceStatistics.BytesSent.ToString("#,0") + " ";
                         _ListViewItem.SubItems[_SubItemsIndex + 1].Text += _IPv4InterfaceStatistics.BytesReceived.ToString("#,0") + " ";
                         _ListViewItem.SubItems[_SubItemsIndex + 1].Text += _IPv4InterfaceStatistics.BytesSent.ToString("#,0") + " ";
-                        Console.WriteLine("受信バイト数:{0}", _IPv4InterfaceStatistics.BytesReceived);
-                        Console.WriteLine("送信バイト数:{0}", _IPv4InterfaceStatistics.BytesSent);
-                        Console.WriteLine("受信したユニキャストパケット数:{0}", _IPv4InterfaceStatistics.UnicastPacketsReceived);
-                        Console.WriteLine("送信したユニキャストパケット数:{0}", _IPv4InterfaceStatistics.UnicastPacketsSent);
+                        Debug.WriteLine("受信バイト数:" + _IPv4InterfaceStatistics.BytesReceived);
+                        Debug.WriteLine("送信バイト数:" + _IPv4InterfaceStatistics.BytesSent);
+                        Debug.WriteLine("受信したユニキャストパケット数:" + _IPv4InterfaceStatistics.UnicastPacketsReceived);
+                        Debug.WriteLine("送信したユニキャストパケット数:" + _IPv4InterfaceStatistics.UnicastPacketsSent);
                     }
-                    Console.WriteLine("");
+                    Debug.WriteLine("");
                 }
                 else
                 {

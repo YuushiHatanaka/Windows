@@ -11,6 +11,26 @@ namespace Common.Performance.Task
     public class NetworkPerformanceChartTask : PerformanceChartListTask
     {
         /// <summary>
+        /// インタフェース名
+        /// </summary>
+        private string m_InterfaceName = string.Empty;
+
+        /// <summary>
+        /// インタフェース名
+        /// </summary>
+        public string InterfaceName
+        {
+            set
+            {
+                this.m_InterfaceName = value;
+            }
+            get
+            {
+                return this.m_InterfaceName;
+            }
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="pCounterName">カウンタ名</param>

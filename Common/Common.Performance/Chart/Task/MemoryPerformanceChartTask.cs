@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 using System.Collections;
+using System.Diagnostics;
 
 namespace Common.Performance.Task
 {
@@ -45,6 +46,7 @@ namespace Common.Performance.Task
             m_ManagementClass.Dispose();
             m_ManagementObjectCollection.Dispose();
         }
+
         /// <summary>
         /// 初期化
         /// </summary>
@@ -122,6 +124,8 @@ namespace Common.Performance.Task
         /// </summary>
         public override void Add()
         {
+            Debug.WriteLine("=>>>> MemoryPerformanceChartTask::Add()");
+
             //------------------------
             // 値を取得し、履歴に登録
             //------------------------
@@ -131,12 +135,18 @@ namespace Common.Performance.Task
                 PerformanceCounterObject _PerformanceCounterObject = Items[i].Counter;
                 PerformanceHistory<float> _PerformanceHistory = Items[i].History;
                 float value = this.TotalVisibleMemorySize - _PerformanceCounterObject.NextValue();
+                Debug.WriteLine("メモリ使用量:{0}", value);
                 _PerformanceHistory.Add(value);
                 _ValueList.Add(value);
             }
+            this.ChartAreas[0].AxisY.Minimum = 0;  // 縦軸の最小値を0にする
+            this.ChartAreas[0].AxisY.Maximum = this.TotalVisibleMemorySize;
+            this.ChartAreas[0].AxisY.Interval = 1000;
 
             // ログ出力
             PrintLog(_ValueList);
+
+            Debug.WriteLine("<<<<= MemoryPerformanceChartTask::Add()");
         }
     }
 }

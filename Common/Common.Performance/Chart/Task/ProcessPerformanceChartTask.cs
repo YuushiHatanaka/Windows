@@ -13,7 +13,23 @@ namespace Common.Performance.Task
         /// <summary>
         /// 代表インスタンス名
         /// </summary>
-        string m_InstanceName = string.Empty;
+        private string m_InstanceName = string.Empty;
+
+        /// <summary>
+        /// インスタンス名
+        /// </summary>
+        public string InstanceName
+        {
+            set
+            {
+                this.m_InstanceName = value;
+            }
+            get
+            {
+                return this.m_InstanceName;
+            }
+        }
+
         /// <summary>
         /// コンストラクタ
         /// </summary>

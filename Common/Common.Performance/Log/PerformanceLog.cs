@@ -123,6 +123,9 @@ namespace Common.Performance
                 }
                 LogWrite();
             }
+
+            // 書込みStream破棄
+            this.m_StreamWriter.Dispose();
             Debug.WriteLine("<<<<= PerformanceLog::DoWork()");
         }
         private void LogWrite()

@@ -167,9 +167,6 @@ namespace Common.Net
             StringBuilder result = new StringBuilder();
             string expectResult = string.Empty;
 
-            // 接続
-            this.Connect();
-
             // 接続判定
             if (!this.m_Client.IsConnected)
             {
@@ -248,9 +245,6 @@ namespace Common.Net
         {
             // exitコマンド送信
             this.WriteLine("exit");
-
-            // 切断
-            this.Disconnect();
         }
 
         /// <summary>

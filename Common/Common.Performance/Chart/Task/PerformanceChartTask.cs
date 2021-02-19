@@ -89,6 +89,22 @@ namespace Common.Performance.Task
         /// </summary>
         private void Initialization()
         {
+            // 描画
+            this.Drawing();
+
+            // タイマー設定(1秒)
+            this.m_ExecuteTimer.Interval = 1000;
+            this.m_ExecuteTimer.Tick += ExecuteTimer_Tick;
+        }
+
+        /// <summary>
+        /// 描画
+        /// </summary>
+        public void Drawing()
+        {
+            // チャートエリアをクリア
+            this.ChartAreas.Clear();
+
             // チャート全体の背景色を設定
             this.BackColor = Color.Black;
             this.AntiAliasing = AntiAliasingStyles.None;
@@ -133,10 +149,6 @@ namespace Common.Performance.Task
 
             // チャートエリアを追加
             this.ChartAreas.Add(_ChartArea);
-
-            // タイマー設定(1秒)
-            this.m_ExecuteTimer.Interval = 1000;
-            this.m_ExecuteTimer.Tick += ExecuteTimer_Tick;
         }
 
         #region Dispose
@@ -186,12 +198,8 @@ namespace Common.Performance.Task
                 this.m_ExecuteTimer = null;
             }
 
-            // ログ出力オブジェクト破棄
-            if (this.m_PerformanceLog != null)
-            {
-                this.m_PerformanceLog.Stop();
-                this.m_PerformanceLog = null;
-            }
+            // ログ停止
+            this.StopLog();
         }
 
         /// <summary>
@@ -212,6 +220,13 @@ namespace Common.Performance.Task
         /// 表示
         /// </summary>
         public virtual void ShowChart()
+        {
+        }
+
+        /// <summary>
+        /// クリア
+        /// </summary>
+        public virtual void Clear()
         {
         }
 
@@ -255,6 +270,19 @@ namespace Common.Performance.Task
             // ログスレッド開始
             this.m_LogThread = new Thread(m_PerformanceLog.DoWork);
             this.m_LogThread.Start();
+        }
+
+        /// <summary>
+        /// ログ停止
+        /// </summary>
+        public void StopLog()
+        {
+            // ログ出力オブジェクト破棄
+            if (this.m_PerformanceLog != null)
+            {
+                this.m_PerformanceLog.Stop();
+                this.m_PerformanceLog = null;
+            }
         }
 
         /// <summary>

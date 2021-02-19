@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Common.Net
 {
@@ -142,9 +143,6 @@ namespace Common.Net
             StringBuilder result = new StringBuilder();
             string expectResult = string.Empty;
 
-            // 接続
-            this.Connect();
-
             // 接続判定
             if (!this.m_Socket.Connected)
             {
@@ -181,7 +179,7 @@ namespace Common.Net
         }
 
         /// <summary>
-        /// ログアウト
+        /// ログイン
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
@@ -238,9 +236,6 @@ namespace Common.Net
         {
             // exitコマンド送信
             this.WriteLine("exit");
-
-            // 切断
-            this.Disconnect();
         }
 
         /// <summary>
@@ -285,7 +280,6 @@ namespace Common.Net
                 }
             }
         }
-
         #endregion
 
         #region 文字列送信
@@ -296,6 +290,9 @@ namespace Common.Net
         /// <returns></returns>
         public void Write(string str)
         {
+            Debug.WriteLine("＜送信文字列＞");
+            Debug.WriteLine("「" + str + "」");
+
             // MemoryStreamオブジェクト生成
             MemoryStream sendStream = new MemoryStream();
 
@@ -518,6 +515,8 @@ namespace Common.Net
 
                     // 文字コード変換
                     string resultRecive = this.NetworkVirtualTerminal.LocalEncoding.GetString(outputStream.ToArray());
+                    Debug.WriteLine("＜受信文字列＞");
+                    Debug.WriteLine("「" + resultRecive + "」");
 
                     // 結果格納
                     result.Append(resultRecive);
