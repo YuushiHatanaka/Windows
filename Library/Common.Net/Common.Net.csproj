@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E7957582-6093-4524-B4C2-00B821096194}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Common.Net</RootNamespace>
+    <AssemblyName>Common.Net</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="PrimS.Telnet.NetStandard, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Telnet.0.11.3\lib\net48\PrimS.Telnet.NetStandard.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2020.0.2.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2020.0.2\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common\CommonLibrary.cs" />
+    <Compile Include="Common\HostInfo.cs" />
+    <Compile Include="Common\ServerInfo.cs" />
+    <Compile Include="Common\Timeout.cs" />
+    <Compile Include="Common\UserInfo.cs" />
+    <Compile Include="Ftp\FtpClientAsyncLibrary.cs" />
+    <Compile Include="Ftp\EventArgs\FtpClientCommandExecuteEventArgs.cs" />
+    <Compile Include="Ftp\FtpClientDataConnection.cs" />
+    <Compile Include="Ftp\EventArgs\FtpClientDownLoadEventArgs.cs" />
+    <Compile Include="Ftp\FtpClientException.cs" />
+    <Compile Include="Ftp\FtpClientLibrary.cs" />
+    <Compile Include="Ftp\EventArgs\FtpClientLoginEventArgs.cs" />
+    <Compile Include="Ftp\EventArgs\FtpClientLogoutEventArgs.cs" />
+    <Compile Include="Ftp\FtpClientReciveStream.cs" />
+    <Compile Include="Ftp\FtpClientSendStream.cs" />
+    <Compile Include="Ftp\EventArgs\FtpClientUpLoadEventArgs.cs" />
+    <Compile Include="Ftp\FtpCommand.cs" />
+    <Compile Include="Ftp\FtpResponse.cs" />
+    <Compile Include="Ftp\FtpTransferMode.cs" />
+    <Compile Include="Icmp\IcmpClientAsyncLibrary.cs" />
+    <Compile Include="Icmp\EventArgs\IcmpClientCompletedEventArgs.cs" />
+    <Compile Include="Icmp\IcmpClientException.cs" />
+    <Compile Include="Icmp\IcmpClientLibrary.cs" />
+    <Compile Include="Icmp\EventArgs\IcmpClientResponseEventArgs.cs" />
+    <Compile Include="Icmp\IcmpStatistics.cs" />
+    <Compile Include="Ntp\NtpClientAsyncLibrary.cs" />
+    <Compile Include="Ntp\EventArgs\NtpClientCommandExecuteEventArgs.cs" />
+    <Compile Include="Ntp\NtpClientException.cs" />
+    <Compile Include="Ntp\NtpClientLibrary.cs" />
+    <Compile Include="Ntp\NtpPacket.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ssh\ShellStreamInfo.cs" />
+    <Compile Include="Ssh\SShClientAlwaysConnectedLibrary.cs" />
+    <Compile Include="Ssh\SshClientAsyncLibrary.cs" />
+    <Compile Include="Ssh\EventArgs\SshClientCommandExecuteEventArgs.cs" />
+    <Compile Include="Ssh\SshClientException.cs" />
+    <Compile Include="Ssh\SshClientLibrary.cs" />
+    <Compile Include="Ssh\EventArgs\SshClientLoginEventArgs.cs" />
+    <Compile Include="Ssh\EventArgs\SshClientLogoutEventArgs.cs" />
+    <Compile Include="Tcp\InterfaceTcpClientLibrary.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientConnectedEventArgs.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientDisconnectedEventArgs.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientEventArgs.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientCanceledEventArgs.cs" />
+    <Compile Include="Tcp\TcpClientException.cs" />
+    <Compile Include="Tcp\TcpClientLibrary.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientReciveEventArgs.cs" />
+    <Compile Include="Tcp\EventArgs\TcpClientSendEventArgs.cs" />
+    <Compile Include="Telnet\TelnetClientAlwaysConnectedLibrary.cs" />
+    <Compile Include="Telnet\TelnetClientAsyncLibrary.cs" />
+    <Compile Include="Telnet\EventArgs\TelnetClientCommandExecuteEventArgs.cs" />
+    <Compile Include="Telnet\TelnetClientException.cs" />
+    <Compile Include="Telnet\TelnetClientLibrary.cs" />
+    <Compile Include="Telnet\EventArgs\TelnetClientLoginEventArgs.cs" />
+    <Compile Include="Telnet\EventArgs\TelnetClientLogoutEventArgs.cs" />
+    <Compile Include="Udp\EventArgs\UdpClientEventArgs.cs" />
+    <Compile Include="Udp\EventArgs\UdpClientConnectedEventArgs.cs" />
+    <Compile Include="Udp\EventArgs\UdpClientDisconnectedEventArgs.cs" />
+    <Compile Include="Udp\UdpClientException.cs" />
+    <Compile Include="Udp\UdpClientLibrary.cs" />
+    <Compile Include="Udp\EventArgs\UdpClientReciveEventArgs.cs" />
+    <Compile Include="Udp\EventArgs\UdpClientSendEventArgs.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="log4net.common.net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Diagnostics\Common.Diagnostics.csproj">
+      <Project>{a66b2dbf-f5a7-4b87-a48c-dc79a1ab48a9}</Project>
+      <Name>Common.Diagnostics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common.Logging\Common.Logging.csproj">
+      <Project>{e9a8b05c-0543-440c-9c02-0de0bc857ea0}</Project>
+      <Name>Common.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="License.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
