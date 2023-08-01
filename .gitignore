@@ -10,6 +10,9 @@ bin/
 #ディレクトリ obj 配下の全てのファイルを除外
 obj/
 
+#ディレクトリ .vs/ 配下の全てのファイルを除外
+.vs/
+
 # nuget.exe は必用なファイル
 !/.nuget/nuget.exe
 
