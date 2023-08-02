@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Runtime.InteropServices;
-using log4net;
+﻿using log4net;
+using System;
+using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Common.Config
 {
     /// <summary>
-    /// INIファイルクラス
+    /// IniFileクラス
     /// </summary>
-    public class IniFile
+    public class IniFile : IDisposable
     {
         #region DllImport
         [DllImport("KERNEL32.DLL")]
@@ -52,6 +48,13 @@ namespace Common.Config
         protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
+        #region Disposeフラグ
+        /// <summary>
+        /// Disposeフラグ
+        /// </summary>
+        protected bool m_Disposed = false;
+        #endregion
+
         #region 定義ファイル名
         /// <summary>
         /// 定義ファイル名
@@ -59,7 +62,7 @@ namespace Common.Config
         protected string FileName { get; set; } = string.Empty;
         #endregion
 
-        #region 定義ファイル名
+        #region バッファサイズ
         /// <summary>
         /// バッファサイズ
         /// </summary>
@@ -79,7 +82,7 @@ namespace Common.Config
             Logger.DebugFormat("fileName:{0}", fileName);
 
             // ロギング
-            Logger.Debug("<<<<= XmlConfig::XmlConfig(string)");
+            Logger.Debug("<<<<= IniFile::IniFile(string)");
         }
 
         /// <summary>
@@ -99,7 +102,92 @@ namespace Common.Config
             Capacity = capacity;
 
             // ロギング
-            Logger.Debug("<<<<= XmlConfig::XmlConfig(string)");
+            Logger.Debug("<<<<= IniFile::IniFile(string)");
+        }
+        #endregion
+
+        #region デストラクタ
+        /// <summary>
+        /// デストラクタ
+        /// </summary>
+        ~IniFile()
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::~IniFile()");
+
+            // リソース破棄
+            Dispose(false);
+
+            // ロギング
+            Logger.Debug("<<<<= IniFile::~IniFile()");
+        }
+        #endregion
+
+        #region Dispose
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        public void Dispose()
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::Dispose()");
+
+            // リソース破棄
+            Dispose(true);
+
+            // ガベージコレクション
+            GC.SuppressFinalize(this);
+
+            // ロギング
+            Logger.Debug("<<<<= IniFile::Dispose()");
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::Dispose(bool)");
+
+            if (!m_Disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: Dispose managed resources here.
+                }
+
+                // TODO: Free unmanaged resources here.
+
+                // Note disposing has been done.
+                m_Disposed = true;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= IniFile::Dispose(bool)");
+        }
+        #endregion
+
+        #region 存在判定
+        /// <summary>
+        /// 存在判定
+        /// </summary>
+        /// <returns></returns>
+        public bool Exists()
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::IsExist()");
+
+            // ファイル存在判定
+            bool result = File.Exists(FileName);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= IniFile::IsExist()");
+
+            // 返却
+            return result;
         }
         #endregion
 
@@ -187,8 +275,51 @@ namespace Common.Config
             // ロギング
             Logger.Debug("<<<<= IniFile::Write(string, string, string)");
         }
+
+        /// <summary>
+        /// 書込
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void Write(string section, string key, bool value)
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::Write(string, string, bool)");
+            Logger.DebugFormat("section:{0}", section);
+            Logger.DebugFormat("key    :{0}", key);
+            Logger.DebugFormat("value  :{0}", value);
+
+            // 書込
+            WritePrivateProfileString(section, key, value.ToString(), FileName);
+
+            // ロギング
+            Logger.Debug("<<<<= IniFile::Write(string, string, bool)");
+        }
+
+        /// <summary>
+        /// 書込
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void Write(string section, string key, uint value)
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::Write(string, string, uint)");
+            Logger.DebugFormat("section:{0}", section);
+            Logger.DebugFormat("key    :{0}", key);
+            Logger.DebugFormat("value  :{0}", value);
+
+            // 書込
+            WritePrivateProfileString(section, key, value.ToString(), FileName);
+
+            // ロギング
+            Logger.Debug("<<<<= IniFile::Write(string, string, uint)");
+        }
         #endregion
 
+        #region 読み出し
         #region 文字列読み出し
         /// <summary>
         /// 文字列読み出し
@@ -218,6 +349,35 @@ namespace Common.Config
         }
         #endregion
 
+        #region Bool読み出し
+        /// <summary>
+        /// Bool読み出し
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool GetBoolValue(string section, string key)
+        {
+            // ロギング
+            Logger.Debug("=>>>> IniFile::GetBoolValue(string, string)");
+            Logger.DebugFormat("section:{0}", section);
+            Logger.DebugFormat("key    :{0}", key);
+
+            StringBuilder sb = new StringBuilder(Capacity);
+            GetPrivateProfileString(section, key, "", sb, (uint)sb.Capacity, FileName);
+
+            // 文字取得
+            string result = sb.ToString();
+
+            // ロギング
+            Logger.DebugFormat("result:{0}", result);
+            Logger.Debug("<<<<= IniFile::GetBoolValue(string, string)");
+
+            // 結果返却
+            return bool.Parse(result);
+        }
+        #endregion
+
         #region 数値読み出し
         /// <summary>
         /// 数値読み出し
@@ -243,6 +403,7 @@ namespace Common.Config
             return result;
         }
         #endregion
+        #endregion
 
         #region 削除
         /// <summary>
@@ -256,9 +417,10 @@ namespace Common.Config
             Logger.DebugFormat("section:{0}", section);
 
             // 指定セクション内の全てのキーと値のペアを削除する
-            WritePrivateProfileString(section, null, null, FileName);
+            uint result = WritePrivateProfileString(section, null, null, FileName);
 
             // ロギング
+            Logger.DebugFormat("result:{0}", result);
             Logger.Debug("<<<<= IniFile::Remove(string)");
         }
 
@@ -275,9 +437,10 @@ namespace Common.Config
             Logger.DebugFormat("key    :{0}", key);
 
             // 1つのキーと値のペアを削除する
-            WritePrivateProfileString(section, key, null, FileName);
+            uint result = WritePrivateProfileString(section, key, null, FileName);
 
             // ロギング
+            Logger.DebugFormat("result:{0}", result);
             Logger.Debug("<<<<= IniFile::Remove(string, string)");
         }
         #endregion
