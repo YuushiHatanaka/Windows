@@ -66,6 +66,7 @@
     <Compile Include="Dialog\ProgressDialog.designer.cs">
       <DependentUpon>ProgressDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\Tools.cs" />
     <Compile Include="Form\formBase.cs">
       <SubType>Form</SubType>
     </Compile>

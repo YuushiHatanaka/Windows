@@ -21,7 +21,7 @@ namespace Common.Net
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         #region ホスト名

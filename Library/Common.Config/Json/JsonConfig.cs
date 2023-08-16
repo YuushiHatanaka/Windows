@@ -33,13 +33,20 @@ namespace Common.Config
     /// <summary>
     /// Json構文解析
     /// </summary>
-    public class JsonConfig
+    public class JsonConfig : IDisposable
     {
         #region ロガーオブジェクト
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #endregion
+
+        #region Disposeフラグ
+        /// <summary>
+        /// Disposeフラグ
+        /// </summary>
+        protected bool m_Disposed = false;
         #endregion
 
         /// <summary>
@@ -96,62 +103,62 @@ namespace Common.Config
         /// <summary>
         /// Object開始検出通知
         /// </summary>
-        public EventHandlerStartObject OnStartObject = null;
+        public EventHandlerStartObject OnStartObject = delegate { return true; };
 
         /// <summary>
         /// Object終了検出通知
         /// </summary>
-        public EventHandlerEndObject OnEndObject = null;
+        public EventHandlerEndObject OnEndObject = delegate { return true; };
 
         /// <summary>
         /// Array開始検出通知
         /// </summary>
-        public EventHandlerStartArray OnStartArray = null;
+        public EventHandlerStartArray OnStartArray = delegate { return true; };
 
         /// <summary>
         /// Array終了検出通知
         /// </summary>
-        public EventHandlerEndArray OnEndArray = null;
+        public EventHandlerEndArray OnEndArray = delegate { return true; };
 
         /// <summary>
         /// Element開始検出通知
         /// </summary>
-        public EventHandlerStartElement OnStartElement = null;
+        public EventHandlerStartElement OnStartElement = delegate { return true; };
 
         /// <summary>
         /// Element終了検出通知
         /// </summary>
-        public EventHandlerEndElement OnEndElement = null;
+        public EventHandlerEndElement OnEndElement = delegate { return true; };
 
         /// <summary>
         /// Key検出通知
         /// </summary>
-        public EventHandlerKey OnKey = null;
+        public EventHandlerKey OnKey = delegate { return true; };
 
         /// <summary>
         /// Value検出通知(Null)
         /// </summary>
-        public EventHandlerNull OnNull = null;
+        public EventHandlerNull OnNull = delegate { return true; };
 
         /// <summary>
         /// Value検出通知(Bool)
         /// </summary>
-        public EventHandlerBool OnBool = null;
+        public EventHandlerBool OnBool = delegate { return true; };
 
         /// <summary>
         /// Value検出通知(Value)
         /// </summary>
-        public EventHandlerValue OnValue = null;
+        public EventHandlerValue OnValue = delegate { return true; };
 
         /// <summary>
         /// Value検出通知(Number)
         /// </summary>
-        public EventHandlerNumber OnNumber = null;
+        public EventHandlerNumber OnNumber = delegate { return true; };
 
         /// <summary>
         /// Value検出通知(String)
         /// </summary>
-        public EventHandlerString OnString = null;
+        public EventHandlerString OnString = delegate { return true; };
 
         /// <summary>
         /// エラーイベント通知
@@ -190,6 +197,7 @@ namespace Common.Config
         }
         #endregion
 
+        #region デストラクタ
         /// <summary>
         /// デストラクタ
         /// </summary>
@@ -198,12 +206,60 @@ namespace Common.Config
             // ロギング
             Logger.Debug("=>>>> JsonConfig::~JsonConfig()");
 
-            // 文字列キューをクリア
-            m_strings_queue.Clear();
+            // リソース破棄
+            Dispose(false);
 
             // ロギング
             Logger.Debug("<<<<= JsonConfig::~JsonConfig()");
         }
+        #endregion
+
+        #region Dispose
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        public void Dispose()
+        {
+            // ロギング
+            Logger.Debug("=>>>> JsonConfig::Dispose()");
+
+            // リソース破棄
+            Dispose(true);
+
+            // ガベージコレクション
+            GC.SuppressFinalize(this);
+
+            // ロギング
+            Logger.Debug("<<<<= JsonConfig::Dispose()");
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            // ロギング
+            Logger.Debug("=>>>> JsonConfig::Dispose(bool)");
+
+            if (!m_Disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: Dispose managed resources here.
+                }
+
+                // TODO: Free unmanaged resources here.
+                m_strings_queue.Clear();
+
+                // Note disposing has been done.
+                m_Disposed = true;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= JsonConfig::Dispose(bool)");
+        }
+        #endregion
 
         /// <summary>
         /// 処理行数取得
@@ -432,6 +488,35 @@ namespace Common.Config
         }
 
         #region 解析
+        /// <summary>
+        /// ファイル解析
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public bool FileParse(string fileName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> JsonConfig::FileParse(string)");
+            Logger.DebugFormat("fileName:[{0}]", fileName);
+
+            // 解析
+            if (!Parse(new FileStream(fileName, FileMode.Open, FileAccess.Read)))
+            {
+                // ロギング
+                Logger.Error("解析:[異常]");
+                Logger.Debug("<<<<= JsonConfig::FileParse(string)");
+
+                // 異常終了
+                return false;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= JsonConfig::FileParse(string)");
+
+            // 正常終了
+            return true;
+        }
+
         /// <summary>
         /// 解析
         /// </summary>
@@ -724,6 +809,35 @@ namespace Common.Config
                         return false;
                     }
             }
+        }
+
+        /// <summary>
+        /// 解析
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public bool Parse(FileStream stream)
+        {
+            // ロギング
+            Logger.Debug("=>>>> JsonConfig::Parse(FileStream)");
+            Logger.DebugFormat("stream:[{0}]", stream.ToString());
+
+            // 解析
+            if (!Parse(new StreamReader(stream)))
+            {
+                // ロギング
+                Logger.Error("解析:[異常]");
+                Logger.Debug("<<<<= JsonConfig::Parse(FileStream)");
+
+                // 異常終了
+                return false;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= JsonConfig::Parse(FileStream)");
+
+            // 正常終了
+            return true;
         }
 
         /// <summary>
@@ -2186,33 +2300,29 @@ namespace Common.Config
             // モードスタック設定
             m_mode_stack.Push(JsonMode.Object);
 
-            // コールバック関数呼び出し
-            if (OnStartObject != null)
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                JsonMode.Object,
+                total_line_no(),
+                m_strings_queue.CurrentColum() - 1,
+                new JsonArrayInfo(),
+                new JsonKeyInfo(),
+                JsonValueType.ObjectStart,
+                "{",
+                new JsonErrorInfo()
+            );
+
+            // Object開始検出通知
+            if (!OnStartObject(_Args, m_user_data))
             {
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    JsonMode.Object,
-                    total_line_no(),
-                    m_strings_queue.CurrentColum() - 1,
-                    new JsonArrayInfo(),
-                    new JsonKeyInfo(),
-                    JsonValueType.ObjectStart,
-                    "{",
-                    new JsonErrorInfo()
-                );
+                // ロギング
+                Logger.Error("Object開始検出通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::StartObject()");
 
-                // Object開始検出通知
-                if (!OnStartObject(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Object開始検出通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::StartObject()");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2265,33 +2375,29 @@ namespace Common.Config
                 return false;
             }
 
-            // コールバック関数呼び出し
-            if (OnEndObject != null)
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                JsonMode.Object,
+                total_line_no(),
+                m_strings_queue.CurrentColum() - 1,
+                new JsonArrayInfo(),
+                new JsonKeyInfo(),
+                JsonValueType.ObjectEnd,
+                "}",
+                new JsonErrorInfo()
+            );
+
+            // Object終了検出通知
+            if (!OnEndObject(_Args, m_user_data))
             {
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    JsonMode.Object,
-                    total_line_no(),
-                    m_strings_queue.CurrentColum() - 1,
-                    new JsonArrayInfo(),
-                    new JsonKeyInfo(),
-                    JsonValueType.ObjectEnd,
-                    "}",
-                    new JsonErrorInfo()
-                );
+                // ロギング
+                Logger.Error("Object終了検出通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::EndObject()");
 
-                // Object終了検出通知
-                if (!OnEndObject(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Object終了検出通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::EndObject()");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2316,40 +2422,36 @@ namespace Common.Config
             // Arrayインデックス初期設定
             initialize_array_index();
 
-            // コールバック関数呼び出し
-            if (OnStartArray != null)
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+                _Array = m_array_index_stack.Get();
+            }
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    JsonMode.Array,
-                    total_line_no(),
-                    m_strings_queue.CurrentColum() - 1,
-                    _Array,
-                    new JsonKeyInfo(),
-                    JsonValueType.ArrayStart,
-                    "[",
-                    new JsonErrorInfo()
-                );
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                JsonMode.Array,
+                total_line_no(),
+                m_strings_queue.CurrentColum() - 1,
+                _Array,
+                new JsonKeyInfo(),
+                JsonValueType.ArrayStart,
+                "[",
+                new JsonErrorInfo()
+            );
 
-                // Array開始検出通知
-                if (!OnStartArray(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Object終了検出通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::StartArray()");
+            // Array開始検出通知
+            if (!OnStartArray(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Object終了検出通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::StartArray()");
 
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2405,40 +2507,36 @@ namespace Common.Config
             // Arrayインデックススタック解放
             m_array_index_stack.Pop();
 
-            // コールバック関数呼び出し
-            if (OnEndArray != null)
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+                _Array = m_array_index_stack.Get();
+            }
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    JsonMode.Array,
-                    total_line_no(),
-                    m_strings_queue.CurrentColum() - 1,
-                    _Array,
-                    new JsonKeyInfo(),
-                    JsonValueType.ArrayEnd,
-                    "]",
-                    new JsonErrorInfo()
-                );
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                JsonMode.Array,
+                total_line_no(),
+                m_strings_queue.CurrentColum() - 1,
+                _Array,
+                new JsonKeyInfo(),
+                JsonValueType.ArrayEnd,
+                "]",
+                new JsonErrorInfo()
+            );
 
-                // Array終了検出通知
-                if (!OnEndArray(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Array終了検出通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::EndArray()");
+            // Array終了検出通知
+            if (!OnEndArray(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Array終了検出通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::EndArray()");
 
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2469,43 +2567,39 @@ namespace Common.Config
             // Key情報登録
             m_key_stack.Push(_keyInfo);
 
-            // コールバック関数呼び出し
-            if (OnStartElement != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _keyInfo,
+                JsonValueType.Element,
+                key,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _keyInfo,
-                    JsonValueType.Element,
-                    key,
-                    new JsonErrorInfo()
-                );
+            // Element開始通知
+            if (!OnStartElement(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Array終了検出通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::StartElement(uint, string)");
 
-                // Element開始通知
-                if (!OnStartElement(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Array終了検出通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::StartElement(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2538,46 +2632,42 @@ namespace Common.Config
                 return true;
             }
 
-            // コールバック関数呼び出し
-            if (OnEndElement != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = m_key_stack.Get();
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = m_key_stack.Get();
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.Element,
+                key,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.Element,
-                    key,
-                    new JsonErrorInfo()
-                );
+            // Element終了通知
+            if (!OnEndElement(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Element終了通知:[異常]");
+                Logger.Debug("<<<<= JsonConfig::EndElement(uint, string)");
 
-                // Element終了通知
-                if (!OnEndElement(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Element終了通知:[異常]");
-                    Logger.Debug("<<<<= JsonConfig::EndElement(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // キースタック解放
@@ -2625,50 +2715,46 @@ namespace Common.Config
             Logger.DebugFormat("startColum:[{0}]", startColum);
             Logger.DebugFormat("value     :[{0}]", value);
 
-            // コールバック関数呼び出し
-            if (OnValue != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.Value,
+                value,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.Value,
-                    value,
-                    new JsonErrorInfo()
-                );
+            // Value検出通知(Value)
+            if (!OnValue(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Value検出通知(Value):[異常]");
+                Logger.Debug("<<<<= JsonConfig::Value(uint, string)");
 
-                // Value検出通知(Value)
-                if (!OnValue(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Value検出通知(Value):[異常]");
-                    Logger.Debug("<<<<= JsonConfig::Value(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // NULL判定
@@ -2751,50 +2837,46 @@ namespace Common.Config
             Logger.DebugFormat("startColum:[{0}]", startColum);
             Logger.DebugFormat("value     :[{0}]", value);
 
-            // コールバック関数呼び出し
-            if (OnNumber != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.Number,
+                value,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.Number,
-                    value,
-                    new JsonErrorInfo()
-                );
+            // Value検出通知(Number)
+            if (!OnNumber(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Value検出通知(Number):[異常]");
+                Logger.Debug("<<<<= JsonConfig::Number(uint, string)");
 
-                // Value検出通知(Number)
-                if (!OnNumber(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Value検出通知(Number):[異常]");
-                    Logger.Debug("<<<<= JsonConfig::Number(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2817,50 +2899,46 @@ namespace Common.Config
             Logger.DebugFormat("startColum:[{0}]", startColum);
             Logger.DebugFormat("value     :[{0}]", value);
 
-            // コールバック関数呼び出し
-            if (OnString != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.String,
+                value,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.String,
-                    value,
-                    new JsonErrorInfo()
-                );
+            // Value検出通知(String)
+            if (!OnString(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Value検出通知(String):[異常]");
+                Logger.Debug("<<<<= JsonConfig::String(uint, string)");
 
-                // Value検出通知(String)
-                if (!OnString(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Value検出通知(String):[異常]");
-                    Logger.Debug("<<<<= JsonConfig::String(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2881,50 +2959,46 @@ namespace Common.Config
             Logger.Debug("=>>>> JsonConfig::Null(uint)");
             Logger.DebugFormat("startColum:[{0}]", startColum);
 
-            // コールバック関数呼び出し
-            if (OnNull != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.Null,
+                "null",
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.Null,
-                    "null",
-                    new JsonErrorInfo()
-                );
+            // Value検出通知(Null)
+            if (!OnNull(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Value検出通知(Null):[異常]");
+                Logger.Debug("<<<<= JsonConfig::Null(uint)");
 
-                // Value検出通知(Null)
-                if (!OnNull(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Value検出通知(Null):[異常]");
-                    Logger.Debug("<<<<= JsonConfig::Null(uint)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -2947,50 +3021,46 @@ namespace Common.Config
             Logger.DebugFormat("startColum:[{0}]", startColum);
             Logger.DebugFormat("value     :[{0}]", value);
 
-            // コールバック関数呼び出し
-            if (OnBool != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
+                _Array = m_array_index_stack.Get();
+            }
 
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
 
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                startColum,
+                _Array,
+                _current_key,
+                JsonValueType.Bool,
+                value,
+                new JsonErrorInfo()
+            );
 
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    startColum,
-                    _Array,
-                    _current_key,
-                    JsonValueType.Bool,
-                    value,
-                    new JsonErrorInfo()
-                );
+            // Value検出通知(Bool)
+            if (!OnBool(_Args, m_user_data))
+            {
+                // ロギング
+                Logger.Error("Value検出通知(Bool):[異常]");
+                Logger.Debug("<<<<= JsonConfig::Bool(uint, string)");
 
-                // Value検出通知(Bool)
-                if (!OnBool(_Args, m_user_data))
-                {
-                    // ロギング
-                    Logger.Error("Value検出通知(Bool):[異常]");
-                    Logger.Debug("<<<<= JsonConfig::Bool(uint, string)");
-
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング
@@ -3010,43 +3080,39 @@ namespace Common.Config
             Logger.Debug("=>>>> JsonConfig::Error(JsonError)");
             Logger.DebugFormat("error:[{0}]", error.ToString());
 
-            // コールバック関数呼び出し
-            if (OnError != null)
+            // 動作モード取得
+            JsonMode _mode = m_mode_stack.Get();
+
+            // 配列情報取得
+            JsonArrayInfo _Array = new JsonArrayInfo();
+            if (m_array_index_stack.Count() > 0)
             {
-                // 動作モード取得
-                JsonMode _mode = m_mode_stack.Get();
-
-                // 配列情報取得
-                JsonArrayInfo _Array = new JsonArrayInfo();
-                if (m_array_index_stack.Count() > 0)
-                {
-                    _Array = m_array_index_stack.Get();
-                }
-
-                // 現在キーを取得
-                JsonKeyInfo _current_key = new JsonKeyInfo();
-                if (m_key_stack.Count() > 0)
-                {
-                    _current_key = m_key_stack.Get();
-                }
-
-                // イベント情報設定
-                JsonEventArg _Args = new JsonEventArg
-                (
-                    m_raw_string,
-                    _mode,
-                    total_line_no(),
-                    m_strings_queue.CurrentColum(),
-                    _Array,
-                    _current_key,
-                    JsonValueType.Unknown,
-                    "",
-                    new JsonErrorInfo(error)
-                );
-
-                // エラーイベント通知
-                OnError(_Args, m_user_data);
+                _Array = m_array_index_stack.Get();
             }
+
+            // 現在キーを取得
+            JsonKeyInfo _current_key = new JsonKeyInfo();
+            if (m_key_stack.Count() > 0)
+            {
+                _current_key = m_key_stack.Get();
+            }
+
+            // イベント情報設定
+            JsonEventArg _Args = new JsonEventArg
+            (
+                m_raw_string,
+                _mode,
+                total_line_no(),
+                m_strings_queue.CurrentColum(),
+                _Array,
+                _current_key,
+                JsonValueType.Unknown,
+                "",
+                new JsonErrorInfo(error)
+            );
+
+            // エラーイベント通知
+            OnError(_Args, m_user_data);
 
             // ロギング
             Logger.Debug("<<<<= JsonConfig::Error(JsonError)");

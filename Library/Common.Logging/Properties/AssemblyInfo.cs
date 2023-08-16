@@ -36,4 +36,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 // log4net初期化
-[assembly: log4net.Config.XmlConfigurator(Watch = true, ConfigFile = "log4net.common.logging.config")]
+[assembly: log4net.Config.XmlConfigurator(Watch = true, ConfigFile = "log4net.common.performance.config")]

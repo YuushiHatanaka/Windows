@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using log4net;
+using System.IO;
 using System.IO.Compression;
+using System.Reflection;
 
 namespace Common.IO.Compression
 {
@@ -8,16 +10,31 @@ namespace Common.IO.Compression
     /// </summary>
     public class CGZipLib
     {
+        #region ロガーオブジェクト
+        /// <summary>
+        /// ロガーオブジェクト
+        /// </summary>
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #endregion
+
         #region 圧縮
         /// <summary>
         /// 圧縮
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Compress(string srcName, string desName)
+        public static void Compress(string srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(string, string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 圧縮
-            CGZipLib.Compress(srcName, desName, new byte[1024]);
+            Compress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(string, string)");
         }
 
         /// <summary>
@@ -26,8 +43,14 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Compress(string srcName, string desName, byte[] buf)
+        public static void Compress(string srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(string, string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+            Logger.DebugFormat("buf    :[{0}]", buf);
+
             int num;
 
             // 入力ストリーム
@@ -53,6 +76,9 @@ namespace Common.IO.Compression
                     }
                 }
             }
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(string, string, byte[])");
         }
 
         /// <summary>
@@ -60,10 +86,18 @@ namespace Common.IO.Compression
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Compress(byte[] srcName, string desName)
+        public static void Compress(byte[] srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(byte[], string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 圧縮
-            CGZipLib.Compress(srcName, desName, new byte[1024]);
+            Compress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(byte[], string)");
         }
 
         /// <summary>
@@ -72,10 +106,18 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Compress(byte[] srcName, string desName, byte[] buf)
+        public static void Compress(byte[] srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(byte[], string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 圧縮
-            CGZipLib.Compress(new MemoryStream(srcName, false), desName, buf);
+            Compress(new MemoryStream(srcName, false), desName, buf);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(byte[], string, byte[])");
         }
 
         /// <summary>
@@ -83,10 +125,18 @@ namespace Common.IO.Compression
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Compress(MemoryStream srcName, string desName)
+        public static void Compress(MemoryStream srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(MemoryStream, string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 圧縮
-            CGZipLib.Compress(srcName, desName, new byte[1024]);
+            Compress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(MemoryStream, string)");
         }
 
         /// <summary>
@@ -95,8 +145,13 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Compress(MemoryStream srcName, string desName, byte[] buf)
+        public static void Compress(MemoryStream srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Compress(MemoryStream, string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             int num;
 
             // 入力ストリーム
@@ -122,6 +177,9 @@ namespace Common.IO.Compression
                     }
                 }
             }
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Compress(MemoryStream, string, byte[])");
         }
         #endregion
 
@@ -131,10 +189,18 @@ namespace Common.IO.Compression
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Decompress(string srcName, string desName)
+        public static void Decompress(string srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(string, string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 解凍
-            CGZipLib.Decompress(srcName, desName, new byte[1024]);
+            Decompress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(string, string)");
         }
 
         /// <summary>
@@ -143,8 +209,14 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Decompress(string srcName, string desName, byte[] buf)
+        public static void Decompress(string srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(string, string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+            Logger.DebugFormat("buf    :[{0}]", buf);
+
             int num;
 
             // 入力ストリーム
@@ -170,6 +242,9 @@ namespace Common.IO.Compression
                     }
                 }
             }
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(string, string, byte[])");
         }
 
         /// <summary>
@@ -177,10 +252,18 @@ namespace Common.IO.Compression
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Decompress(byte[] srcName, string desName)
+        public static void Decompress(byte[] srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(byte[], string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 解凍
-            CGZipLib.Decompress(srcName, desName, new byte[1024]);
+            Decompress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(byte[], string)");
         }
 
         /// <summary>
@@ -189,10 +272,19 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Decompress(byte[] srcName, string desName, byte[] buf)
+        public static void Decompress(byte[] srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(byte[], string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+            Logger.DebugFormat("buf    :[{0}]", buf);
+
             // 解凍
-            CGZipLib.Decompress(new MemoryStream(srcName, false), desName, buf);
+            Decompress(new MemoryStream(srcName, false), desName, buf);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(byte[], string, byte[])");
         }
 
         /// <summary>
@@ -200,10 +292,18 @@ namespace Common.IO.Compression
         /// </summary>
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
-        static void Decompress(MemoryStream srcName, string desName)
+        public static void Decompress(MemoryStream srcName, string desName)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(MemoryStream, string)");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             // 解凍
-            CGZipLib.Decompress(srcName, desName, new byte[1024]);
+            Decompress(srcName, desName, new byte[1024]);
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(MemoryStream, string)");
         }
 
         /// <summary>
@@ -212,8 +312,13 @@ namespace Common.IO.Compression
         /// <param name="srcName"></param>
         /// <param name="desName"></param>
         /// <param name="buf"></param>
-        static void Decompress(MemoryStream srcName, string desName, byte[] buf)
+        public static void Decompress(MemoryStream srcName, string desName, byte[] buf)
         {
+            // ロギング
+            Logger.Debug("=>>>> CGZipLib::Decompress(MemoryStream, string, byte[])");
+            Logger.DebugFormat("srcName:[{0}]", srcName);
+            Logger.DebugFormat("desName:[{0}]", desName);
+
             int num;
 
             // 出力ストリーム
@@ -236,6 +341,9 @@ namespace Common.IO.Compression
                     }
                 }
             }
+
+            // ロギング
+            Logger.Debug("<<<<= CGZipLib::Decompress(MemoryStream, string, byte[])");
         }
         #endregion
     }

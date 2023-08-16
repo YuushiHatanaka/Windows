@@ -45,7 +45,7 @@ namespace Common.Config
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         #region Disposeフラグ
@@ -150,6 +150,7 @@ namespace Common.Config
         {
             // ロギング
             Logger.Debug("=>>>> IniFile::Dispose(bool)");
+            Logger.DebugFormat("disposing:[{0}]", disposing);
 
             if (!m_Disposed)
             {
@@ -270,9 +271,10 @@ namespace Common.Config
             Logger.DebugFormat("value  :{0}", value);
 
             // 書込
-            WritePrivateProfileString(section, key, value, FileName);
+            uint result = WritePrivateProfileString(section, key, value, FileName);
 
             // ロギング
+            Logger.DebugFormat("result:{0}", result);
             Logger.Debug("<<<<= IniFile::Write(string, string, string)");
         }
 
@@ -291,9 +293,10 @@ namespace Common.Config
             Logger.DebugFormat("value  :{0}", value);
 
             // 書込
-            WritePrivateProfileString(section, key, value.ToString(), FileName);
+            uint result = WritePrivateProfileString(section, key, value.ToString(), FileName);
 
             // ロギング
+            Logger.DebugFormat("result:{0}", result);
             Logger.Debug("<<<<= IniFile::Write(string, string, bool)");
         }
 
@@ -312,9 +315,10 @@ namespace Common.Config
             Logger.DebugFormat("value  :{0}", value);
 
             // 書込
-            WritePrivateProfileString(section, key, value.ToString(), FileName);
+            uint result = WritePrivateProfileString(section, key, value.ToString(), FileName);
 
             // ロギング
+            Logger.DebugFormat("result:{0}", result);
             Logger.Debug("<<<<= IniFile::Write(string, string, uint)");
         }
         #endregion

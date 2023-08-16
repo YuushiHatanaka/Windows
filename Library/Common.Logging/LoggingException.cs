@@ -17,7 +17,7 @@ namespace Common.Logging
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         #region コンストラクタ

@@ -15,13 +15,24 @@ using System.Xml.Linq;
 
 namespace Common.Config
 {
-    public class XmlConfig<T>
+    /// <summary>
+    /// XmlConfigクラス
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class XmlConfig<T> : IDisposable
     {
         #region ロガーオブジェクト
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        protected ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        protected static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #endregion
+
+        #region Disposeフラグ
+        /// <summary>
+        /// Disposeフラグ
+        /// </summary>
+        protected bool m_Disposed = false;
         #endregion
 
         #region XmlSerializerオブジェクト
@@ -38,6 +49,7 @@ namespace Common.Config
         private string FileName { get; set; }
         #endregion
 
+        #region デストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -57,6 +69,70 @@ namespace Common.Config
             // ロギング
             Logger.Debug("<<<<= XmlConfig::XmlConfig(string)");
         }
+        #endregion
+
+        #region デストラクタ
+        /// <summary>
+        /// デストラクタ
+        /// </summary>
+        ~XmlConfig()
+        {
+            // ロギング
+            Logger.Debug("=>>>> XmlConfig::~XmlConfig()");
+
+            // リソース破棄
+            Dispose(false);
+
+            // ロギング
+            Logger.Debug("<<<<= XmlConfig::~XmlConfig()");
+        }
+        #endregion
+
+        #region Dispose
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        public void Dispose()
+        {
+            // ロギング
+            Logger.Debug("=>>>> XmlConfig::Dispose()");
+
+            // リソース破棄
+            Dispose(true);
+
+            // ガベージコレクション
+            GC.SuppressFinalize(this);
+
+            // ロギング
+            Logger.Debug("<<<<= XmlConfig::Dispose()");
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            // ロギング
+            Logger.Debug("=>>>> XmlConfig::Dispose(bool)");
+
+            if (!m_Disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: Dispose managed resources here.
+                }
+
+                // TODO: Free unmanaged resources here.
+
+                // Note disposing has been done.
+                m_Disposed = true;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= XmlConfig::Dispose(bool)");
+        }
+        #endregion
 
         /// <summary>
         /// ファイル存在判定

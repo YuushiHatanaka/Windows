@@ -49,56 +49,56 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AllowScroll.cs" />
-    <Compile Include="AutoScrollControl.cs">
+    <Compile Include="AllowScroll\AllowScroll.cs" />
+    <Compile Include="AllowScroll\AutoScrollControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="AutoScrollControl.designer.cs">
+    <Compile Include="AllowScroll\AutoScrollControl.designer.cs">
       <DependentUpon>AutoScrollControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="AutoScrollLabel.cs">
+    <Compile Include="AllowScroll\AutoScrollLabel.cs">
       <SubType>AutoScrollControl</SubType>
     </Compile>
-    <Compile Include="BlinkAppearance.cs" />
-    <Compile Include="BlinkButton.cs">
+    <Compile Include="Blink\BlinkAppearance.cs" />
+    <Compile Include="Blink\BlinkButton.cs">
       <SubType>BlinkControl</SubType>
     </Compile>
-    <Compile Include="BlinkInfomation.cs" />
-    <Compile Include="BlinkListViewItem.cs" />
-    <Compile Include="ButtonBlinkInfomation.cs" />
-    <Compile Include="CommonConsole.cs" />
-    <Compile Include="ControlMargin.cs" />
-    <Compile Include="ControlPositions.cs" />
-    <Compile Include="DirectoryTreeView.cs">
+    <Compile Include="Blink\BlinkInfomation.cs" />
+    <Compile Include="Blink\BlinkListViewItem.cs" />
+    <Compile Include="Blink\ButtonBlinkInfomation.cs" />
+    <Compile Include="Common\CommonConsole.cs" />
+    <Compile Include="Common\ControlMargin.cs" />
+    <Compile Include="Common\ControlPositions.cs" />
+    <Compile Include="Directory\DirectoryTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragAndDropPictureBox.cs">
+    <Compile Include="Picture\DragAndDropPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropFileListView.cs">
+    <Compile Include="File\DragDropFileListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DragDropFileListViewItem.cs" />
-    <Compile Include="FileListView.cs">
+    <Compile Include="File\DragDropFileListViewItem.cs" />
+    <Compile Include="File\FileListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="FileListViewItem.cs" />
-    <Compile Include="FileTreeView.cs">
+    <Compile Include="File\FileListViewItem.cs" />
+    <Compile Include="File\FileTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IpAddressTextbox.cs">
+    <Compile Include="Net\IpAddressTextbox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="LabeledComboBox.cs">
+    <Compile Include="Labeled\LabeledComboBox.cs">
       <SubType>LabeledControl</SubType>
     </Compile>
-    <Compile Include="LabeledControl.cs">
+    <Compile Include="Labeled\LabeledControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="LabeledControl.designer.cs">
+    <Compile Include="Labeled\LabeledControl.designer.cs">
       <DependentUpon>LabeledControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="LabeledTextBox.cs">
+    <Compile Include="Labeled\LabeledTextBox.cs">
       <SubType>LabeledControl</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -132,14 +132,14 @@
     <Compile Include="Resource\Task\ProcessListViewTask.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ScreeanSize.cs" />
-    <Compile Include="StringPanel.cs">
+    <Compile Include="Common\ScreeanSize.cs" />
+    <Compile Include="Panel\StringPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="StringPanel.designer.cs">
+    <Compile Include="Panel\StringPanel.designer.cs">
       <DependentUpon>StringPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="TimeTextBox.cs">
+    <Compile Include="TextBox\TimeTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
@@ -151,10 +151,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="LabeledControl.resx">
+    <EmbeddedResource Include="Labeled\LabeledControl.resx">
       <DependentUpon>LabeledControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="StringPanel.resx">
+    <EmbeddedResource Include="Panel\StringPanel.resx">
       <DependentUpon>StringPanel.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

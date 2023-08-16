@@ -34,3 +34,6 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+
+// log4net初期化
+[assembly: log4net.Config.XmlConfigurator(Watch = true, ConfigFile = "log4net.common.font.config")]
