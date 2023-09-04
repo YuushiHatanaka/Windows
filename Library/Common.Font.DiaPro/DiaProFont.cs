@@ -320,36 +320,5 @@ namespace Common.Font.DiaPro
             return true;
         }
         #endregion
-
-        #region Fontオブジェクト取得
-        /// <summary>
-        /// Fontオブジェクト取得
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public System.Drawing.Font GetFont(string fileName, float size)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DiaProFont::GetFont()");
-            Logger.DebugFormat("fileName:[{0}]", fileName);
-
-            // PrivateFontCollectionをインスタンス化する
-            PrivateFontCollection pfc = new PrivateFontCollection();
-
-            // ttfファイルを追加する
-            pfc.AddFontFile(fileName);
-
-            // フォントのインスタンスを作成する
-            System.Drawing.Font result = new System.Drawing.Font(pfc.Families[0], size);
-
-            // ロギング
-            Logger.Debug("<<<<= DiaProFont::GetFont()");
-            Logger.DebugFormat("result:[{0}]", result.ToString());
-
-            // 返却
-            return result;
-        }
-        #endregion
     }
 }
