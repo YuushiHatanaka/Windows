@@ -93,14 +93,14 @@ namespace Common.Font
             Logger.DebugFormat("size    :[{0}]", size);
             Logger.DebugFormat("style   :[{0}]", style);
 
-            // PrivateFontCollectionをインスタンス化する
-            PrivateFontCollection pfc = new PrivateFontCollection();
+            // PrivateFontCollectionオブジェクト生成
+            PrivateFontCollection privateFontCollection = new PrivateFontCollection();
 
             // ttfファイルを追加する
-            pfc.AddFontFile(fileName);
+            privateFontCollection.AddFontFile(fileName);
 
             // フォントのインスタンスを作成する
-            System.Drawing.Font result = new System.Drawing.Font(pfc.Families[0], size, style);
+            System.Drawing.Font result = new System.Drawing.Font(privateFontCollection.Families[0], size, style);
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result.ToString());

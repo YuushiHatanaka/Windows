@@ -28,9 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.SuspendLayout();
+            // 
+            // Dialog
+            // 
+            this.ClientSize = new System.Drawing.Size(284, 261);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MinimizeBox = false;
             this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "Dialog";
+            this.Load += new System.EventHandler(this.Dialog_Load);
+            this.ResumeLayout(false);
+
         }
 
         #endregion

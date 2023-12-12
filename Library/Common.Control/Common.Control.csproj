@@ -134,10 +134,10 @@
     </Compile>
     <Compile Include="Common\ScreeanSize.cs" />
     <Compile Include="Panel\StringPanel.cs">
-      <SubType>UserControl</SubType>
+      <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panel\StringPanel.designer.cs">
-      <DependentUpon>StringPanel.cs</DependentUpon>
+    <Compile Include="TableLayoutPanel\GridTableLayoutPanel.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="TextBox\TimeTextBox.cs">
       <SubType>Component</SubType>
@@ -153,9 +153,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Labeled\LabeledControl.resx">
       <DependentUpon>LabeledControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Panel\StringPanel.resx">
-      <DependentUpon>StringPanel.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

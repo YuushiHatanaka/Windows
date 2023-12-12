@@ -99,11 +99,11 @@ namespace Common.IO
         /// 相対パスから絶対パスを取得します。
         /// </summary>
         /// <param name="basePath">基準とするパス。</param>
-        /// <param name="relativePath">相対パス。</param>
-        /// <returns>絶対パス。</returns>
+        /// <param name="relativePath">相対パス</param>
+        /// <returns>絶対パス</returns>
         public static string GetAbsolutePath(string basePath, string relativePath)
         {
-            StringBuilder sb = new StringBuilder(2048);
+            StringBuilder sb = new StringBuilder();
             IntPtr res = PathCombine(sb, basePath, relativePath);
             if (res == IntPtr.Zero)
             {
@@ -116,11 +116,11 @@ namespace Common.IO
         /// 絶対パスから相対パスを取得します。
         /// </summary>
         /// <param name="basePath">基準とするフォルダのパス。</param>
-        /// <param name="absolutePath">相対パス。</param>
-        /// <returns>絶対パス。</returns>
+        /// <param name="absolutePath">絶対パス</param>
+        /// <returns>相対パス</returns>
         public static string GetRelativePath(string basePath, string absolutePath)
         {
-            StringBuilder sb = new StringBuilder(260);
+            StringBuilder sb = new StringBuilder();
             bool res = PathRelativePathTo(sb,
                 basePath, System.IO.FileAttributes.Directory,
                 absolutePath, System.IO.FileAttributes.Normal);

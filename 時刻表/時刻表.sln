@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrainTimeTable", "TrainTimeTable\TrainTimeTable.csproj", "{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {61F71208-11F4-4586-A7B1-6D1816601C90}
+	EndGlobalSection
+EndGlobal

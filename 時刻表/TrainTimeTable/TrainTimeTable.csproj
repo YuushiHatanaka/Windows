@@ -1,0 +1,434 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BBAC2BDB-D7F2-41DF-9AE7-F6958271FB47}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>TrainTimeTable</RootNamespace>
+    <AssemblyName>TrainTimeTable</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.118.0\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.118.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.118.0\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common\DepartureArrivalType.cs" />
+    <Compile Include="Common\AssemblyLibrary.cs" />
+    <Compile Include="Common\Const.cs" />
+    <Compile Include="Common\DateTimeLibrary.cs" />
+    <Compile Include="Common\DiagramDrawLibrary.cs" />
+    <Compile Include="Common\DiagramTrainInformation.cs" />
+    <Compile Include="Common\DiaProFont.cs" />
+    <Compile Include="Common\DirectionType.cs" />
+    <Compile Include="Common\FontLibrary.cs" />
+    <Compile Include="Common\ImportFileType.cs" />
+    <Compile Include="Common\MathLibrary.cs" />
+    <Compile Include="Common\StationScale.cs" />
+    <Compile Include="Common\StationTreatment.cs" />
+    <Compile Include="Common\StopMarkDrawType.cs" />
+    <Compile Include="Common\StringLibrary.cs" />
+    <Compile Include="Common\StringValueAttribute.cs" />
+    <Compile Include="Common\TimeFormat.cs" />
+    <Compile Include="Common\WindowLibrary.cs" />
+    <Compile Include="Component\DictionaryDiagramTrainInformation.cs" />
+    <Compile Include="Component\DictionaryFormRoute.cs" />
+    <Compile Include="Component\DictionaryStationDistanceFromReferenceStation.cs" />
+    <Compile Include="Component\DictionaryStationTimeProperties.cs" />
+    <Compile Include="Component\DictionaryTrain.cs" />
+    <Compile Include="Control\ComboBox\ComboBoxFontName.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ComboBox\ComboBoxFontSize.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ComboBox\ComboBoxFontStyle.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\DataGridViewPrinter.cs" />
+    <Compile Include="Control\DataGridView\DataGridViewTimetable.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\DataGridViewStationTimetable.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\DataGridViewStationTimetableDisplay.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\DataGridViewTrainType.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\DataGridViewStation.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ListBox\ListBoxDiagram.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ListBox\ListBoxColor.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ListBox\ListBoxFont.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\PictureBox\Core\PictureBoxDiagramCore.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\PictureBox\PictureBoxHours.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\PictureBox\PictureBoxStations.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\PictureBox\PictureBoxDiagram.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ProgressBar\ProgressBarTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ProgressBar\ProgressBarInfomation.cs" />
+    <Compile Include="Control\ProgressBar\ToolStripProgressBarTask.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\TreeNode\TreeNodeComment.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeDiagram.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeDiagramDetail.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeDiagramDraw.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeInboundTimeTable.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeOutboundTimetable.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeRoot.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeStation.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeStationTimetable.cs" />
+    <Compile Include="Control\TreeNode\TreeNodeTrainType.cs" />
+    <Compile Include="Control\TreeView\TreeViewRoute.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Database\RouteFileDatabase.cs" />
+    <Compile Include="Database\Table\ColorTable.cs" />
+    <Compile Include="Database\Table\CommentTable.cs" />
+    <Compile Include="Database\Table\Core\TableDictionaryCore.cs" />
+    <Compile Include="Database\Table\Core\TableListCore.cs" />
+    <Compile Include="Database\Table\Core\TablePropertyCore.cs" />
+    <Compile Include="Database\Table\DiagramScreenTable.cs" />
+    <Compile Include="Database\Table\DiagramTable.cs" />
+    <Compile Include="Database\Table\FileInfomationTable.cs" />
+    <Compile Include="Database\Table\FontTable.cs" />
+    <Compile Include="Database\Table\NextStationTable.cs" />
+    <Compile Include="Database\Table\RouteTable.cs" />
+    <Compile Include="Database\Table\Core\TableCore.cs" />
+    <Compile Include="Database\Table\StationTable.cs" />
+    <Compile Include="Database\Table\StationTimeTable.cs" />
+    <Compile Include="Database\Table\TrainTable.cs" />
+    <Compile Include="Database\Table\TrainTypeTable.cs" />
+    <Compile Include="Database\Table\TrainMarkTable.cs" />
+    <Compile Include="Dialog\DialogAbout.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialog\DialogAbout.Designer.cs">
+      <DependentUpon>DialogAbout.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DialogFont.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialog\DialogFont.Designer.cs">
+      <DependentUpon>DialogFont.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialog\DialogProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialog\DialogProgress.Designer.cs">
+      <DependentUpon>DialogProgress.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EventArgs\CommentUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\DiagramPropertiesUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\FontNameSelectedIndexChangedEventArgs.cs" />
+    <Compile Include="EventArgs\FontSizeSelectedIndexChangedEventArgs.cs" />
+    <Compile Include="EventArgs\FontStyleSelectedIndexChangedEventArgs.cs" />
+    <Compile Include="EventArgs\RouteFilePropertyUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\StationPropertiesUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\StationPropertyUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\StationTimetableUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\TimetableUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\TrainTypePropertiesUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\TrainTypePropertyUpdateEventArgs.cs" />
+    <Compile Include="File\Core\FileCore.cs" />
+    <Compile Include="File\Oudia2File.cs" />
+    <Compile Include="File\OudiaFile.cs" />
+    <Compile Include="File\WinDiaFile.cs" />
+    <Compile Include="Form\FormStationProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormStationProperty.Designer.cs">
+      <DependentUpon>FormStationProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormTrainTypeProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormTrainTypeProperty.Designer.cs">
+      <DependentUpon>FormTrainTypeProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormTimetable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormTimetable.Designer.cs">
+      <DependentUpon>FormTimetable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormStationTimetableDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormStationTimetableDisplay.Designer.cs">
+      <DependentUpon>FormStationTimetableDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormDiagramProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormDiagramProperty.Designer.cs">
+      <DependentUpon>FormDiagramProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormStationTimetable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormStationTimetable.Designer.cs">
+      <DependentUpon>FormStationTimetable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormDiagramDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormDiagramDisplay.Designer.cs">
+      <DependentUpon>FormDiagramDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormComment.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormComment.Designer.cs">
+      <DependentUpon>FormComment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormDiagramProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormDiagramProperties.Designer.cs">
+      <DependentUpon>FormDiagramProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormTrainTypeProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormTrainTypeProperties.Designer.cs">
+      <DependentUpon>FormTrainTypeProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormStationProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormStationProperties.Designer.cs">
+      <DependentUpon>FormStationProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormRoute.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormRoute.Designer.cs">
+      <DependentUpon>FormRoute.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormMain.Designer.cs">
+      <DependentUpon>FormMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormRouteFileProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormRouteFileProperty.Designer.cs">
+      <DependentUpon>FormRouteFileProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Property\ColorProperties.cs" />
+    <Compile Include="Property\ColorProperty.cs" />
+    <Compile Include="Property\DiagramDrawProperties.cs" />
+    <Compile Include="Property\DiagramDrawProperty.cs" />
+    <Compile Include="Property\DiagramProperties.cs" />
+    <Compile Include="Property\DiagramProperty.cs" />
+    <Compile Include="Property\DiagramScreenProperty.cs" />
+    <Compile Include="Property\FileInfomationProperty.cs" />
+    <Compile Include="Property\FontProperties.cs" />
+    <Compile Include="Property\FontProperty.cs" />
+    <Compile Include="Property\NextStationProperty.cs" />
+    <Compile Include="Property\NextStationProperties.cs" />
+    <Compile Include="Property\RouteFileProperty.cs" />
+    <Compile Include="Property\RouteProperty.cs" />
+    <Compile Include="Property\StationMarks.cs" />
+    <Compile Include="Property\StationProperties.cs" />
+    <Compile Include="Property\StationProperty.cs" />
+    <Compile Include="Property\StationTimeProperties.cs" />
+    <Compile Include="Property\StationTimeProperty.cs" />
+    <Compile Include="Property\TrainMarkProperties.cs" />
+    <Compile Include="Property\TrainMarkProperty.cs" />
+    <Compile Include="Property\TrainProperties.cs" />
+    <Compile Include="Property\TrainProperty.cs" />
+    <Compile Include="Property\TrainTypeProperties.cs" />
+    <Compile Include="Property\TrainTypeProperty.cs" />
+    <EmbeddedResource Include="Dialog\DialogAbout.resx">
+      <DependentUpon>DialogAbout.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialog\DialogFont.resx">
+      <DependentUpon>DialogFont.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialog\DialogProgress.resx">
+      <DependentUpon>DialogProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormComment.resx">
+      <DependentUpon>FormComment.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormDiagramDisplay.resx">
+      <DependentUpon>FormDiagramDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormDiagramProperties.resx">
+      <DependentUpon>FormDiagramProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormDiagramProperty.resx">
+      <DependentUpon>FormDiagramProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormRoute.resx">
+      <DependentUpon>FormRoute.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormMain.resx">
+      <DependentUpon>FormMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormRouteFileProperty.resx">
+      <DependentUpon>FormRouteFileProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormStationProperties.resx">
+      <DependentUpon>FormStationProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormStationProperty.resx">
+      <DependentUpon>FormStationProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormStationTimetable.resx">
+      <DependentUpon>FormStationTimetable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormStationTimetableDisplay.resx">
+      <DependentUpon>FormStationTimetableDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormTimetable.resx">
+      <DependentUpon>FormTimetable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormTrainTypeProperties.resx">
+      <DependentUpon>FormTrainTypeProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormTrainTypeProperty.resx">
+      <DependentUpon>FormTrainTypeProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Font\DiaPro-Bold.ttf" />
+    <None Include="Font\DiaPro-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Image\HorizontalExpansion.png" />
+    <Content Include="Image\HorizontalReduction.png" />
+    <Content Include="Image\Print.png" />
+    <Content Include="Image\PrinterSetting.png" />
+    <Content Include="Image\PrintPreview.png" />
+    <Content Include="Image\readme.txt" />
+    <Content Include="Image\TrainName.png" />
+    <Content Include="Image\TrainNo.png" />
+    <Content Include="Image\TrainTime.png" />
+    <Content Include="Image\VerticalAxisDirectionReset.png" />
+    <Content Include="Image\VerticalExpansion.png" />
+    <Content Include="Image\VerticalReduction.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.props'))" />
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" />
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.118.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+</Project>

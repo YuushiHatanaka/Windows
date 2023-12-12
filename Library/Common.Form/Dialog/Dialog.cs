@@ -22,5 +22,18 @@ namespace Common.Dialog
             // コンポーネント初期化
             InitializeComponent();
         }
+
+        /// <summary>
+        /// Dialog_Load
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Dialog_Load(object sender, System.EventArgs e)
+        {
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MinimizeBox = false;
+            MaximizeBox = false;
+            StartPosition = FormStartPosition.CenterParent;
+        }
     }
 }
