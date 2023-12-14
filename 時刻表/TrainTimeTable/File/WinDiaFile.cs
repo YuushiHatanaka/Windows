@@ -87,6 +87,13 @@ namespace TrainTimeTable.File
                 { new TrainTypeProperty(){ Seq = 24, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
             };
 
+            // 列車種別シーケンスデフォルト設定
+            int seq = 1;
+            foreach (var trainType in m_RouteFileProperty.TrainTypes)
+            {
+                m_RouteFileProperty.TrainTypeSequences.Add(new TrainTypeSequenceProperty() { Name = trainType.Name, Seq = seq++ });
+            }
+
             // DiagramPropertyオブジェクト生成
             DiagramProperty diagramProperty = new DiagramProperty();
             diagramProperty.Name = "";
@@ -207,6 +214,10 @@ namespace TrainTimeTable.File
                 // 要素毎に繰り返す
                 while (!textFieldParser.EndOfData)
                 {
+                    // StationSequencePropertyオブジェクト生成
+                    StationSequenceProperty stationSequenceProperty = new StationSequenceProperty();
+                    stationSequenceProperty.Seq = m_RouteFileProperty.StationSequences.Count + 1;
+
                     // StationPropertyオブジェクト生成
                     StationProperty stationProperty = new StationProperty();
                     stationProperty.Seq = m_RouteFileProperty.Stations.Count + 1;
@@ -252,6 +263,7 @@ namespace TrainTimeTable.File
                         // 駅名設定
                         stationProperty.Name = Regex.Replace(match.Groups["name"].Value.Trim(), "[ |　]*", "");
                         stationProperty.NextStations[stationProperty.NextStations.Count - 1].Name = stationProperty.Name;
+                        stationSequenceProperty.Name = stationProperty.Name;
 
                         // 距離判定
                         float distance = 0.0f;
@@ -268,6 +280,7 @@ namespace TrainTimeTable.File
 
                         // 登録
                         m_RouteFileProperty.Stations.Add(stationProperty);
+                        m_RouteFileProperty.StationSequences.Add(stationSequenceProperty);
                     }
                     else
                     {
@@ -459,6 +472,7 @@ namespace TrainTimeTable.File
                         m_RouteFileProperty.TrainTypes[index].Seq = index + 1;
                         m_RouteFileProperty.TrainTypes[index].Name = columns[0];
                         m_RouteFileProperty.TrainTypes[index].Abbreviation = columns[1];
+                        m_RouteFileProperty.TrainTypeSequences[index].Name = columns[0];
                     }
                 }
             }
@@ -482,12 +496,23 @@ namespace TrainTimeTable.File
             Logger.Debug("=>>>> WinDiaFile::SetOutboundSection(string)");
             Logger.DebugFormat("line:[{0}]", line);
 
-            // 仮登録
+            // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
             trainProperty.DiagramIndex = 0;
+            trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainProperty.Direction = DirectionType.Outbound;
+
+            // TrainPropertyオブジェクト生成
+            TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
+            trainSequenceProperty.DiagramIndex = 0;
+            trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].GetNewId();
+            trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
+            trainSequenceProperty.Direction = DirectionType.Outbound;
+
+            // 仮登録
             m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Add(trainProperty);
+            m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].Add(trainSequenceProperty);
 
             // 設定
             SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count - 1, line);
@@ -506,12 +531,23 @@ namespace TrainTimeTable.File
             Logger.Debug("=>>>> WinDiaFile::SetInboundSection(string)");
             Logger.DebugFormat("line:[{0}]", line);
 
-            // 仮登録
+            // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
             trainProperty.DiagramIndex = 0;
+            trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainProperty.Direction = DirectionType.Inbound;
+
+            // TrainPropertyオブジェクト生成
+            TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
+            trainSequenceProperty.DiagramIndex = 0;
+            trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].GetNewId();
+            trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
+            trainSequenceProperty.Direction = DirectionType.Inbound;
+
+            // 仮登録
             m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Add(trainProperty);
+            m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].Add(trainSequenceProperty);
 
             // 設定
             SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count - 1, line);

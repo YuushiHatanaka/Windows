@@ -48,12 +48,12 @@ namespace TrainTimeTable.Database
             query.Append("DiagramIndex INTEGER NOT NULL DEFAULT -1,");  // ダイヤグラム番号
             query.Append("TrainIndex INTEGER NOT NULL DEFAULT -1,");    // 列車番号(インデックス)
             query.Append("Direction INTEGER NOT NULL DEFAULT 0,");      // 方向種別
-            query.Append("Seq INTEGER NOT NULL,");                      // シーケンス番号
             query.Append("MarkName TEXT,");                             // 記号名
+            query.Append("Seq INTEGER NOT NULL,");                      // シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(DiagramIndex, TrainIndex, Seq, Direction));");
+            query.Append("PRIMARY KEY(DiagramIndex, TrainIndex, Direction, MarkName));");
 
             // 作成
             Create(query.ToString());
@@ -80,7 +80,7 @@ namespace TrainTimeTable.Database
             {
                 // SQLクエリ生成
                 StringBuilder query = new StringBuilder();
-                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramIndex = {1} AND TrainIndex = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramIndex, train.Seq - 1, (int)train.Direction));
+                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramIndex = {1} AND TrainIndex = {2} AND Direction = {3} ORDER BY Direction;", m_TableName, train.DiagramIndex, train.Id, (int)train.Direction));
 
                 // クエリ実行
                 using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))

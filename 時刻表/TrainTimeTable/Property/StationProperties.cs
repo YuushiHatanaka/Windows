@@ -158,36 +158,26 @@ namespace TrainTimeTable.Property
             // 駅登録分繰り返す(昇順)
             for (int i = 0; i < Count; i++)
             {
-                // StationProperty設定
+                // StationPropertyオブジェクト設定
                 StationProperty property = this[i];
 
-                // 念のため上り情報を一時削除
-                property.NextStations.RemoveAll(station => station.Direction == DirectionType.Inbound);
+                // 次駅情報を念のため削除
+                property.NextStations.Clear();
 
-                // 次駅リストを繰り返す
-                foreach (var nextStation in property.NextStations)
+                // NextStationPropertyオブジェクト生成
+                NextStationProperty nextStationProperty = new NextStationProperty();
+
+                // NextStationPropertyオブジェクト設定
+                nextStationProperty.Name = property.Name;
+                nextStationProperty.Direction = DirectionType.Outbound;
+                if (!(i + 1 >= Count))
                 {
-                    // 次駅のシーケンス番号を駅リストから検索
-                    var findStations = FindAll(station => station.Seq == nextStation.NextStationSeq);
-
-                    // 見つからなかった場合
-                    if (findStations.Count == 0)
-                    {
-                        // 次駅設定
-                        nextStation.NextStationSeq = 0;
-                        continue;
-                    }
-                    // 1件見つかった場合
-                    else if (findStations.Count == 1)
-                    {
-                        // TODO:未実装
-                    }
-                    // 複数見つかった場合
-                    else
-                    {
-                        // TODO:未実装
-                    }
+                    nextStationProperty.NextStationSeq = i + 1;
+                    nextStationProperty.NextStationName = this[i + 1].Name;
                 }
+
+                // 登録
+                property.NextStations.Add(nextStationProperty);
             }
 
             // 終着駅距離
@@ -196,43 +186,24 @@ namespace TrainTimeTable.Property
             // 駅登録分繰り返す(降順)
             for (int i = Count - 1; i >= 0; i--)
             {
-                // StationProperty設定
-                StationProperty stationProperty = this[i];
+                // StationPropertyオブジェクト設定
+                StationProperty property = this[i];
 
                 // 駅距離計算
-                stationProperty.StationDistanceFromReferenceStations[DirectionType.Inbound] = terminalStationDistance - stationProperty.StationDistanceFromReferenceStations[DirectionType.Outbound]; ;
+                property.StationDistanceFromReferenceStations[DirectionType.Inbound] = terminalStationDistance - property.StationDistanceFromReferenceStations[DirectionType.Outbound]; ;
 
                 // NextStationPropertyオブジェクト生成
-                NextStationProperty nextStation = new NextStationProperty()
+                NextStationProperty nextStationProperty = new NextStationProperty();
+                nextStationProperty.Name = property.Name;
+                nextStationProperty.Direction = DirectionType.Inbound;
+                if (!(i <= 0))
                 {
-                    Name = stationProperty.Name,
-                    NextStationSeq = stationProperty.Seq - 1,
-                    Direction = DirectionType.Inbound
-                };
-
-                // 次駅のシーケンス番号を駅リストから検索
-                var findStations = FindAll(station => station.Seq == nextStation.NextStationSeq);
-
-                // 見つからなかった場合
-                if (findStations.Count == 0)
-                {
-                    // 次駅設定
-                    nextStation.NextStationSeq = 0;
-
-                    // 登録
-                    stationProperty.NextStations.Add(nextStation);
+                    nextStationProperty.NextStationSeq = i - 1;
+                    nextStationProperty.NextStationName = this[i - 1].Name;
                 }
-                // 1件見つかった場合
-                else if (findStations.Count == 1)
-                {
-                    // 登録
-                    stationProperty.NextStations.Add(nextStation);
-                }
-                // 複数見つかった場合
-                else
-                {
-                    // TODO:未実装
-                }
+
+                // 登録
+                property.NextStations.Add(nextStationProperty);
             }
 
             // ロギング

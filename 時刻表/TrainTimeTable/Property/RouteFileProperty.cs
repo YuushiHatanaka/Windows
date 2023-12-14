@@ -56,9 +56,19 @@ namespace TrainTimeTable.Property
         public StationProperties Stations = new StationProperties();
 
         /// <summary>
+        /// 駅シーケンスプロパティ
+        /// </summary>
+        public StationSequenceProperties StationSequences = new StationSequenceProperties();
+
+        /// <summary>
         /// 列車種別プロパティ
         /// </summary>
         public TrainTypeProperties TrainTypes = new TrainTypeProperties();
+
+        /// <summary>
+        /// 列車種別シーケンスプロパティ
+        /// </summary>
+        public TrainTypeSequenceProperties TrainTypeSequences = new TrainTypeSequenceProperties();
 
         /// <summary>
         /// コメントプロパティ
@@ -122,6 +132,7 @@ namespace TrainTimeTable.Property
                 Colors.Copy(property.Colors);
                 DiagramScreen.Copy(property.DiagramScreen);
                 Stations.Copy(property.Stations);
+                StationSequences.Copy(property.StationSequences);
                 TrainTypes.Copy(property.TrainTypes);
                 Comment.Clear();
                 Comment.Append(property.Comment);
@@ -200,6 +211,15 @@ namespace TrainTimeTable.Property
                 // 不一致
                 return false;
             }
+            if (!StationSequences.Compare(property.StationSequences))
+            {
+                // ロギング
+                Logger.DebugFormat("StationSequence:[不一致][{0}][{1}]", StationSequences, property.StationSequences);
+                Logger.Debug("<<<<= RouteFileProperty::Compare(RouteFileProperty)");
+
+                // 不一致
+                return false;
+            }
             if (!TrainTypes.Compare(property.TrainTypes))
             {
                 // ロギング
@@ -268,6 +288,7 @@ namespace TrainTimeTable.Property
             result.Append(Colors.ToString(indent + 1));
             result.Append(DiagramScreen.ToString(indent + 1));
             result.Append(Stations.ToString(indent + 1));
+            result.Append(StationSequences.ToString(indent + 1));
             result.Append(TrainTypes.ToString(indent + 1));
             result.AppendLine(indentstr + string.Format("＜コメント＞"));
             result.AppendLine(indentstr + string.Format("　{0}", Comment.ToString()));

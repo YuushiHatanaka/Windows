@@ -33,6 +33,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// シーケンス番号
         /// </summary>
+        [Obsolete("StationPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
         public int Seq { get; set; } = 0;
 
         /// <summary>

@@ -9,10 +9,9 @@ using System.Threading.Tasks;
 namespace TrainTimeTable.Property
 {
     /// <summary>
-    /// TrainPropertiesクラス
+    /// TrainMarkSequencePropertiesクラス
     /// </summary>
-    [Serializable]
-    public class TrainProperties : List<TrainProperty>
+    public class TrainMarkSequenceProperties : List<TrainMarkSequenceProperty>
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -25,45 +24,45 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public TrainProperties()
+        public TrainMarkSequenceProperties()
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperties::TrainProperties()");
+            Logger.Debug("=>>>> TrainMarkSequenceProperties::TrainMarkSequenceProperties()");
 
             // ロギング
-            Logger.Debug("<<<<= TrainProperties::TrainProperties()");
+            Logger.Debug("<<<<= TrainMarkSequenceProperties::TrainMarkSequenceProperties()");
         }
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="properties"></param>
-        public TrainProperties(TrainProperties properties)
+        public TrainMarkSequenceProperties(TrainMarkSequenceProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperties::TrainProperties(TrainProperties)");
+            Logger.Debug("=>>>> TrainMarkSequenceProperties::TrainMarkSequenceProperties(TrainMarkSequenceProperties)");
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // コピー
             Copy(properties);
 
             // ロギング
-            Logger.Debug("<<<<= TrainProperties::TrainProperties(StationProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceProperties::TrainMarkSequenceProperties(TrainMarkSequenceProperties)");
         }
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="collection"></param>
-        public TrainProperties(IEnumerable<TrainProperty> collection)
+        public TrainMarkSequenceProperties(IEnumerable<TrainMarkSequenceProperty> collection)
             : base(collection)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperties::TrainProperties(IEnumerable<TrainProperty>)");
+            Logger.Debug("=>>>> TrainMarkSequenceProperties::TrainMarkSequenceProperties(IEnumerable<TrainMarkSequenceProperty>)");
             Logger.DebugFormat("collection:[{0}]", collection);
 
             // ロギング
-            Logger.Debug("<<<<= TrainProperties::TrainProperties(IEnumerable<TrainProperty>)");
+            Logger.Debug("<<<<= TrainMarkSequenceProperties::TrainMarkSequenceProperties(IEnumerable<TrainMarkSequenceProperty>)");
         }
         #endregion
 
@@ -72,14 +71,14 @@ namespace TrainTimeTable.Property
         /// コピー
         /// </summary>
         /// <param name="properties"></param>
-        public void Copy(TrainProperties properties)
+        public void Copy(TrainMarkSequenceProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperties::Copy(TrainProperties)");
+            Logger.Debug("=>>>> TrainMarkSequenceProperties::Copy(TrainMarkSequenceProperties)");
             Logger.DebugFormat("property:[{0}]", properties);
 
             // 同一オブジェクト以外に実施する
-            if (!ReferenceEquals(this ,properties))
+            if (!ReferenceEquals(this, properties))
             {
                 // クリア
                 Clear();
@@ -88,12 +87,12 @@ namespace TrainTimeTable.Property
                 foreach (var property in properties)
                 {
                     // 登録
-                    Add(new TrainProperty(property));
+                    Add(new TrainMarkSequenceProperty(property));
                 }
             }
 
             // ロギング
-            Logger.Debug("<<<<= TrainProperties::Copy(TrainProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceProperties::Copy(TrainMarkSequenceProperties)");
         }
         #endregion
 
@@ -103,10 +102,10 @@ namespace TrainTimeTable.Property
         /// </summary>
         /// <param name="properties"></param>
         /// <returns></returns>
-        public bool Compare(TrainProperties properties)
+        public bool Compare(TrainMarkSequenceProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperties::Compare(TrainProperties)");
+            Logger.Debug("=>>>> TrainMarkSequenceProperties::Compare(TrainMarkSequenceProperties)");
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // 要素数判定
@@ -114,7 +113,7 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Count:[{0}][{1}][不一致]", Count, properties.Count);
-                Logger.Debug("<<<<= TrainProperties::Compare(TrainProperties)");
+                Logger.Debug("<<<<= TrainMarkSequenceProperties::Compare(TrainMarkSequenceProperties)");
 
                 // 不一致
                 return false;
@@ -129,7 +128,7 @@ namespace TrainTimeTable.Property
                 {
                     // ロギング
                     Logger.DebugFormat("Property:[不一致][{0}][{1}]", this[i].ToString(), property.ToString());
-                    Logger.Debug("<<<<= TrainProperties::Compare(TrainProperties)");
+                    Logger.Debug("<<<<= TrainMarkSequenceProperties::Compare(TrainMarkSequenceProperties)");
 
                     // 不一致
                     return false;
@@ -141,31 +140,10 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("result:[一致]");
-            Logger.Debug("<<<<= TrainProperties::Compare(TrainProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceProperties::Compare(TrainMarkSequenceProperties)");
 
             // 一致
             return true;
-        }
-        #endregion
-
-        #region 発着駅設定
-        /// <summary>
-        /// 発着駅設定(列車リスト)
-        /// </summary>
-        public void DepartureArrivalStationSetting()
-        {
-            // ロギング
-            Logger.Debug("=>>>> TrainProperties::DepartureArrivalStationSetting()");
-
-            // リストを繰り返す
-            foreach (var property in this)
-            {
-                // 発着駅設定(列車)
-                property.DepartureArrivalStationSetting();
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= TrainProperties::DepartureArrivalStationSetting()");
         }
         #endregion
 

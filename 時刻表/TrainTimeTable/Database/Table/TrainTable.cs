@@ -47,6 +47,7 @@ namespace TrainTimeTable.Database.Table
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
             query.Append("DiagramIndex INTEGER NOT NULL DEFAULT -1,");  // ダイヤグラム番号
             query.Append("Direction INTEGER NOT NULL DEFAULT 0,");      // 方向種別
+            query.Append("Id INTEGER NOT NULL,");                       // ID
             query.Append("Seq INTEGER NOT NULL,");                      // シーケンス番号
             query.Append("TrainType INTEGER NOT NULL DEFAULT 0,");      // 列車種別番号
             query.Append("No TEXT,");                                   // 列車番号
@@ -58,7 +59,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(DiagramIndex, Direction, Seq));");
+            query.Append("PRIMARY KEY(DiagramIndex, Direction, Id));");
 
             // 作成
             Create(query.ToString());
@@ -77,13 +78,13 @@ namespace TrainTimeTable.Database.Table
         public DictionaryTrain Load(int index)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainTable::Save(int)");
+            Logger.Debug("=>>>> TrainTable::Load(int)");
             Logger.DebugFormat("index:[{0}]", index);
 
             // DictionaryTrainオブジェクト生成
             DictionaryTrain result = new DictionaryTrain();
 
-            // DictionaryTrainオブジェクト生成
+            // TrainPropertiesオブジェクト生成
             TrainProperties trainProperties = new TrainProperties();
 
             // SQLクエリ生成
@@ -107,7 +108,7 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= TrainTable::Save(int)");
+            Logger.Debug("<<<<= TrainTable::Load(int)");
 
             // 返却
             return result;
@@ -133,6 +134,7 @@ namespace TrainTimeTable.Database.Table
             // 設定
             property.DiagramIndex = int.Parse(sqliteDataReader["DiagramIndex"].ToString());
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
+            property.Id = int.Parse(sqliteDataReader["Id"].ToString());
             property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
             property.TrainType = int.Parse(sqliteDataReader["TrainType"].ToString());
             property.No = sqliteDataReader["No"].ToString();
@@ -226,6 +228,44 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region ID最大値取得
+        /// <summary>
+        /// ID最大値取得
+        /// </summary>
+        /// <returns></returns>
+        public int GetMaxId()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::GetMaxId()");
+
+            // 結果初期化
+            int result = 0;
+
+            // SQLクエリ生成
+            StringBuilder query = new StringBuilder();
+            query.Append(string.Format("SELECT MAX(Id) FROM {0} WHERE ", m_TableName));
+
+            // SQLiteCommandオブジェクト作成
+            using (SQLiteCommand sqliteCommand = new SQLiteCommand(m_SqliteConnection))
+            {
+                // SQLクエリ設定
+                sqliteCommand.CommandText = query.ToString();
+
+                // ロギング
+                Logger.DebugFormat("ID最大値取得:[{0}]", query);
+
+                // クエリ実行
+                result = Convert.ToInt32(sqliteCommand.ExecuteScalar());
+
+                // ロギング
+                Logger.Debug("<<<<= TrainTable::GetMaxId()");
+
+                // 返却
+                return result;
+            }
+        }
+        #endregion
+
         #region 挿入
         /// <summary>
         /// 挿入
@@ -243,6 +283,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("(");
             query.Append("DiagramIndex,");          // ダイヤグラム番号
             query.Append("Direction,");             // 方向種別
+            query.Append("Id,");                    // シーケンス番号
             query.Append("Seq,");                   // シーケンス番号
             query.Append("TrainType,");             // 列車種別番号
             query.Append("No,");                    // 列車番号
@@ -255,6 +296,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("(");
             query.Append(property.DiagramIndex.ToString() + ",");
             query.Append((int)property.Direction + ",");
+            query.Append(property.Id.ToString() + ",");
             query.Append(property.Seq.ToString() + ",");
             query.Append(property.TrainType.ToString() + ",");
             query.Append("'" + property.No.ToString() + "',");

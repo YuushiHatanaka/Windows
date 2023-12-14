@@ -80,6 +80,11 @@ namespace TrainTimeTable.Database
         private StationTable m_StationTable = null;
 
         /// <summary>
+        /// StationSequenceTableオブジェクト
+        /// </summary>
+        private StationSequenceTable m_StationSequenceTable = null;
+
+        /// <summary>
         /// NextStationTableオブジェクト
         /// </summary>
         private NextStationTable m_NextStationTable = null;
@@ -88,6 +93,11 @@ namespace TrainTimeTable.Database
         /// TrainTypeTableオブジェクト
         /// </summary>
         private TrainTypeTable m_TrainTypeTable = null;
+
+        /// <summary>
+        /// TrainTypeSequenceTableオブジェクト
+        /// </summary>
+        private TrainTypeSequenceTable m_TrainTypeSequenceTable = null;
 
         /// <summary>
         /// CommentTableオブジェクト
@@ -105,9 +115,19 @@ namespace TrainTimeTable.Database
         private TrainTable m_TrainTable = null;
 
         /// <summary>
+        /// TrainSequenceTableオブジェクト
+        /// </summary>
+        private TrainSequenceTable m_TrainSequenceTable = null;
+
+        /// <summary>
         /// TrainMarkTableオブジェクト
         /// </summary>
         private TrainMarkTable m_TrainMarkTable = null;
+
+        /// <summary>
+        /// TrainMarkSequenceTableオブジェクト
+        /// </summary>
+        private TrainMarkSequenceTable m_TrainMarkSequenceTable = null;
 
         /// <summary>
         /// StationTimeTableオブジェクト
@@ -142,12 +162,16 @@ namespace TrainTimeTable.Database
             m_ColorTable = new ColorTable(m_SqliteConnection);
             m_DiagramScreenTable = new DiagramScreenTable(m_SqliteConnection);
             m_StationTable = new StationTable(m_SqliteConnection);
+            m_StationSequenceTable = new StationSequenceTable(m_SqliteConnection);
             m_NextStationTable = new NextStationTable(m_SqliteConnection);
             m_TrainTypeTable = new TrainTypeTable(m_SqliteConnection);
+            m_TrainTypeSequenceTable = new TrainTypeSequenceTable(m_SqliteConnection);
             m_CommentTable = new CommentTable(m_SqliteConnection);
             m_DiagramTable = new DiagramTable(m_SqliteConnection);
             m_TrainTable = new TrainTable(m_SqliteConnection);
+            m_TrainSequenceTable = new TrainSequenceTable(m_SqliteConnection);
             m_TrainMarkTable = new TrainMarkTable(m_SqliteConnection);
+            m_TrainMarkSequenceTable = new TrainMarkSequenceTable(m_SqliteConnection);
             m_StationTimeTable = new StationTimeTable(m_SqliteConnection);
 
             // データベース接続
@@ -240,12 +264,16 @@ namespace TrainTimeTable.Database
             m_ColorTable.Create();
             m_DiagramScreenTable.Create();
             m_StationTable.Create();
+            m_StationSequenceTable.Create();
             m_NextStationTable.Create();
             m_TrainTypeTable.Create();
+            m_TrainTypeSequenceTable.Create();
             m_CommentTable.Create();
             m_DiagramTable.Create();
             m_TrainTable.Create();
+            m_TrainSequenceTable.Create();
             m_TrainMarkTable.Create();
+            m_TrainMarkSequenceTable.Create();
             m_StationTimeTable.Create();
 
             // ロギング
@@ -274,12 +302,16 @@ namespace TrainTimeTable.Database
                 m_ColorTable.Save(property.Colors);
                 m_DiagramScreenTable.Save(property.DiagramScreen);
                 m_StationTable.Save(property.Stations);
+                m_StationSequenceTable.Save(property.StationSequences);
                 m_NextStationTable.Save(property.Stations);
                 m_TrainTypeTable.Save(property.TrainTypes);
+                m_TrainTypeSequenceTable.Save(property.TrainTypeSequences);
                 m_CommentTable.Save(property.Comment);
                 m_DiagramTable.Save(property.Diagrams);
                 m_TrainTable.Save(property.Diagrams);
+                m_TrainSequenceTable.Save(property.Diagrams);
                 m_TrainMarkTable.Save(property.Diagrams);
+                m_TrainMarkSequenceTable.Save(property.Diagrams);
                 m_StationTimeTable.Save(property.Diagrams);
 
                 // トランザクションコミット
@@ -315,16 +347,20 @@ namespace TrainTimeTable.Database
             {
                 station.NextStations = m_NextStationTable.Load(station);
             }
+            result.StationSequences = m_StationSequenceTable.Load();
             result.TrainTypes = m_TrainTypeTable.Load();
+            result.TrainTypeSequences = m_TrainTypeSequenceTable.Load();
             result.Comment = m_CommentTable.Load();
             result.Diagrams = m_DiagramTable.Load();
             foreach (var diagram in result.Diagrams)
             {
                 diagram.Trains = m_TrainTable.Load(diagram.Seq - 1);
+                diagram.TrainSequence = m_TrainSequenceTable.Load(diagram.Seq - 1);
 
                 foreach (var train in diagram.Trains)
                 {
                     m_TrainMarkTable.Load(train);
+                    m_TrainMarkSequenceTable.Load(train);
                     m_StationTimeTable.Load(train);
                 }
             }
@@ -354,12 +390,16 @@ namespace TrainTimeTable.Database
             m_ColorTable.Remove();
             m_DiagramScreenTable.Remove();
             m_StationTable.Remove();
+            m_StationSequenceTable.Remove();
             m_NextStationTable.Remove();
             m_TrainTypeTable.Remove();
+            m_TrainTypeSequenceTable.Remove();
             m_CommentTable.Remove();
             m_DiagramTable.Remove();
             m_TrainTable.Remove();
+            m_TrainSequenceTable.Remove();
             m_TrainMarkTable.Remove();
+            m_TrainMarkSequenceTable.Remove();
             m_StationTimeTable.Remove();
 
             // ロギング

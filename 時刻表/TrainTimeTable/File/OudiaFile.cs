@@ -221,11 +221,16 @@ namespace TrainTimeTable.File
             switch (line)
             {
                 case "Eki.":
-                    // 仮登録
+                    // StationSequencePropertyオブジェクト生成
+                    StationSequenceProperty stationSequenceProperty = new StationSequenceProperty();
+                    stationSequenceProperty.Seq = m_RouteFileProperty.StationSequences.Count + 1;
+                    // StationPropertyオブジェクト生成
                     StationProperty stationProperty = new StationProperty();
                     stationProperty.Seq = m_RouteFileProperty.Stations.Count + 1;
                     stationProperty.NextStations.Add(new NextStationProperty() { NextStationSeq = stationProperty.Seq + 1, Direction = DirectionType.Outbound });
+                    // 仮登録
                     m_RouteFileProperty.Stations.Add(stationProperty);
+                    m_RouteFileProperty.StationSequences.Add(stationSequenceProperty);
                     // ロギング
                     Logger.Debug("<<<<= OudFile::SetEkiSection(string)");
                     return;
@@ -250,30 +255,32 @@ namespace TrainTimeTable.File
             }
 
             // 配列インデックス取得
-            int arrayIndex = m_RouteFileProperty.Stations.Count - 1;
+            int stationsArrayIndex = m_RouteFileProperty.Stations.Count - 1;
+            int stationSequenceArrayIndex = m_RouteFileProperty.StationSequences.Count - 1;
 
             // キー分岐
             switch (keyValue[0])
             {
                 case "Ekimei":
                     // 設定
-                    m_RouteFileProperty.Stations[arrayIndex].Name = keyValue[1];
-                    m_RouteFileProperty.Stations[arrayIndex].NextStations[0].Name = m_RouteFileProperty.Stations[arrayIndex].Name;
+                    m_RouteFileProperty.Stations[stationsArrayIndex].Name = keyValue[1];
+                    m_RouteFileProperty.Stations[stationsArrayIndex].NextStations[0].Name = m_RouteFileProperty.Stations[stationsArrayIndex].Name;
+                    m_RouteFileProperty.StationSequences[stationSequenceArrayIndex].Name = keyValue[1];
                     break;
                 case "Ekijikokukeisiki":
                     switch (keyValue[1])
                     {
                         case "Jikokukeisiki_KudariChaku":
-                            m_RouteFileProperty.Stations[arrayIndex].TimeFormat = TimeFormat.OutboundArrivalTime;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].TimeFormat = TimeFormat.OutboundArrivalTime;
                             break;
                         case "Jikokukeisiki_NoboriChaku":
-                            m_RouteFileProperty.Stations[arrayIndex].TimeFormat = TimeFormat.InboundArrivalTime;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].TimeFormat = TimeFormat.InboundArrivalTime;
                             break;
                         case "Jikokukeisiki_Hatsu":
-                            m_RouteFileProperty.Stations[arrayIndex].TimeFormat = TimeFormat.DepartureTime;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].TimeFormat = TimeFormat.DepartureTime;
                             break;
                         case "Jikokukeisiki_Hatsuchaku":
-                            m_RouteFileProperty.Stations[arrayIndex].TimeFormat = TimeFormat.DepartureAndArrival;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].TimeFormat = TimeFormat.DepartureAndArrival;
                             break;
                         default:
                             // フォーマット異常
@@ -284,10 +291,10 @@ namespace TrainTimeTable.File
                     switch (keyValue[1])
                     {
                         case "Ekikibo_Ippan":
-                            m_RouteFileProperty.Stations[arrayIndex].StationScale = StationScale.GeneralStation;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].StationScale = StationScale.GeneralStation;
                             break;
                         case "Ekikibo_Syuyou":
-                            m_RouteFileProperty.Stations[arrayIndex].StationScale = StationScale.MainStation;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].StationScale = StationScale.MainStation;
                             break;
                         default:
                             // フォーマット異常
@@ -297,20 +304,20 @@ namespace TrainTimeTable.File
                 case "Kyoukaisen":
                     if (keyValue[1] == "1")
                     {
-                        m_RouteFileProperty.Stations[arrayIndex].Border = true;
+                        m_RouteFileProperty.Stations[stationsArrayIndex].Border = true;
                     }
                     break;
                 case "DiagramRessyajouhouHyoujiKudari":
                     switch (keyValue[1])
                     {
                         case "DiagramRessyajouhouHyouji_Anytime":
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.AlwaysVisible;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.AlwaysVisible;
                             break;
                         case "DiagramRessyajouhouHyouji_Not":
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.DoNotShow;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.DoNotShow;
                             break;
                         default:
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Outbound] = DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
                             break;
                     }
                     break;
@@ -318,13 +325,13 @@ namespace TrainTimeTable.File
                     switch (keyValue[1])
                     {
                         case "DiagramRessyajouhouHyouji_Anytime":
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.AlwaysVisible;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.AlwaysVisible;
                             break;
                         case "DiagramRessyajouhouHyouji_Not":
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.DoNotShow;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.DoNotShow;
                             break;
                         default:
-                            m_RouteFileProperty.Stations[arrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
+                            m_RouteFileProperty.Stations[stationsArrayIndex].DiagramTrainInformations[DirectionType.Inbound] = DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
                             break;
                     }
                     break;
@@ -351,10 +358,15 @@ namespace TrainTimeTable.File
             switch (line)
             {
                 case "Ressyasyubetsu.":
-                    // 仮登録
+                    // TrainTypePropertyオブジェクト生成
                     TrainTypeProperty trainTypeProperty = new TrainTypeProperty();
                     trainTypeProperty.Seq = m_RouteFileProperty.TrainTypes.Count + 1;
+                    // TrainTypeSequencePropertyオブジェクト生成
+                    TrainTypeSequenceProperty trainTypeSequenceProperty = new TrainTypeSequenceProperty();
+                    trainTypeSequenceProperty.Seq = m_RouteFileProperty.TrainTypeSequences.Count + 1;
+                    // 仮登録
                     m_RouteFileProperty.TrainTypes.Add(trainTypeProperty);
+                    m_RouteFileProperty.TrainTypeSequences.Add(trainTypeSequenceProperty);
                     // ロギング
                     Logger.Debug("<<<<= SetRessyasyubetsuSection::SetEkiSection(string)");
                     return;
@@ -377,7 +389,8 @@ namespace TrainTimeTable.File
             }
 
             // 配列インデックス取得
-            int arrayIndex = m_RouteFileProperty.TrainTypes.Count - 1;
+            int trainTypesArrayIndex = m_RouteFileProperty.TrainTypes.Count - 1;
+            int trainTypeSequencesArrayIndex = m_RouteFileProperty.TrainTypeSequences.Count - 1;
 
             // キー分岐
             switch (keyValue[0])
@@ -385,31 +398,32 @@ namespace TrainTimeTable.File
                 // 種別名
                 case "Syubetsumei":
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].Name = keyValue[1];
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].Name = keyValue[1];
+                        m_RouteFileProperty.TrainTypeSequences[trainTypeSequencesArrayIndex].Name = keyValue[1];
                     }
                     break;
                 // 略称
                 case "Ryakusyou":
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].Abbreviation = keyValue[1];
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].Abbreviation = keyValue[1];
                     }
                     break;
                 // 時刻表文字色
                 case "JikokuhyouMojiColor":
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].StringsColor = GetTimetableColor(keyValue).Value;
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].StringsColor = GetTimetableColor(keyValue).Value;
                     }
                     break;
                 // 時刻表Fontインデックス
                 case "JikokuhyouFontIndex":
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].TimetableFontIndex = int.Parse(keyValue[1]);
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].TimetableFontIndex = int.Parse(keyValue[1]);
                     }
                     break;
                 // ダイヤグラム線色
                 case "DiagramSenColor":
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineColor = GetTimetableColor(keyValue).Value;
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineColor = GetTimetableColor(keyValue).Value;
                     }
                     break;
                 // ダイヤグラム線スタイル
@@ -419,16 +433,16 @@ namespace TrainTimeTable.File
                         switch (keyValue[1])
                         {
                             case "SenStyle_Jissen":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineStyle = DashStyle.Solid;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineStyle = DashStyle.Solid;
                                 break;
                             case "SenStyle_Hasen":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineStyle = DashStyle.Dash;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineStyle = DashStyle.Dash;
                                 break;
                             case "SenStyle_Tensen":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineStyle = DashStyle.Dot;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineStyle = DashStyle.Dot;
                                 break;
                             case "SenStyle_Ittensasen":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineStyle = DashStyle.DashDot;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineStyle = DashStyle.DashDot;
                                 break;
                             default:
                                 // フォーマット異常
@@ -440,7 +454,7 @@ namespace TrainTimeTable.File
                 case "DiagramSenIsBold":
                     if (keyValue[1] == "1")
                     {
-                        m_RouteFileProperty.TrainTypes[arrayIndex].DiagramLineBold = true;
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].DiagramLineBold = true;
                     }
                     break;
                 // 停車駅明示
@@ -450,10 +464,10 @@ namespace TrainTimeTable.File
                         switch (keyValue[1])
                         {
                             case "EStopMarkDrawType_Nothing":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].StopStationClearlyIndicated = StopMarkDrawType.Nothing;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].StopStationClearlyIndicated = StopMarkDrawType.Nothing;
                                 break;
                             case "EStopMarkDrawType_DrawOnStop":
-                                m_RouteFileProperty.TrainTypes[arrayIndex].StopStationClearlyIndicated = StopMarkDrawType.DrawOnStop;
+                                m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].StopStationClearlyIndicated = StopMarkDrawType.DrawOnStop;
                                 break;
                             default:
                                 // フォーマット異常
@@ -575,11 +589,19 @@ namespace TrainTimeTable.File
             switch (line)
             {
                 case "Ressya.":
-                    // 仮登録
+                    // TrainPropertyオブジェクト生成
                     TrainProperty trainProperty = new TrainProperty(m_RouteFileProperty.Stations);
                     trainProperty.DiagramIndex = diagramsArrayIndex;
+                    trainProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
                     trainProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
+                    // TrainPropertyオブジェクト生成
+                    TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
+                    trainSequenceProperty.DiagramIndex = diagramsArrayIndex;
+                    trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].GetNewId();
+                    trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Count + 1;
+                    // 仮登録
                     m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Add(trainProperty);
+                    m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Add(trainSequenceProperty);
                     return;
                 default:
                     break;
@@ -609,9 +631,11 @@ namespace TrainTimeTable.File
                         {
                             case "Kudari":
                                 m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].Direction = DirectionType.Outbound;
+                                m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType][trainsArrayIndex].Direction = DirectionType.Outbound;
                                 break;
                             case "Nobori":
                                 m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].Direction = DirectionType.Inbound;
+                                m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType][trainsArrayIndex].Direction = DirectionType.Inbound;
                                 break;
                             default:
                                 // フォーマット異常

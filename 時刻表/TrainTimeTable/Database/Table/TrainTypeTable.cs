@@ -58,7 +58,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(Name, Seq));");
+            query.Append("PRIMARY KEY(Name));");
 
             // 作成
             Create(query.ToString());

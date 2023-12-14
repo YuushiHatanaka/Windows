@@ -1,20 +1,20 @@
 ﻿using log4net;
-using log4net.Repository.Hierarchy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using TrainTimeTable.Common;
 
 namespace TrainTimeTable.Property
 {
     /// <summary>
-    /// NextStationPropertyクラス
+    /// TrainSequencePropertyクラス
     /// </summary>
     [Serializable]
-    public class NextStationProperty
+    public class TrainSequenceProperty
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -24,9 +24,9 @@ namespace TrainTimeTable.Property
         #endregion
 
         /// <summary>
-        /// 駅名
+        /// ダイヤグラム番号
         /// </summary>
-        public string Name { get; set; } = string.Empty;
+        public int DiagramIndex { get; set; } = -1;
 
         /// <summary>
         /// 方向種別
@@ -34,44 +34,43 @@ namespace TrainTimeTable.Property
         public DirectionType Direction { get; set; } = DirectionType.None;
 
         /// <summary>
-        /// 次駅名
+        /// 列車ID
         /// </summary>
-        public string NextStationName { get; set; } = string.Empty;
+        public int Id { get; set; } = 0;
 
         /// <summary>
-        /// 次駅シーケンス番号
+        /// シーケンス番号
         /// </summary>
-        [Obsolete("NextStationPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int NextStationSeq { get; set; } = 0;
+        public int Seq { get; set; } = 0;
 
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public NextStationProperty()
+        public TrainSequenceProperty()
         {
             // ロギング
-            Logger.Debug("=>>>> NextStationProperty::NextStationProperty()");
+            Logger.Debug("=>>>> TrainSequenceProperty::TrainSequenceProperty()");
 
             // ロギング
-            Logger.Debug("<<<<= NextStationProperty::NextStationProperty()");
+            Logger.Debug("<<<<= TrainSequenceProperty::TrainSequenceProperty()");
         }
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="property"></param>
-        public NextStationProperty(NextStationProperty property)
+        public TrainSequenceProperty(TrainSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> NextStationProperty::NextStationProperty(NextStationProperty)");
+            Logger.Debug("=>>>> TrainSequenceProperty::TrainSequenceProperty(TrainSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // コピー
             Copy(property);
 
             // ロギング
-            Logger.Debug("<<<<= NextStationProperty::NextStationProperty(NextStationProperty)");
+            Logger.Debug("<<<<= TrainSequenceProperty::TrainSequenceProperty(TrainSequenceProperty)");
         }
         #endregion
 
@@ -80,26 +79,26 @@ namespace TrainTimeTable.Property
         /// コピー
         /// </summary>
         /// <param name="property"></param>
-        public void Copy(NextStationProperty property)
+        public void Copy(TrainSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> NextStationProperty::Copy(NextStationProperty)");
+            Logger.Debug("=>>>> TrainSequenceProperty::Copy(TrainSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 同一オブジェクト以外に実施する
-            if (!ReferenceEquals(this ,property))
+            if (!ReferenceEquals(this, property))
             {
                 // コピー
-                Name = property.Name;
+                DiagramIndex = property.DiagramIndex;
                 Direction = property.Direction;
-                NextStationSeq = property.NextStationSeq;
-                NextStationName = property.NextStationName;
+                Id = property.Id;
+                Seq = property.Seq;
             }
 
             // ロギング
-            Logger.Debug("<<<<= NextStationProperty::Copy(NextStationProperty)");
+            Logger.Debug("<<<<= TrainSequenceProperty::Copy(TrainSequenceProperty)");
         }
-        #endregion   
+        #endregion
 
         #region 比較
         /// <summary>
@@ -107,18 +106,18 @@ namespace TrainTimeTable.Property
         /// </summary>
         /// <param name="property"></param>
         /// <returns></returns>
-        public bool Compare(NextStationProperty property)
+        public bool Compare(TrainSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> NextStationProperty::Compare(NextStationProperty)");
+            Logger.Debug("=>>>> TrainSequenceProperty::Compare(TrainSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 比較
-            if (Name != property.Name)
+            if (DiagramIndex != property.DiagramIndex)
             {
                 // ロギング
-                Logger.DebugFormat("Name:[不一致][{0}][{1}]", Name, property.Name);
-                Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
+                Logger.DebugFormat("DiagramIndex:[不一致][{0}][{1}]", DiagramIndex, property.DiagramIndex);
+                Logger.Debug("<<<<= TrainSequenceProperty::Compare(TrainSequenceProperty)");
 
                 // 不一致
                 return false;
@@ -127,25 +126,25 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Direction:[不一致][{0}][{1}]", Direction, property.Direction);
-                Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
+                Logger.Debug("<<<<= TrainSequenceProperty::Compare(TrainSequenceProperty)");
 
                 // 不一致
                 return false;
             }
-            if (NextStationSeq != property.NextStationSeq)
+            if (Id != property.Id)
             {
                 // ロギング
-                Logger.DebugFormat("NextStationSeq:[不一致][{0}][{1}]", NextStationSeq, property.NextStationSeq);
-                Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
+                Logger.DebugFormat("Id:[不一致][{0}][{1}]", Id, property.Id);
+                Logger.Debug("<<<<= TrainSequenceProperty::Compare(TrainSequenceProperty)");
 
                 // 不一致
                 return false;
             }
-            if (NextStationName != property.NextStationName)
+            if (Seq != property.Seq)
             {
                 // ロギング
-                Logger.DebugFormat("NextStationName:[不一致][{0}][{1}]", NextStationName, property.NextStationName);
-                Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
+                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
+                Logger.Debug("<<<<= TrainSequenceProperty::Compare(TrainSequenceProperty)");
 
                 // 不一致
                 return false;
@@ -153,7 +152,7 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.DebugFormat("result:[一致]");
-            Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
+            Logger.Debug("<<<<= TrainSequenceProperty::Compare(TrainSequenceProperty)");
 
             // 一致
             return true;
@@ -185,11 +184,11 @@ namespace TrainTimeTable.Property
             string indentstr = new string('　', indent);
 
             // 文字列追加
-            result.AppendLine(indentstr + string.Format("＜次駅情報＞"));
-            result.AppendLine(indentstr + string.Format("　駅名              :[{0}]", Name));
-            result.AppendLine(indentstr + string.Format("　方向種別          :[{0}]", Direction.GetStringValue()));
-            result.AppendLine(indentstr + string.Format("　次駅シーケンス番号:[{0}]", NextStationSeq));
-            result.AppendLine(indentstr + string.Format("　次駅名            :[{0}]", NextStationName));
+            result.AppendLine(indentstr + string.Format("＜駅シーケンス情報＞"));
+            result.AppendLine(indentstr + string.Format("　ダイヤグラム番号:[{0}] ", DiagramIndex));
+            result.AppendLine(indentstr + string.Format("　方向種別        :[{0}] ", Direction.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　列車ID          :[{0}] ", Id));
+            result.AppendLine(indentstr + string.Format("　シーケンス番号  :[{0}] ", Seq));
 
             // 返却
             return result.ToString();

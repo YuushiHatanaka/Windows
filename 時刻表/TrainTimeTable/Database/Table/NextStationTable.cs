@@ -44,13 +44,14 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
-            query.Append("Name TEXT NOT NULL,");                                    // 駅名
-            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");                  // 方向種別
-            query.Append("NextStationSeq INTEGER NOT NULL,");                       // 次駅シーケンス番号
+            query.Append("Name TEXT NOT NULL,");                    // 駅名
+            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");  // 方向種別
+            query.Append("NextStationName TEXT NOT NULL,");         // 次駅名
+            query.Append("NextStationSeq INTEGER NOT NULL,");       // 次駅シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(Name, Direction, NextStationSeq));");
+            query.Append("PRIMARY KEY(Name, Direction, NextStationName));");
 
             // 作成
             Create(query.ToString());
@@ -158,6 +159,7 @@ namespace TrainTimeTable.Database.Table
             property.Name = sqliteDataReader["Name"].ToString();
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
             property.NextStationSeq = int.Parse(sqliteDataReader["NextStationSeq"].ToString());
+            property.NextStationName = sqliteDataReader["NextStationName"].ToString();
 
             // 登録
             result.Add(property);
@@ -234,14 +236,16 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("Name,");          // 駅名
-            query.Append("Direction,");     // 方向種別
-            query.Append("NextStationSeq"); // 次駅シーケンス番号
+            query.Append("Name,");              // 駅名
+            query.Append("Direction,");         // 方向種別
+            query.Append("NextStationSeq,");    // 次駅シーケンス番号
+            query.Append("NextStationName");    // 次駅名
             query.Append(") VALUES ");
             query.Append("(");
             query.Append("'" + property.Name + "',");
             query.Append((int)property.Direction + ",");
-            query.Append(property.NextStationSeq.ToString());
+            query.Append(property.NextStationSeq.ToString()+",");
+            query.Append("'" + property.NextStationName + "'");
             query.Append(");");
 
             // 挿入

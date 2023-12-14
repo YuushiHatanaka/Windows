@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TrainTimeTable.Common;
@@ -12,24 +11,24 @@ using TrainTimeTable.Property;
 namespace TrainTimeTable.Database.Table
 {
     /// <summary>
-    /// StationTimeTableクラス
+    /// TrainMarkSequenceTableクラス
     /// </summary>
-    public class StationTimeTable : TableListCore<StationTimeProperties, StationTimeProperty>
+    public class TrainMarkSequenceTable : TableListCore<TrainMarkSequenceProperties, TrainMarkSequenceProperty>
     {
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="connection"></param>
-        public StationTimeTable(SQLiteConnection connection)
-            : base("StationTime", connection)
+        public TrainMarkSequenceTable(SQLiteConnection connection)
+            : base("TrainMarkSequence", connection)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::StationTimeTable(SQLiteConnection)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::TrainMarkSequenceTable(SQLiteConnection)");
             Logger.DebugFormat("connection:[{0}]", connection);
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::StationTimeTable(SQLiteConnection)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::TrainMarkSequenceTable(SQLiteConnection)");
         }
         #endregion
 
@@ -40,31 +39,26 @@ namespace TrainTimeTable.Database.Table
         public void Create()
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Create()");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Create()");
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
-            query.Append("DiagramIndex INTEGER NOT NULL DEFAULT -1,");      // ダイヤグラム番号
-            query.Append("TrainIndex INTEGER NOT NULL DEFAULT -1,");        // 列車番号(インデックス)
-            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");          // 方向種別
-            query.Append("Seq INTEGER NOT NULL,");                          // 駅シーケンス番号
-            query.Append("StationName TEXT,");                              // 駅名
-            query.Append("StationTreatment INTEGER NOT NULL DEFAULT 0,");   // 駅扱い
-            query.Append("DepartureTime TEXT,");                            // 発時刻
-            query.Append("EstimatedDepartureTime TEXT DEFAULT 'FALSE',");   // 推定時刻(発時刻)
-            query.Append("ArrivalTime TEXT,");                              // 着時刻
-            query.Append("EstimatedArrivalTime TEXT DEFAULT 'FALSE',");     // 推定時刻(着時刻)
+            query.Append("DiagramIndex INTEGER NOT NULL DEFAULT -1,");  // ダイヤグラム番号
+            query.Append("TrainIndex INTEGER NOT NULL DEFAULT -1,");    // 列車番号(インデックス)
+            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");      // 方向種別
+            query.Append("MarkName TEXT,");                             // 記号名
+            query.Append("Seq INTEGER NOT NULL,");                      // シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(DiagramIndex, TrainIndex, Direction, StationName));");
+            query.Append("PRIMARY KEY(DiagramIndex, TrainIndex, Direction, MarkName));");
 
             // 作成
             Create(query.ToString());
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::Create()");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Create()");
         }
         #endregion
 
@@ -72,13 +66,12 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 読込
         /// </summary>
-        /// <param name="keyValuePair"></param>
+        /// <param name="train"></param>
         /// <returns></returns>
-
         public TrainProperties Load(KeyValuePair<DirectionType, TrainProperties> keyValuePair)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Load(KeyValuePair<DirectionType, TrainProperties>)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Load(KeyValuePair<DirectionType, TrainProperties>)");
             Logger.DebugFormat("keyValuePair:[{0}]", keyValuePair);
 
             // 列車毎に繰り返す
@@ -86,29 +79,29 @@ namespace TrainTimeTable.Database.Table
             {
                 // SQLクエリ生成
                 StringBuilder query = new StringBuilder();
-                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramIndex = {1} AND TrainIndex = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramIndex, train.Seq - 1, (int)train.Direction));
+                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramIndex = {1} AND TrainIndex = {2} AND Direction = {3} ORDER BY Direction;", m_TableName, train.DiagramIndex, train.Id, (int)train.Direction));
 
                 // クエリ実行
                 using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
                 {
-                    // StationTimePropertiesオブジェクト生成
-                    StationTimeProperties stationTimeProperties = new StationTimeProperties();
+                    // TrainMarkPropertiesオブジェクト生成
+                    TrainMarkSequenceProperties trainMarkProperties = new TrainMarkSequenceProperties();
 
                     // データを取得
                     while (sqliteDataReader.Read())
                     {
                         // SELECTデータ登録
-                        SelectDataRegston(sqliteDataReader, ref stationTimeProperties);
+                        SelectDataRegston(sqliteDataReader, ref trainMarkProperties);
                     }
 
-                    // 時刻表データ登録
-                    train.StationTimes.AddRange(stationTimeProperties);
+                    // 列車記号シーケンスデータ登録
+                    train.MarkSequences.AddRange(trainMarkProperties);
                 }
             }
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", keyValuePair.Value);
-            Logger.Debug("<<<<= StationTimeTable::Load(KeyValuePair<DirectionType, TrainProperties>)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Load(KeyValuePair<DirectionType, TrainProperties>)");
 
             // 返却
             return keyValuePair.Value;
@@ -121,33 +114,28 @@ namespace TrainTimeTable.Database.Table
         /// </summary>
         /// <param name="sqliteDataReader"></param>
         /// <param name="result"></param>
-        protected override void SelectDataRegston(SQLiteDataReader sqliteDataReader, ref StationTimeProperties result)
+        protected override void SelectDataRegston(SQLiteDataReader sqliteDataReader, ref TrainMarkSequenceProperties result)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::SelectDataRegston(SQLiteDataReader, StationTimeProperties)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::SelectDataRegston(SQLiteDataReader, TrainMarkSequenceProperties)");
             Logger.DebugFormat("sqliteDataReader:[{0}]", sqliteDataReader);
             Logger.DebugFormat("result          :[{0}]", result);
 
-            // StationTimePropertyオブジェクト生成
-            StationTimeProperty property = new StationTimeProperty();
+            // オブジェクト生成
+            TrainMarkSequenceProperty property = new TrainMarkSequenceProperty();
 
             // 設定
             property.DiagramIndex = int.Parse(sqliteDataReader["DiagramIndex"].ToString());
             property.TrainIndex = int.Parse(sqliteDataReader["TrainIndex"].ToString());
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
             property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
-            property.StationName = sqliteDataReader["StationName"].ToString();
-            property.StationTreatment = (StationTreatment)int.Parse(sqliteDataReader["StationTreatment"].ToString());
-            property.DepartureTime = sqliteDataReader["DepartureTime"].ToString();
-            property.EstimatedDepartureTime = bool.Parse(sqliteDataReader["EstimatedDepartureTime"].ToString());
-            property.ArrivalTime = sqliteDataReader["ArrivalTime"].ToString();
-            property.EstimatedArrivalTime = bool.Parse(sqliteDataReader["EstimatedArrivalTime"].ToString());
+            property.MarkName = sqliteDataReader["MarkName"].ToString();
 
             // 登録
             result.Add(property);
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::SelectDataRegston(SQLiteDataReader, StationTimeProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::SelectDataRegston(SQLiteDataReader, TrainMarkSequenceProperties)");
         }
         #endregion
 
@@ -159,7 +147,7 @@ namespace TrainTimeTable.Database.Table
         public void Save(DiagramProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Save(DiagramProperties)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Save(DiagramProperties)");
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // ダイヤグラム分繰り返す
@@ -168,22 +156,23 @@ namespace TrainTimeTable.Database.Table
                 // 方向種別分繰り返す
                 foreach (var value in property.Trains.Values)
                 {
+
                     // 列車分繰り返す
                     foreach (var train in value)
                     {
-                        // 駅時刻分繰り返す
-                        foreach (var stationtime in train.StationTimes)
+                        // 列車記号分繰り返す
+                        foreach (var markSequences in train.MarkSequences)
                         {
                             // 存在判定
-                            if (!Exist(stationtime))
+                            if (!Exist(markSequences))
                             {
                                 // 存在なしの場合
-                                Insert(stationtime);
+                                Insert(markSequences);
                             }
                             else
                             {
                                 // 存在ありの場合
-                                Update(stationtime);
+                                Update(markSequences);
                             }
                         }
                     }
@@ -191,7 +180,7 @@ namespace TrainTimeTable.Database.Table
             }
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::Save(DiagramProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Save(DiagramProperties)");
         }
         #endregion
 
@@ -201,10 +190,10 @@ namespace TrainTimeTable.Database.Table
         /// </summary>
         /// <param name="property"></param>
         /// <returns></returns>
-        protected override bool Exist(StationTimeProperty property)
+        protected override bool Exist(TrainMarkSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Exist(StationTimeProperty)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Exist(TrainMarkSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // SQLクエリ生成
@@ -216,8 +205,7 @@ namespace TrainTimeTable.Database.Table
             bool result = Exist(query.ToString());
 
             // ロギング
-            Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= StationTimeTable::Exist(StationTimeProperty)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Exist(TrainMarkSequenceProperty)");
 
             // 返却
             return result;
@@ -229,45 +217,35 @@ namespace TrainTimeTable.Database.Table
         /// 挿入
         /// </summary>
         /// <param name="property"></param>
-        protected override void Insert(StationTimeProperty property)
+        protected override void Insert(TrainMarkSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Insert(StationTimeProperty)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Insert(TrainMarkSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("DiagramIndex,");              // ダイヤ番号(インデックス)
-            query.Append("TrainIndex,");                // 列車番号(インデックス)
-            query.Append("Direction,");                 // 方向種別
-            query.Append("Seq,");                       // 駅シーケンス番号
-            query.Append("StationName,");               // 駅名
-            query.Append("StationTreatment,");          // 駅扱い
-            query.Append("DepartureTime,");             // 発時刻
-            query.Append("EstimatedDepartureTime,");    // 推定時刻(発時刻)
-            query.Append("ArrivalTime,");               // 着時刻
-            query.Append("EstimatedArrivalTime");       // 推定時刻(着時刻)
+            query.Append("DiagramIndex,");  // ダイヤ番号(インデックス)
+            query.Append("TrainIndex,");    // 列車番号(インデックス)
+            query.Append("Direction,");     // 方向種別
+            query.Append("Seq,");           // シーケンス番号
+            query.Append("MarkName");       // 記号名
             query.Append(") VALUES ");
             query.Append("(");
             query.Append(property.DiagramIndex.ToString() + ",");
             query.Append(property.TrainIndex.ToString() + ",");
             query.Append((int)property.Direction + ",");
             query.Append(property.Seq.ToString() + ",");
-            query.Append("'" + property.StationName.ToString() + "',");
-            query.Append((int)property.StationTreatment + ",");
-            query.Append("'" + property.DepartureTime.ToString() + "',");
-            query.Append("'" + property.EstimatedDepartureTime.ToString() + "',");
-            query.Append("'" + property.ArrivalTime.ToString() + "',");
-            query.Append("'" + property.EstimatedArrivalTime.ToString() + "'");
+            query.Append("'" + property.MarkName.ToString() + "'");
             query.Append(");");
 
             // 挿入
             Insert(query.ToString());
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::Insert(StationTimeProperty)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Insert(TrainMarkSequenceProperty)");
         }
         #endregion
 
@@ -276,29 +254,21 @@ namespace TrainTimeTable.Database.Table
         /// 更新
         /// </summary>
         /// <param name="property"></param>
-        protected override void Update(StationTimeProperty property)
+        protected override void Update(TrainMarkSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Update(StationTimeProperty)");
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Update(TrainMarkSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
-            query.Append("StationName = '" + property.StationName.ToString() + "',");
-            query.Append("StationTreatment = " + (int)property.StationTreatment + ",");
-            query.Append("DepartureTime = '" + property.DepartureTime.ToString() + "',");
-            query.Append("EstimatedDepartureTime = '" + property.EstimatedDepartureTime.ToString() + "',");
-            query.Append("ArrivalTime = '" + property.ArrivalTime.ToString() + "',");
-            query.Append("EstimatedArrivalTime = '" + property.EstimatedArrivalTime.ToString() + "',");
+            query.Append("MarkName = '" + property.MarkName.ToString() + "',");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE DiagramIndex = " + property.DiagramIndex + " AND TrainIndex = " + property.TrainIndex + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
 
-            // 更新
-            Update(query.ToString());
-
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::Update(StationTimeProperty)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Update(TrainMarkSequenceProperty)");
         }
         #endregion
     }
