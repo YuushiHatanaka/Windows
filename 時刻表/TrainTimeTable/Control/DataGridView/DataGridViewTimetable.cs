@@ -1,6 +1,7 @@
 ﻿using log4net;
 using Microsoft.VisualBasic;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -22,7 +23,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 namespace TrainTimeTable.Control
 {
     /// <summary>
-    /// DataGridViewTimetableクラス
+    /// DataGridViewTimetableラス
     /// </summary>
     public class DataGridViewTimetable : DataGridView
     {
@@ -32,6 +33,11 @@ namespace TrainTimeTable.Control
         /// </summary>
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
+
+        /// <summary>
+        /// ダイヤグラムID
+        /// </summary>
+        private int m_DiagramId = 0;
 
         /// <summary>
         /// ダイアログ名
@@ -51,7 +57,7 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// Font辞書
         /// </summary>
-        private Dictionary<string, Font> m_Dictionary = null;
+        private Dictionary<string, Font> m_FontDictionary = null;
 
         /// <summary>
         /// DiaProFontオブジェクト
@@ -78,7 +84,7 @@ namespace TrainTimeTable.Control
             m_DiagramName = text;
             m_DirectionType = type;
             m_RouteFileProperty = property;
-            m_Dictionary = m_RouteFileProperty.Fonts.GetFonts(
+            m_FontDictionary = m_RouteFileProperty.Fonts.GetFonts(
                 new List<string>()
                 {
                     "時刻表ビュー",
@@ -97,7 +103,10 @@ namespace TrainTimeTable.Control
                 });
 
             // Font設定
-            Font = m_Dictionary["時刻表ビュー"];
+            Font = m_FontDictionary["時刻表ビュー"];
+
+            // ダイヤグラムID取得
+            m_DiagramId = m_RouteFileProperty.Diagrams.GetIndex(m_DiagramName);
 
             // 初期化
             Initialization();
@@ -128,16 +137,6 @@ namespace TrainTimeTable.Control
             GridColor = Color.DarkGray;
             BackgroundColor = Color.White;
             AutoGenerateColumns = false;
-            // TODO:仮想モードにする
-            // VirtualMode = true;
-            // NewRowNeeded += new DataGridViewRowEventHandler(dataGridView1_NewRowNeeded);
-            // RowsAdded += new DataGridViewRowsAddedEventHandler(dataGridView1_RowsAdded);
-            // CellValidating += new DataGridViewCellValidatingEventHandler(dataGridView1_CellValidating);
-            // CellValueNeeded += new DataGridViewCellValueEventHandler(dataGridView1_CellValueNeeded);
-            // CellValuePushed += new DataGridViewCellValueEventHandler(dataGridView1_CellValuePushed);
-
-            // ヘッダーとすべてのセルの内容に合わせて、列の幅を自動調整する
-            // AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 
             // ヘッダーとすべてのセルの内容に合わせて、行の高さを自動調整する
             AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
@@ -145,7 +144,7 @@ namespace TrainTimeTable.Control
             // ヘッダーの色等
             EnableHeadersVisualStyles = false;     // Visualスタイルを使用しない
             ColumnHeadersDefaultCellStyle.BackColor = Color.WhiteSmoke;
-            ColumnHeadersDefaultCellStyle.Font = m_Dictionary["時刻表ヘッダー"];
+            ColumnHeadersDefaultCellStyle.Font = m_FontDictionary["時刻表ヘッダー"];
             ColumnHeadersDefaultCellStyle.Font = Font;
             ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
@@ -161,65 +160,60 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::Initialization()");
         }
+        #endregion
 
+        #region 描画
         /// <summary>
-        /// 初期化
+        /// 描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void Initialization(int index, DirectionType type, RouteFileProperty property)
+        public void Draw()
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> DataGridViewTimetable::Draw()");
 
-            // 列初期化
-            ColumnsInitialization(index, type, property);
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trains = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType];
 
-            // 列車番号初期化
-            RowsTrainNumberInitialization(index, type, property);
+            // 列描画
+            DrawColumns(trains);
 
-            // 列車種別初期化
-            RowsTrainTypeInitialization(index, type, property);
+            // 列車番号描画
+            DrawRowsTrainNumber(trains);
 
-            // 列車名初期化
-            RowsTrainNameInitialization(index, type, property);
+            // 列車種別描画
+            DrawRowsTrainType(trains);
 
-            // 列車記号初期化
-            RowsTrainMarkInitialization(index, type, property);
+            // 列車名描画
+            DrawRowsTrainName(trains);
 
-            // 始発駅初期化
-            RowsDepartingStationInitialization(index, type, property);
+            // 列車記号描画
+            DrawRowsTrainMark(trains);
 
-            // 終着駅初期化
-            RowsDestinationStationInitialization(index, type, property);
+            // 始発駅描画
+            DrawRowsDepartingStation(trains);
 
-            // 駅時刻初期化
-            RowsStationTimeInitialization(index, type, property);
+            // 終着駅描画
+            DrawRowsDestinationStation(trains);
 
-            // 備考初期化
-            RowsRemarksStationInitialization(index, type, property);
+            // 駅時刻描画
+            DrawRowsStationTime(trains);
+
+            // 備考初描画
+            DrawRowsRemarksStation(trains);
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::Draw()");
         }
 
         /// <summary>
-        /// 初期化(固定カラム)
+        /// 列描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void ColumnsInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="trains"></param>
+        private void DrawColumns(TrainProperties trains)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::ColumnsInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawColumns(TrainProperties)");
+            Logger.DebugFormat("trains:[{0}]", trains);
 
             // 固定カラム追加
             Columns.Add("Distance", "距離");
@@ -230,7 +224,7 @@ namespace TrainTimeTable.Control
             // 固定カラム幅設定
             Columns[0].Width = 48;  // 距離
             Columns[1].Width = 32;  // 駅マーク
-            Columns[2].Width = 24 * property.Route.WidthOfStationNameField;  // 駅名
+            Columns[2].Width = 24 * m_RouteFileProperty.Route.WidthOfStationNameField;  // 駅名
             Columns[3].Width = 24;  // 発着
 
             // 固定カラム背景色設定
@@ -238,132 +232,107 @@ namespace TrainTimeTable.Control
             Columns[1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // 固定カラムフォント設定
-            Columns[0].DefaultCellStyle.Font = m_Dictionary["駅間距離"];
+            Columns[0].DefaultCellStyle.Font = m_FontDictionary["駅間距離"];
 
             // 文字位置設定
             Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             Columns[3].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
-
             // 列車プロパティを繰り返す
             foreach (var train in trains)
             {
                 // 列追加
-                Columns.Add(string.Format("Train{0}", train.Seq), string.Format("{0}", train.No));
-                Columns[Columns.Count - 1].Width = 8 * property.Route.TimetableTrainWidth;  // 列車
+                Columns.Add(string.Format("Train{0}", train.Id), string.Format("{0}", train.No));
+                Columns[Columns.Count - 1].Width = 8 * m_RouteFileProperty.Route.TimetableTrainWidth;  // 列車
                 Columns[Columns.Count - 1].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = property.TrainTypes[train.TrainType].StringsColor;
+                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = m_RouteFileProperty.TrainTypes[train.TrainType].StringsColor;
             }
 
             // 固定列(発着)設定
             Columns["ArrivalAndDeparture"].Frozen = true;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::ColumnsInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawColumns(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(列車番号)
+        /// 列車番号描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void RowsTrainNumberInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsTrainNumber(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsTrainNumberInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainNumber(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("列車番号");
 
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                // 追加
-                columnsList.Add(string.Format("{0}", train.No));
-            }
+            // 列車番号一覧を取得
+            List<string> numberList = properties.Select(t => t.No).ToList();
+
+            // 列車番号一覧を追加
+            columnsList.AddRange(numberList);
 
             // 行追加
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["列車番号"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車番号"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsTrainNumberInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainNumber(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(列車種別)
+        /// 列車種別描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void RowsTrainTypeInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsTrainType(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsTrainTypeInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainType(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("列車種別");
 
             // 列車プロパティを繰り返す
-            foreach (var train in trains)
+            foreach (var train in properties)
             {
                 // 追加
-                columnsList.Add(string.Format("{0}", m_DiaProFont[property.TrainTypes[train.TrainType].Name]));
+                columnsList.Add(string.Format("{0}", m_DiaProFont[m_RouteFileProperty.TrainTypes[train.TrainType].Name]));
             }
 
             // 行追加
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["列車種別"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車種別"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsTrainTypeInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainType(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(列車名)
+        /// 列車名描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void RowsTrainNameInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsTrainName(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsTrainNameInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainName(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("列車名");
 
             // 列車プロパティを繰り返す
-            foreach (var train in trains)
+            foreach (var train in properties)
             {
                 // 追加
                 StringBuilder trainName = new StringBuilder();
@@ -379,37 +348,29 @@ namespace TrainTimeTable.Control
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["列車名"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車名"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsTrainNameInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainName(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(列車記号)
+        /// 列車記号描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private void RowsTrainMarkInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsTrainMark(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsTrainMarkInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainMark(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("");
 
             // 列車プロパティを繰り返す
-            foreach (var train in trains)
+            foreach (var train in properties)
             {
                 // 列車記号文字列
                 StringBuilder sb = new StringBuilder();
@@ -429,151 +390,134 @@ namespace TrainTimeTable.Control
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["列車記号"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車記号"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsTrainMarkInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainMark(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(始発駅)
+        /// 始発駅描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void RowsDepartingStationInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsDepartingStation(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsDepartingStationInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsDepartingStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("始発駅");
 
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                // 列Listに追加
-                columnsList.Add(string.Format("{0}", train.DepartingStation));
-            }
+            // 始発駅一覧を取得
+            List<string> departingStationList = properties.Select(t => t.DepartingStation).ToList();
+
+            // 始発駅一覧を登録
+            columnsList.AddRange(departingStationList);
 
             // 行追加
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["始発駅"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["始発駅"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsDepartingStationInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsDepartingStation(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(終着駅)
+        /// 終着駅描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
-        private void RowsDestinationStationInitialization(int index, DirectionType type, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsDestinationStation(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsDestinationStationInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsDestinationStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("終着駅");
 
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                // 列Listに追加
-                columnsList.Add(string.Format("{0}", train.DestinationStation));
-            }
+            // 終着駅一覧を取得
+            List<string> destinationStationList = properties.Select(t => t.DestinationStation).ToList();
+
+            // 終着駅一覧を登録
+            columnsList.AddRange(destinationStationList);
 
             // 行追加
             Rows.Add(columnsList.ToArray());
 
             // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["終着駅"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["終着駅"];
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
             Rows[Rows.Count - 1].Frozen = true;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsDestinationStationInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsDestinationStation(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(駅時刻)
+        /// 駅時刻描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
-        /// <param name="property"></param>
+        /// <param name="properties"></param>
         /// <exception cref="AggregateException"></exception>
-        private void RowsStationTimeInitialization(int index, DirectionType type, RouteFileProperty property)
+        private void DrawRowsStationTime(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsStationTimeInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // 方向種別で分岐
-            switch (type)
+            switch (m_DirectionType)
             {
                 case DirectionType.Outbound:
-                    RowsOutboundStationTimeInitialization(index, property);
+                    // 駅時刻描画(下り)
+                    DrawRowsOutboundStationTime(properties);
                     break;
                 case DirectionType.Inbound:
-                    RowsInboundStationTimeInitialization(index, property);
+                    // 駅時刻描画(上り)
+                    DrawRowsInboundStationTime(properties);
                     break;
                 default:
-                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", type));
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", m_DirectionType));
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsStationTimeInitialization(int, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsStationTime(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(駅時刻：下り)
+        /// 駅時刻描画(下り)
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="property"></param>
-        private void RowsOutboundStationTimeInitialization(int index, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsOutboundStationTime(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsOutboundStationTimeInitialization(int, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsOutboundStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[DirectionType.Outbound];
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
 
-            // 駅数分繰り返す
-            for (int i = 0; i < property.Stations.Count; i++)
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, property.Stations[i], i, trains);
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, station, properties);
 
                 // 行追加
                 foreach (DepartureArrivalType type in columnsList.Keys)
                 {
                     // 駅距離を設定
-                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Outbound, i, property.Stations);
+                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Outbound, station);
 
                     // 行追加
                     Rows.Add(columnsList[type].ToArray());
@@ -581,35 +525,36 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsOutboundStationTimeInitialization(int, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsOutboundStationTime(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(駅時刻：上り)
+        /// 駅時刻描画(上り)
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="property"></param>
-        private void RowsInboundStationTimeInitialization(int index, RouteFileProperty property)
+        /// <param name="properties"></param>
+        private void DrawRowsInboundStationTime(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsInboundStationTimeInitialization(int, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsInboundStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[DirectionType.Inbound];
+            // 駅シーケンスリスト取得(降順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderByDescending(t => t.Seq);
 
-            // 駅数分繰り返す
-            for (int i = property.Stations.Count - 1; i >= 0; i--)
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, property.Stations[i], i, trains);
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, station, properties);
 
                 // 行追加
                 foreach (DepartureArrivalType type in columnsList.Keys)
                 {
                     // 駅距離を設定
-                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Inbound, i, property.Stations);
+                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Inbound, station);
 
                     // 行追加
                     Rows.Add(columnsList[type].ToArray());
@@ -617,64 +562,37 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsInboundStationTimeInitialization(index, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsInboundStationTime(TrainProperties)");
         }
 
         /// <summary>
-        /// 初期化(備考)
+        /// 備考描画
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="type"></param>
         /// <param name="property"></param>
-        private void RowsRemarksStationInitialization(int index, DirectionType type, RouteFileProperty property)
+        private void DrawRowsRemarksStation(TrainProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::RowsRemarksStationInitialization(int, DirectionType, RouteFileProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("type    :[{0}]", type);
-            Logger.DebugFormat("property:[{0}]", property);
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = property.Diagrams[index].Trains[type];
+            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsRemarksStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
             // List初期化
             List<string> columnsList = ColumnsListInitialization("備考");
 
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                columnsList.Add(string.Format("{0}", train.Remarks));
-            }
+            // 備考一覧を取得
+            List<string> remarksList = properties.Select(t => t.Remarks).ToList();
+
+            // 終着駅一覧を登録
+            columnsList.AddRange(remarksList);
 
             // 行追加
             Rows.Add(columnsList.ToArray());
 
             // TODO:フォント設定(暫定)
             Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_Dictionary["備考"];
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["備考"];
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::RowsRemarksStationInitialization(int, DirectionType, RouteFileProperty)");
-        }
-        #endregion
-
-        #region publicメソッド
-        /// <summary>
-        /// 時刻表描画
-        /// </summary>
-        public void DrawTimetable()
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawTimetable()");
-
-            // ダイアログインデックス取得
-            int diagramIndex = m_RouteFileProperty.Diagrams.GetIndex(m_DiagramName);
-
-            // 初期化
-            Initialization(diagramIndex, m_DirectionType, m_RouteFileProperty);
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawTimetable()");
+            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsRemarksStation(TrainProperties)");
         }
         #endregion
 
@@ -741,7 +659,6 @@ namespace TrainTimeTable.Control
         /// カラムリスト初期化
         /// </summary>
         /// <param name="property"></param>
-
         private Dictionary<DepartureArrivalType, List<string>> ColumnsListInitialization(DirectionType type, StationProperty property)
         {
             // ロギング
@@ -840,6 +757,47 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 駅時刻行取得
         /// </summary>
+        /// <param name="inbound"></param>
+        /// <param name="station"></param>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+
+        private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station, TrainProperties trains)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
+            Logger.DebugFormat("type   :[{0}]", type);
+            Logger.DebugFormat("station:[{0}]", station);
+            Logger.DebugFormat("trains :[{0}]", trains);
+
+            // 結果オブジェクト生成
+            Dictionary<DepartureArrivalType, List<string>> result = ColumnsListInitialization(type, station);
+
+            // 列車プロパティを繰り返す
+            foreach (var train in trains)
+            {
+                // 列車時刻を取得
+                Dictionary<DepartureArrivalType, string> trainTimes = GetStationTime(type, train, station);
+
+                // 行追加
+                foreach (var trainTime in trainTimes)
+                {
+                    // 登録
+                    result[trainTime.Key].Add(trainTime.Value);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 駅時刻行取得
+        /// </summary>
         /// <param name="property"></param>
         /// <param name="directionType"></param>
         /// <param name="index"></param>
@@ -874,6 +832,94 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
             Logger.Debug("<<<<= DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, int, TrainProperties)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 駅時刻取得
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="train"></param>
+        /// <param name="station"></param>
+        /// <returns></returns>
+        private Dictionary<DepartureArrivalType, string> GetStationTime(DirectionType type, TrainProperty train, StationProperty station)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
+            Logger.DebugFormat("type   :[{0}]", type);
+            Logger.DebugFormat("train  :[{0}]", train);
+            Logger.DebugFormat("station:[{0}]", station);
+
+            // 結果オブジェクト生成
+            Dictionary<DepartureArrivalType, string> result = null;
+
+            // StationTimePropertyオブジェクト取得
+            StationTimeProperty stationTime = train.StationTimes.Find(t => t.StationName == station.Name);
+
+            // 駅扱いで分岐
+            switch (stationTime.StationTreatment)
+            {
+                // 「停車」の場合
+                case StationTreatment.Stop:
+                    // 「停車時刻」を設定
+                    result = GetStationStopTime(type, train, station, stationTime);
+                    break;
+                // 「通過」の場合
+                case StationTreatment.Passing:
+                    // 「通過」を設定
+                    result = GetStationTime(type, train, station, m_DiaProFont["通過①"]);
+                    break;
+                // 「経由なし」の場合
+                case StationTreatment.NoRoute:
+                    // 「他線区経由」を設定
+                    result = GetStationTime(type, train, station, m_DiaProFont["他線区経由"]);
+                    break;
+                // 「運行なし」の場合
+                case StationTreatment.NoService:
+                    // 駅規模判定
+                    switch (station.TimeFormat)
+                    {
+                        case TimeFormat.DepartureAndArrival:
+                        case TimeFormat.OutboundArrivalAndDeparture:
+                        case TimeFormat.InboundDepartureAndArrival:
+                            // 「時刻無し」を設定
+                            result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
+                            break;
+                        default:
+                            // 駅規模判定
+                            if (station.StationScale != StationScale.GeneralStation)
+                            {
+                                // 始発駅、終着駅か？
+                                if (station.StartingStation || station.TerminalStation)
+                                {
+                                    // 「時刻無し」を設定
+                                    result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
+                                }
+                                else
+                                {
+                                    // 「基準線」を設定
+                                    result = GetStationTime(type, train, station, m_DiaProFont["照準線①"]);
+                                }
+                            }
+                            else
+                            {
+                                // 「時刻無し」を設定
+                                result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
+                            }
+                            break;
+                    }
+                    break;
+                // 「上記以外」の場合
+                default:
+                    // 例外
+                    throw new AggregateException(string.Format("駅扱いの異常を検出しました:[{0}]", stationTime.StationTreatment));
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
 
             // 返却
             return result;
@@ -1252,6 +1298,31 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 駅間距離文字列取得
         /// </summary>
+        /// <param name="outbound"></param>
+        /// <param name="stations"></param>
+        /// <param name="station"></param>
+        /// <returns></returns>
+        private string GetDistanceStringBetweenStations(DirectionType type, StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
+            Logger.DebugFormat("type      :[{0}]", type);
+            Logger.DebugFormat("properties:[{0}]", property);
+
+            // 結果オブジェクト設定
+            float result = property.StationDistanceFromReferenceStations[type];
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
+
+            // 返却(文字列変換)
+            return string.Format("{0:#,0.0}", result);
+        }
+
+        /// <summary>
+        /// 駅間距離文字列取得
+        /// </summary>
         /// <param name="type"></param>
         /// <param name="index"></param>
         /// <param name="properties"></param>
@@ -1324,7 +1395,6 @@ namespace TrainTimeTable.Control
                 return false;
             }
         }
-
         #endregion
 
         #region イベント

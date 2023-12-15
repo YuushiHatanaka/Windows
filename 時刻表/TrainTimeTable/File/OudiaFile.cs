@@ -35,9 +35,14 @@ namespace TrainTimeTable.File
 
         #region ダイアグラムインデックス
         /// <summary>
-        /// ダイアグラムインデックス
+        /// ダイアグラムID
         /// </summary>
-        protected int m_DiagramIndex = -1;
+        protected int m_DiagramId = -1;
+
+        /// <summary>
+        /// ダイアグラムシーケンスID
+        /// </summary>
+        protected int m_DiagramSequenceId = -1;
         #endregion
 
         #region コンストラクタ
@@ -498,10 +503,13 @@ namespace TrainTimeTable.File
             switch (line)
             {
                 case "Dia.":
+                    // DiagramPropertyオブジェクト生成
+                    DiagramProperty diagramProperty = new DiagramProperty() { Name = "", Seq = m_RouteFileProperty.Diagrams.Count + 1 };
+                    // DiagramSequencePropertyオブジェクト生成
+                    DiagramSequenceProperty diagramSequenceProperty = new DiagramSequenceProperty() { Name = "", Seq = m_RouteFileProperty.DiagramSequences.Count + 1 };
                     // 仮登録
-                    DiagramProperty diagramProperty = new DiagramProperty();
-                    diagramProperty.Seq = m_RouteFileProperty.Diagrams.Count + 1;
                     m_RouteFileProperty.Diagrams.Add(diagramProperty);
+                    m_RouteFileProperty.DiagramSequences.Add(diagramSequenceProperty);
                     return;
                 default:
                     break;
@@ -518,7 +526,8 @@ namespace TrainTimeTable.File
             }
 
             // 配列インデックス取得
-            m_DiagramIndex = m_RouteFileProperty.Diagrams.Count - 1;
+            m_DiagramId = m_RouteFileProperty.Diagrams.Count - 1;
+            m_DiagramSequenceId = m_RouteFileProperty.DiagramSequences.Count - 1;
 
             // キー分岐
             switch (keyValue[0])
@@ -526,7 +535,8 @@ namespace TrainTimeTable.File
                 // ダイヤ名
                 case "DiaName":
                     {
-                        m_RouteFileProperty.Diagrams[m_DiagramIndex].Name = keyValue[1];
+                        m_RouteFileProperty.Diagrams[m_DiagramId].Name = keyValue[1];
+                        m_RouteFileProperty.DiagramSequences[m_DiagramId].Name = keyValue[1];
                     }
                     break;
                 default:
@@ -591,12 +601,12 @@ namespace TrainTimeTable.File
                 case "Ressya.":
                     // TrainPropertyオブジェクト生成
                     TrainProperty trainProperty = new TrainProperty(m_RouteFileProperty.Stations);
-                    trainProperty.DiagramIndex = diagramsArrayIndex;
+                    trainProperty.DiagramId = diagramsArrayIndex;
                     trainProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
                     trainProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
                     // TrainPropertyオブジェクト生成
                     TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-                    trainSequenceProperty.DiagramIndex = diagramsArrayIndex;
+                    trainSequenceProperty.DiagramId = diagramsArrayIndex;
                     trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].GetNewId();
                     trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Count + 1;
                     // 仮登録
@@ -731,15 +741,15 @@ namespace TrainTimeTable.File
         /// <summary>
         /// SetStationTimeOutbound
         /// </summary>
-        /// <param name="trainIndex"></param>
+        /// <param name="trainId"></param>
         /// <param name="stationProperties"></param>
         /// <param name="stationTimes"></param>
         /// <param name="value"></param>
-        private void SetStationTimeOutbound(int trainIndex, StationProperties stationProperties, StationTimeProperties stationTimes, string value)
+        private void SetStationTimeOutbound(int trainId, StationProperties stationProperties, StationTimeProperties stationTimes, string value)
         {
             // ロギング
             Logger.Debug("=>>>> OudFile::SetStationTimeOutbound(int, StationTimeProperties, string)");
-            Logger.DebugFormat("trainIndex       :[{0}]", trainIndex);
+            Logger.DebugFormat("trainId          :[{0}]", trainId);
             Logger.DebugFormat("stationProperties:[{0}]", stationProperties);
             Logger.DebugFormat("stationTimes     :[{0}]", stationTimes);
             Logger.DebugFormat("value            :[{0}]", value);
@@ -753,8 +763,8 @@ namespace TrainTimeTable.File
             {
                 // StationTimePropertyオブジェクト生成
                 StationTimeProperty property = new StationTimeProperty();
-                property.DiagramIndex = m_DiagramIndex;
-                property.TrainIndex = trainIndex;
+                property.DiagramId = m_DiagramId;
+                property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
                 property.Seq = index + 1;
                 property.StationName = stationProperties[index].Name;
@@ -794,7 +804,7 @@ namespace TrainTimeTable.File
             }
 
             // 後処理
-            SetStationTimePostProcessing(trainIndex, stationTimes);
+            SetStationTimePostProcessing(trainId, stationTimes);
 
             // ロギング
             Logger.Debug("<<<<= OudFile::SetStationTimeOutbound(int, StationTimeProperties, string)");
@@ -803,15 +813,15 @@ namespace TrainTimeTable.File
         /// <summary>
         /// SetStationTimeInbound
         /// </summary>
-        /// <param name="trainIndex"></param>
+        /// <param name="trainId"></param>
         /// <param name="stationProperties"></param>
         /// <param name="stationTimes"></param>
         /// <param name="value"></param>
-        private void SetStationTimeInbound(int trainIndex, StationProperties stationProperties, StationTimeProperties stationTimes, string value)
+        private void SetStationTimeInbound(int trainId, StationProperties stationProperties, StationTimeProperties stationTimes, string value)
         {
             // ロギング
             Logger.Debug("=>>>> OudFile::SetStationTimeInbound(int, StationTimeProperties, string)");
-            Logger.DebugFormat("trainIndex       :[{0}]", trainIndex);
+            Logger.DebugFormat("trainId          :[{0}]", trainId);
             Logger.DebugFormat("stationProperties:[{0}]", stationProperties);
             Logger.DebugFormat("stationTimes     :[{0}]", stationTimes);
             Logger.DebugFormat("value            :[{0}]", value);
@@ -825,8 +835,8 @@ namespace TrainTimeTable.File
             {
                 // StationTimePropertyオブジェクト生成
                 StationTimeProperty property = new StationTimeProperty();
-                property.DiagramIndex = m_DiagramIndex;
-                property.TrainIndex = trainIndex;
+                property.DiagramId = m_DiagramId;
+                property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
                 property.Seq = index + 1;
                 property.StationName = stationProperties[index].Name;
@@ -866,7 +876,7 @@ namespace TrainTimeTable.File
             }
 
             // 後処理
-            SetStationTimePostProcessing(trainIndex, stationTimes);
+            SetStationTimePostProcessing(trainId, stationTimes);
 
             // ロギング
             Logger.Debug("<<<<= OudFile::SetStationTimeInbound(int, StationTimeProperties, string)");
@@ -945,22 +955,24 @@ namespace TrainTimeTable.File
         /// <summary>
         /// SetStationTimePostProcessing
         /// </summary>
-        private void SetStationTimePostProcessing(int trainIndex, StationTimeProperties stationTimes)
+        /// <param name="trainId"></param>
+        /// <param name="stationTimes"></param>
+        private void SetStationTimePostProcessing(int trainId, StationTimeProperties stationTimes)
         {
             // ロギング
             Logger.Debug("=>>>> OudFile::SetStationTimePostProcessing(int, StationTimeProperties)");
-            Logger.DebugFormat("trainIndex  :[{0}]", trainIndex);
+            Logger.DebugFormat("trainId     :[{0}]", trainId);
             Logger.DebugFormat("stationTimes:[{0}]", stationTimes);
 
             // 後処理
             foreach (var property in stationTimes)
             {
                 // 列車インデックスを判定
-                if (property.TrainIndex == -1)
+                if (property.TrainId == -1)
                 {
                     // 更新
-                    property.DiagramIndex = m_DiagramIndex;
-                    property.TrainIndex = trainIndex;
+                    property.DiagramId = m_DiagramId;
+                    property.TrainId = trainId;
                     property.Direction = m_CurrentDirectionType;
                     property.StationTreatment = StationTreatment.NoService;
                 }

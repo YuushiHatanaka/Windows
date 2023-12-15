@@ -3,20 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Routing;
-using TrainTimeTable.Common;
-using TrainTimeTable.Component;
 
 namespace TrainTimeTable.Property
 {
     /// <summary>
-    /// DiagramPropertyクラス
+    /// DiagramSequencePropertyクラス
     /// </summary>
     [Serializable]
-    public class DiagramProperty
+    public class DiagramSequenceProperty
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -33,55 +29,36 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// シーケンス番号
         /// </summary>
-        [Obsolete("DiagramPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
         public int Seq { get; set; } = 0;
-
-        /// <summary>
-        /// 列車辞書
-        /// </summary>
-        public DictionaryTrain Trains { get; set; } = new DictionaryTrain()
-        {
-            { DirectionType.Outbound, new TrainProperties() },
-            { DirectionType.Inbound, new TrainProperties() },
-        };
-
-        /// <summary>
-        /// 列車シーケンス辞書
-        /// </summary>
-        public DictionaryTrainSequence TrainSequence { get; set; } = new DictionaryTrainSequence()
-        {
-            { DirectionType.Outbound, new TrainSequenceProperties() },
-            { DirectionType.Inbound, new TrainSequenceProperties() },
-        };
 
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public DiagramProperty()
+        public DiagramSequenceProperty()
         {
             // ロギング
-            Logger.Debug("=>>>> DiagramProperty::DiagramProperty()");
+            Logger.Debug("=>>>> DiagramSequenceProperty::DiagramSequenceProperty()");
 
             // ロギング
-            Logger.Debug("<<<<= DiagramProperty::DiagramProperty()");
+            Logger.Debug("<<<<= DiagramSequenceProperty::DiagramSequenceProperty()");
         }
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="property"></param>
-        public DiagramProperty(DiagramProperty property)
+        public DiagramSequenceProperty(DiagramSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DiagramProperty::DiagramProperty(DiagramProperty)");
+            Logger.Debug("=>>>> DiagramSequenceProperty::DiagramSequenceProperty(DiagramSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // コピー
             Copy(property);
 
             // ロギング
-            Logger.Debug("<<<<= DiagramProperty::DiagramProperty(DiagramProperty)");
+            Logger.Debug("<<<<= DiagramSequenceProperty::DiagramSequenceProperty(DiagramSequenceProperty)");
         }
         #endregion
 
@@ -90,24 +67,22 @@ namespace TrainTimeTable.Property
         /// コピー
         /// </summary>
         /// <param name="property"></param>
-        public void Copy(DiagramProperty property)
+        public void Copy(DiagramSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DiagramProperty::Copy(DiagramProperty)");
+            Logger.Debug("=>>>> DiagramSequenceProperty::Copy(DiagramSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 同一オブジェクト以外に実施する
-            if (!ReferenceEquals(this , property))
+            if (!ReferenceEquals(this, property))
             {
                 // コピー
                 Name = property.Name;
                 Seq = property.Seq;
-                Trains.Copy(property.Trains);
-                TrainSequence.Copy(property.TrainSequence);
             }
 
             // ロギング
-            Logger.Debug("<<<<= DiagramProperty::Copy(DiagramProperty)");
+            Logger.Debug("<<<<= DiagramSequenceProperty::Copy(DiagramSequenceProperty)");
         }
         #endregion
 
@@ -117,10 +92,10 @@ namespace TrainTimeTable.Property
         /// </summary>
         /// <param name="property"></param>
         /// <returns></returns>
-        public bool Compare(DiagramProperty property)
+        public bool Compare(DiagramSequenceProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DiagramProperty::Compare(DiagramProperty)");
+            Logger.Debug("=>>>> DiagramSequenceProperty::Compare(DiagramSequenceProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 比較
@@ -128,7 +103,7 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Name:[不一致][{0}][{1}]", Name, property.Name);
-                Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
+                Logger.Debug("<<<<= DiagramSequenceProperty::Compare(DiagramSequenceProperty)");
 
                 // 不一致
                 return false;
@@ -137,33 +112,15 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
-                Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
+                Logger.Debug("<<<<= DiagramSequenceProperty::Compare(DiagramSequenceProperty)");
 
                 // 不一致
                 return false;
             }
-            if (!Trains.Compare(property.Trains))
-            {
-                // ロギング
-                Logger.DebugFormat("Trains:[不一致][{0}][{1}]", Trains, property.Trains);
-                Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
 
-                // 不一致
-                return false;
-            }
-            if (!TrainSequence.Compare(property.TrainSequence))
-            {
-                // ロギング
-                Logger.DebugFormat("TrainSequence:[不一致][{0}][{1}]", TrainSequence, property.TrainSequence);
-                Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
-
-                // 不一致
-                return false;
-            }
-            
             // ロギング
             Logger.DebugFormat("result:[一致]");
-            Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
+            Logger.Debug("<<<<= DiagramSequenceProperty::Compare(DiagramSequenceProperty)");
 
             // 一致
             return true;
@@ -174,18 +131,11 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 文字列化
         /// </summary>
-        /// <remarks>※このメソッドはデバッグ用には使用不可</remarks>
         /// <returns></returns>
         public override string ToString()
         {
-            // 結果オブジェクト生成
-            StringBuilder result = new StringBuilder();
-
-            // 文字列追加
-            result.Append(Name);
-
-            // 返却
-            return result.ToString();
+            // 文字列化返却
+            return ToString(0);
         }
 
         /// <summary>
@@ -202,11 +152,9 @@ namespace TrainTimeTable.Property
             string indentstr = new string('　', indent);
 
             // 文字列追加
-            result.AppendLine(indentstr + string.Format("＜ダイヤグラム情報＞"));
-            result.AppendLine(indentstr + string.Format("　ダイヤ名      :[{0}] ", Name));
+            result.AppendLine(indentstr + string.Format("＜ダイヤグラムシーケンス情報＞"));
+            result.AppendLine(indentstr + string.Format("　ダイヤ名    　:[{0}] ", Name));
             result.AppendLine(indentstr + string.Format("　シーケンス番号:[{0}] ", Seq));
-            result.Append(Trains.ToString(indent + 1));
-            result.Append(TrainSequence.ToString(indent + 1));
 
             // 返却
             return result.ToString();

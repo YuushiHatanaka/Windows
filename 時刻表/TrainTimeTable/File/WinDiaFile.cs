@@ -95,12 +95,14 @@ namespace TrainTimeTable.File
             }
 
             // DiagramPropertyオブジェクト生成
-            DiagramProperty diagramProperty = new DiagramProperty();
-            diagramProperty.Name = "";
-            diagramProperty.Seq = 1;
+            DiagramProperty diagramProperty = new DiagramProperty() { Name = "", Seq = 1 };
+
+            // DiagramSequencePropertyオブジェクト生成
+            DiagramSequenceProperty diagramSequenceProperty = new DiagramSequenceProperty() { Name = "", Seq = 1 };
 
             // 1件分登録(WinDIAは1件のみなので固定)
             m_RouteFileProperty.Diagrams.Add(diagramProperty);
+            m_RouteFileProperty.DiagramSequences.Add(diagramSequenceProperty);
 
             // インポートファイル種別設定
             m_RouteFileProperty.FileInfo.ImportFileType = "WinDIA";
@@ -186,6 +188,7 @@ namespace TrainTimeTable.File
             m_RouteFileProperty.FileInfo.RouteName = line;
             m_RouteFileProperty.Route.Name = line;
             m_RouteFileProperty.Diagrams[0].Name = line;
+            m_RouteFileProperty.DiagramSequences[0].Name = line;
 
             // ロギング
             Logger.Debug("<<<<= WinDiaFile::SetWinDIASection(string)");
@@ -498,14 +501,14 @@ namespace TrainTimeTable.File
 
             // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramIndex = 0;
+            trainProperty.DiagramId = 0;
             trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainProperty.Direction = DirectionType.Outbound;
 
             // TrainPropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-            trainSequenceProperty.DiagramIndex = 0;
+            trainSequenceProperty.DiagramId = 0;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].GetNewId();
             trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Outbound;
@@ -533,14 +536,14 @@ namespace TrainTimeTable.File
 
             // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramIndex = 0;
+            trainProperty.DiagramId = 0;
             trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainProperty.Direction = DirectionType.Inbound;
 
             // TrainPropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-            trainSequenceProperty.DiagramIndex = 0;
+            trainSequenceProperty.DiagramId = 0;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].GetNewId();
             trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Inbound;
@@ -561,15 +564,15 @@ namespace TrainTimeTable.File
         /// </summary>
         /// <param name="stationProperties"></param>
         /// <param name="trainProperty"></param>
-        /// <param name="trainIndex"></param>
+        /// <param name="trainId"></param>
         /// <param name="line"></param>
-        private void SetTrainSection(StationProperties stationProperties, TrainProperty trainProperty, int trainIndex, string line)
+        private void SetTrainSection(StationProperties stationProperties, TrainProperty trainProperty, int trainId, string line)
         {
             // ロギング
             Logger.Debug("=>>>> WinDiaFile::SetInboundSection(StationProperties, TrainProperty, int, string)");
             Logger.DebugFormat("stationProperties:[{0}]", stationProperties);
             Logger.DebugFormat("trainProperty    :[{0}]", trainProperty);
-            Logger.DebugFormat("trainIndex       :[{0}]", trainIndex);
+            Logger.DebugFormat("trainId          :[{0}]", trainId);
             Logger.DebugFormat("line             :[{0}]", line);
 
             // TextReaderオブジェクト生成
@@ -644,8 +647,8 @@ namespace TrainTimeTable.File
 
                                     // StationTimePropertyオブジェクト生成
                                     StationTimeProperty stationTimeProperty = new StationTimeProperty();
-                                    stationTimeProperty.DiagramIndex = 0;
-                                    stationTimeProperty.TrainIndex = trainIndex;
+                                    stationTimeProperty.DiagramId = 0;
+                                    stationTimeProperty.TrainId = trainId;
                                     stationTimeProperty.Direction = trainProperty.Direction;
                                     stationTimeProperty.Seq = trainProperty.StationTimes.Count + 1;
                                     stationTimeProperty.StationName = stationProperties[trainProperty.StationTimes.Count].Name;

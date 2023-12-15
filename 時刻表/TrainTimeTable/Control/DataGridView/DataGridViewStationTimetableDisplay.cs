@@ -263,12 +263,12 @@ namespace TrainTimeTable.Control
                         StringBuilder sb = new StringBuilder();
 
                         // 列車種別
-                        string trainType = m_DiaProFont[trainTypeProperties[trainProperties[property.TrainIndex].TrainType].Name];
+                        string trainType = m_DiaProFont[trainTypeProperties[trainProperties[property.TrainId].TrainType].Name];
                         if (trainType != string.Empty) { sb.AppendLine(trainType); }
 
 
                         // 列車名取得
-                        string trainName = string.Format("{0}{1}", trainProperties[property.TrainIndex].Name, trainProperties[property.TrainIndex].Number);
+                        string trainName = string.Format("{0}{1}", trainProperties[property.TrainId].Name, trainProperties[property.TrainId].Number);
                         if (trainName != string.Empty) { sb.AppendLine(trainName); }
 
                         // 発時刻(分)取得
@@ -276,12 +276,12 @@ namespace TrainTimeTable.Control
                         sb.AppendLine(departureTime);
 
                         // 行先取得
-                        string destination = trainProperties[property.TrainIndex].DestinationStation;
+                        string destination = trainProperties[property.TrainId].DestinationStation;
                         sb.Append(destination);
 
                         // 登録
                         columns.Add(sb.ToString());
-                        colors.Add(trainTypeProperties[trainProperties[property.TrainIndex].TrainType].StringsColor);
+                        colors.Add(trainTypeProperties[trainProperties[property.TrainId].TrainType].StringsColor);
                     }
                 }
 

@@ -48,9 +48,9 @@ namespace TrainTimeTable
         private FormRoute m_Owner = null;
 
         /// <summary>
-        /// ダイヤグラムインデックス
+        /// ダイヤグラムID
         /// </summary>
-        private int m_DiagramIndex = 0;
+        private int m_DiagramId = 0;
 
         /// <summary>
         /// RouteFilePropertyオブジェクト
@@ -83,7 +83,7 @@ namespace TrainTimeTable
 
             // 設定
             m_Owner = owner;
-            m_DiagramIndex = index;
+            m_DiagramId = index;
             m_RouteFileProperty = property;
             m_DataGridViewStationTimetable = new DataGridViewStationTimetable(property);
             m_DataGridViewStationTimetable.CellClick += DataGridViewStationTimetable_CellClick;
@@ -148,13 +148,13 @@ namespace TrainTimeTable
             StationProperty stationProperty = m_RouteFileProperty.Stations[e.RowIndex];
 
             // 登録名設定
-            string regName = FormStationTimetableDisplay.GetTitle(directionType, stationProperty.Name, m_RouteFileProperty.Diagrams[m_DiagramIndex].Name);
+            string regName = FormStationTimetableDisplay.GetTitle(directionType, stationProperty.Name, m_RouteFileProperty.Diagrams[m_DiagramId].Name);
 
             // 登録判定
             if (!m_Owner.IsMDIChildForm(typeof(FormStationTimetableDisplay), regName))
             {
                 // フォーム生成
-                FormStationTimetableDisplay form = new FormStationTimetableDisplay(m_RouteFileProperty.Diagrams[m_DiagramIndex].Name, directionType, e.RowIndex, m_RouteFileProperty);
+                FormStationTimetableDisplay form = new FormStationTimetableDisplay(m_RouteFileProperty.Diagrams[m_DiagramId].Name, directionType, e.RowIndex, m_RouteFileProperty);
 
                 // フォーム登録
                 m_Owner.AddMDIChildForm(form);

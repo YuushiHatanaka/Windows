@@ -112,7 +112,7 @@ namespace TrainTimeTable
 
             // コントコール設定
             m_DataGridViewTimetable.Dock = DockStyle.Fill;
-            m_DataGridViewTimetable.DrawTimetable();
+            m_DataGridViewTimetable.Draw();
             panelMain.Controls.Add(m_DataGridViewTimetable);
             panelMain.Dock = DockStyle.Fill;
 

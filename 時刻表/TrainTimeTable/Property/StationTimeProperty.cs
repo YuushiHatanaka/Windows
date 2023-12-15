@@ -27,19 +27,19 @@ namespace TrainTimeTable.Property
         #endregion
 
         /// <summary>
-        /// ダイヤグラム番号
+        /// ダイヤグラムID
         /// </summary>
-        public int DiagramIndex { get; set; } = -1;
-
-        /// <summary>
-        /// 列車番号(インデックス)
-        /// </summary>
-        public int TrainIndex { get; set; } = -1;
+        public int DiagramId { get; set; } = -1;
 
         /// <summary>
         /// 方向種別
         /// </summary>
         public DirectionType Direction { get; set; } = DirectionType.None;
+
+        /// <summary>
+        /// 列車Id
+        /// </summary>
+        public int TrainId { get; set; } = -1;
 
         /// <summary>
         /// シーケンス番号
@@ -123,11 +123,11 @@ namespace TrainTimeTable.Property
             if (!ReferenceEquals(this ,property))
             {
                 // コピー
-                DiagramIndex = property.DiagramIndex;
-                TrainIndex = property.TrainIndex;
+                DiagramId = property.DiagramId;
+                Direction = property.Direction;
+                TrainId = property.TrainId;
                 Seq = property.Seq;
                 StationName = property.StationName;
-                Direction = property.Direction;
                 StationTreatment = property.StationTreatment;
                 DepartureTime = property.DepartureTime;
                 EstimatedDepartureTime = property.EstimatedDepartureTime;
@@ -153,19 +153,28 @@ namespace TrainTimeTable.Property
             Logger.DebugFormat("property:[{0}]", property);
 
             // 比較
-            if (DiagramIndex != property.DiagramIndex)
+            if (DiagramId != property.DiagramId)
             {
                 // ロギング
-                Logger.DebugFormat("TrainIndex:[不一致][{0}][{1}]", TrainIndex, property.TrainIndex);
+                Logger.DebugFormat("DiagramId:[不一致][{0}][{1}]", DiagramId, property.DiagramId);
                 Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
 
                 // 不一致
                 return false;
             }
-            if (TrainIndex != property.TrainIndex)
+            if (Direction != property.Direction)
             {
                 // ロギング
-                Logger.DebugFormat("TrainIndex:[不一致][{0}][{1}]", TrainIndex, property.TrainIndex);
+                Logger.DebugFormat("Direction:[不一致][{0}][{1}]", Direction, property.Direction);
+                Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
+
+                // 不一致
+                return false;
+            }
+            if (TrainId != property.TrainId)
+            {
+                // ロギング
+                Logger.DebugFormat("TrainId:[不一致][{0}][{1}]", TrainId, property.TrainId);
                 Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
 
                 // 不一致
@@ -184,15 +193,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("StationName:[不一致][{0}][{1}]", StationName, property.StationName);
-                Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (Direction != property.Direction)
-            {
-                // ロギング
-                Logger.DebugFormat("Direction:[不一致][{0}][{1}]", Direction, property.Direction);
                 Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
 
                 // 不一致
@@ -324,16 +324,16 @@ namespace TrainTimeTable.Property
 
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜駅時刻情報＞"));
-            result.AppendLine(indentstr + string.Format("　ダイヤ番号(インデックス):[{0}] ", DiagramIndex));
-            result.AppendLine(indentstr + string.Format("　列車番号(インデックス)  :[{0}] ", TrainIndex));
-            result.AppendLine(indentstr + string.Format("　方向種別                :[{0}] ", Direction.GetStringValue()));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号          :[{0}] ", Seq));
-            result.AppendLine(indentstr + string.Format("　駅名                    :[{0}] ", StationName));
-            result.AppendLine(indentstr + string.Format("　駅扱い                  :[{0}] ", StationTreatment.GetStringValue()));
-            result.AppendLine(indentstr + string.Format("　発時刻                  :[{0}] ", DepartureTime));
-            result.AppendLine(indentstr + string.Format("　推定時刻(発時刻)        :[{0}] ", EstimatedDepartureTime));
-            result.AppendLine(indentstr + string.Format("　着時刻                  :[{0}] ", ArrivalTime));
-            result.AppendLine(indentstr + string.Format("　推定時刻(着時刻)        :[{0}] ", EstimatedArrivalTime));
+            result.AppendLine(indentstr + string.Format("　ダイヤグラムID  :[{0}] ", DiagramId));
+            result.AppendLine(indentstr + string.Format("　方向種別        :[{0}] ", Direction.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　列車ID          :[{0}] ", TrainId));
+            result.AppendLine(indentstr + string.Format("　シーケンス番号  :[{0}] ", Seq));
+            result.AppendLine(indentstr + string.Format("　駅名            :[{0}] ", StationName));
+            result.AppendLine(indentstr + string.Format("　駅扱い          :[{0}] ", StationTreatment.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　発時刻          :[{0}] ", DepartureTime));
+            result.AppendLine(indentstr + string.Format("　推定時刻(発時刻):[{0}] ", EstimatedDepartureTime));
+            result.AppendLine(indentstr + string.Format("　着時刻          :[{0}] ", ArrivalTime));
+            result.AppendLine(indentstr + string.Format("　推定時刻(着時刻):[{0}] ", EstimatedArrivalTime));
 
             // 返却
             return result.ToString();

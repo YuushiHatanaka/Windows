@@ -45,15 +45,15 @@ namespace TrainTimeTable.Database
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
-            query.Append("DiagramIndex INTEGER NOT NULL DEFAULT -1,");  // ダイヤグラム番号
-            query.Append("TrainIndex INTEGER NOT NULL DEFAULT -1,");    // 列車番号(インデックス)
-            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");      // 方向種別
-            query.Append("MarkName TEXT,");                             // 記号名
-            query.Append("Seq INTEGER NOT NULL,");                      // シーケンス番号
+            query.Append("DiagramId INTEGER NOT NULL DEFAULT -1,"); // ダイヤグラムID
+            query.Append("Direction INTEGER NOT NULL DEFAULT 0,");  // 方向種別
+            query.Append("TrainId INTEGER NOT NULL DEFAULT -1,");   // 列車ID
+            query.Append("MarkName TEXT,");                         // 記号名
+            query.Append("Seq INTEGER NOT NULL,");                  // シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(DiagramIndex, TrainIndex, Direction, MarkName));");
+            query.Append("PRIMARY KEY(DiagramId, Direction, TrainId, MarkName));");
 
             // 作成
             Create(query.ToString());
@@ -80,7 +80,7 @@ namespace TrainTimeTable.Database
             {
                 // SQLクエリ生成
                 StringBuilder query = new StringBuilder();
-                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramIndex = {1} AND TrainIndex = {2} AND Direction = {3} ORDER BY Direction;", m_TableName, train.DiagramIndex, train.Id, (int)train.Direction));
+                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramId = {1} AND TrainId = {2} AND Direction = {3} ORDER BY Direction;", m_TableName, train.DiagramId, train.Id, (int)train.Direction));
 
                 // クエリ実行
                 using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
@@ -126,8 +126,8 @@ namespace TrainTimeTable.Database
             TrainMarkProperty property = new TrainMarkProperty();
 
             // 設定
-            property.DiagramIndex = int.Parse(sqliteDataReader["DiagramIndex"].ToString());
-            property.TrainIndex = int.Parse(sqliteDataReader["TrainIndex"].ToString());
+            property.DiagramId = int.Parse(sqliteDataReader["DiagramId"].ToString());
+            property.TrainId = int.Parse(sqliteDataReader["TrainId"].ToString());
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
             property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
             property.MarkName = sqliteDataReader["MarkName"].ToString();
@@ -200,7 +200,7 @@ namespace TrainTimeTable.Database
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("DiagramIndex = " + property.DiagramIndex + " AND TrainIndex = " + property.TrainIndex + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+            query.Append("DiagramId = " + property.DiagramId + " AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -229,16 +229,16 @@ namespace TrainTimeTable.Database
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("DiagramIndex,");  // ダイヤ番号(インデックス)
-            query.Append("TrainIndex,");    // 列車番号(インデックス)
-            query.Append("Direction,");     // 方向種別
-            query.Append("Seq,");           // シーケンス番号
-            query.Append("MarkName");       // 記号名
+            query.Append("DiagramId,"); // ダイヤグラムID
+            query.Append("Direction,"); // 方向種別
+            query.Append("TrainId,");   // 列車ID
+            query.Append("Seq,");       // シーケンス番号
+            query.Append("MarkName");   // 記号名
             query.Append(") VALUES ");
             query.Append("(");
-            query.Append(property.DiagramIndex.ToString() + ",");
-            query.Append(property.TrainIndex.ToString() + ",");
+            query.Append(property.DiagramId.ToString() + ",");
             query.Append((int)property.Direction + ",");
+            query.Append(property.TrainId.ToString() + ",");
             query.Append(property.Seq.ToString() + ",");
             query.Append("'" + property.MarkName.ToString() + "'");
             query.Append(");");
@@ -267,7 +267,7 @@ namespace TrainTimeTable.Database
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
             query.Append("MarkName = '" + property.MarkName.ToString() + "',");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE DiagramIndex = " + property.DiagramIndex + " AND TrainIndex = " + property.TrainIndex + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+            query.Append("WHERE DiagramId = " + property.DiagramId + " AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
 
             // 更新
             Update(query.ToString());

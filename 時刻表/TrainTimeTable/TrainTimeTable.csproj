@@ -169,6 +169,7 @@
     <Compile Include="Database\Table\Core\TableListCore.cs" />
     <Compile Include="Database\Table\Core\TablePropertyCore.cs" />
     <Compile Include="Database\Table\DiagramScreenTable.cs" />
+    <Compile Include="Database\Table\DiagramSequenceTable.cs" />
     <Compile Include="Database\Table\DiagramTable.cs" />
     <Compile Include="Database\Table\FileInfomationTable.cs" />
     <Compile Include="Database\Table\FontTable.cs" />
@@ -311,6 +312,8 @@
     <Compile Include="Property\DiagramProperties.cs" />
     <Compile Include="Property\DiagramProperty.cs" />
     <Compile Include="Property\DiagramScreenProperty.cs" />
+    <Compile Include="Property\DiagramSequenceProperties.cs" />
+    <Compile Include="Property\DiagramSequenceProperty.cs" />
     <Compile Include="Property\FileInfomationProperty.cs" />
     <Compile Include="Property\FontProperties.cs" />
     <Compile Include="Property\FontProperty.cs" />

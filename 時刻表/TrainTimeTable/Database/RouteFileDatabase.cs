@@ -110,6 +110,11 @@ namespace TrainTimeTable.Database
         private DiagramTable m_DiagramTable = null;
 
         /// <summary>
+        /// DiagramSequenceTableオブジェクト
+        /// </summary>
+        private DiagramSequenceTable m_DiagramSequenceTable = null;
+
+        /// <summary>
         /// TrainTableオブジェクト
         /// </summary>
         private TrainTable m_TrainTable = null;
@@ -168,6 +173,7 @@ namespace TrainTimeTable.Database
             m_TrainTypeSequenceTable = new TrainTypeSequenceTable(m_SqliteConnection);
             m_CommentTable = new CommentTable(m_SqliteConnection);
             m_DiagramTable = new DiagramTable(m_SqliteConnection);
+            m_DiagramSequenceTable = new DiagramSequenceTable(m_SqliteConnection);
             m_TrainTable = new TrainTable(m_SqliteConnection);
             m_TrainSequenceTable = new TrainSequenceTable(m_SqliteConnection);
             m_TrainMarkTable = new TrainMarkTable(m_SqliteConnection);
@@ -270,6 +276,7 @@ namespace TrainTimeTable.Database
             m_TrainTypeSequenceTable.Create();
             m_CommentTable.Create();
             m_DiagramTable.Create();
+            m_DiagramSequenceTable.Create();
             m_TrainTable.Create();
             m_TrainSequenceTable.Create();
             m_TrainMarkTable.Create();
@@ -308,6 +315,7 @@ namespace TrainTimeTable.Database
                 m_TrainTypeSequenceTable.Save(property.TrainTypeSequences);
                 m_CommentTable.Save(property.Comment);
                 m_DiagramTable.Save(property.Diagrams);
+                m_DiagramSequenceTable.Save(property.DiagramSequences);
                 m_TrainTable.Save(property.Diagrams);
                 m_TrainSequenceTable.Save(property.Diagrams);
                 m_TrainMarkTable.Save(property.Diagrams);
@@ -364,6 +372,7 @@ namespace TrainTimeTable.Database
                     m_StationTimeTable.Load(train);
                 }
             }
+            result.DiagramSequences = m_DiagramSequenceTable.Load();
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
@@ -396,6 +405,7 @@ namespace TrainTimeTable.Database
             m_TrainTypeSequenceTable.Remove();
             m_CommentTable.Remove();
             m_DiagramTable.Remove();
+            m_DiagramSequenceTable.Remove();
             m_TrainTable.Remove();
             m_TrainSequenceTable.Remove();
             m_TrainMarkTable.Remove();

@@ -80,6 +80,11 @@ namespace TrainTimeTable.Property
         /// </summary>
         public DiagramProperties Diagrams = new DiagramProperties();
 
+        /// <summary>
+        /// ダイアグラムシーケンスプロパティ
+        /// </summary>
+        public DiagramSequenceProperties DiagramSequences = new DiagramSequenceProperties();
+
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
