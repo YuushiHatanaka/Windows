@@ -96,6 +96,9 @@
     <Compile Include="Component\DictionaryStationTimeProperties.cs" />
     <Compile Include="Component\DictionaryTrain.cs" />
     <Compile Include="Component\DictionaryTrainSequence.cs" />
+    <Compile Include="Control\ComboBox\ComboBoxDiagramTrainInformation.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Control\ComboBox\ComboBoxFontName.cs">
       <SubType>Component</SubType>
     </Compile>

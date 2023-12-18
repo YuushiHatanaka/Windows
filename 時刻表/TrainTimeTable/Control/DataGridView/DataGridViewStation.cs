@@ -39,6 +39,9 @@ namespace TrainTimeTable.Control
         public event UpdateEventHandler OnUpdate = delegate { };
         #endregion
 
+        /// <summary>
+        /// StationPropertiesオブジェクト
+        /// </summary>
         private StationProperties Property { get; set; } = new StationProperties();
 
         public DataGridViewStation()
@@ -57,7 +60,6 @@ namespace TrainTimeTable.Control
             //ヘッダ高さ
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
             ColumnHeadersHeight = 28;
-            Columns.Add("Number"           , "番号");
             Columns.Add("StationName"      , "駅名");
             Columns.Add("StationTimeFormat", "駅時刻形式");
             Columns.Add("StationSize"      , "駅規模");
@@ -271,7 +273,6 @@ namespace TrainTimeTable.Control
             {
                 List<string> values = new List<string>
                 {
-                    property.Seq.ToString(),
                     property.Name,
                     property.TimeFormat.GetStringValue(),
                     property.StationScale.GetStringValue()
