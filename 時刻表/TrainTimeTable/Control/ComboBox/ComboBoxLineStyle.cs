@@ -12,13 +12,14 @@ using TrainTimeTable.Common;
 using log4net;
 using System.Reflection;
 using System.Drawing.Drawing2D;
+using System.Xml.Linq;
 
 namespace TrainTimeTable.Control
 {
     /// <summary>
-    /// ComboBoxDiagramTrainInformationクラス
+    /// ComboBoxLineStyleクラス
     /// </summary>
-    public class ComboBoxDiagramTrainInformation : ComboBox
+    public class ComboBoxLineStyle : ComboBox
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -30,7 +31,7 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public ComboBoxDiagramTrainInformation()
+        public ComboBoxLineStyle()
             : base()
         {
             DropDownStyle = ComboBoxStyle.DropDownList;
@@ -46,9 +47,9 @@ namespace TrainTimeTable.Control
         {
             Items.Clear();
 
-            for (DiagramTrainInformation i = DiagramTrainInformation.DisplayIfItIsTheFirstTrain; i <= DiagramTrainInformation.DoNotShow; i++)
+            for (DashStyle i = DashStyle.Solid; i <= DashStyle.DashDotDot; i++)
             {
-                Items.Add(i.GetStringValue());
+                Items.Add(new DashStyleInfo(i));
             }
 
             if (Items.Count > 0)
@@ -57,18 +58,18 @@ namespace TrainTimeTable.Control
             }
         }
 
-        public DiagramTrainInformation GetSelected()
+        public DashStyle GetSelected()
         {
             if (SelectedIndex < 0)
             {
-                return DiagramTrainInformation.DoNotShow;
+                return DashStyle.Solid;
             }
-            return (DiagramTrainInformation)(Items[SelectedIndex]);
+            return ((DashStyleInfo)(Items[SelectedIndex])).Style;
         }
 
-        public void SetSelected(DiagramTrainInformation info)
+        public void SetSelected(DashStyle style)
         {
-            int index = FindString(info.GetStringValue());
+            int index = FindString(new DashStyleInfo(style).ToString());
             if (index >= 0)
             {
                 SelectedIndex = index;

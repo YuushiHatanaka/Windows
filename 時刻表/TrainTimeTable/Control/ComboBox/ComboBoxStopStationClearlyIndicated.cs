@@ -11,14 +11,13 @@ using TrainTimeTable.EventArgs;
 using TrainTimeTable.Common;
 using log4net;
 using System.Reflection;
-using System.Drawing.Drawing2D;
 
 namespace TrainTimeTable.Control
 {
     /// <summary>
-    /// ComboBoxDiagramTrainInformationクラス
+    /// ComboBoxStopStationClearlyIndicatedクラス
     /// </summary>
-    public class ComboBoxDiagramTrainInformation : ComboBox
+    public class ComboBoxStopStationClearlyIndicated : ComboBox
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -30,7 +29,7 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public ComboBoxDiagramTrainInformation()
+        public ComboBoxStopStationClearlyIndicated()
             : base()
         {
             DropDownStyle = ComboBoxStyle.DropDownList;
@@ -46,7 +45,7 @@ namespace TrainTimeTable.Control
         {
             Items.Clear();
 
-            for (DiagramTrainInformation i = DiagramTrainInformation.DisplayIfItIsTheFirstTrain; i <= DiagramTrainInformation.DoNotShow; i++)
+            for (StopMarkDrawType i = StopMarkDrawType.Nothing; i <= StopMarkDrawType.DrawOnStop; i++)
             {
                 Items.Add(i.GetStringValue());
             }
@@ -54,24 +53,6 @@ namespace TrainTimeTable.Control
             if (Items.Count > 0)
             {
                 SelectedIndex = 0;
-            }
-        }
-
-        public DiagramTrainInformation GetSelected()
-        {
-            if (SelectedIndex < 0)
-            {
-                return DiagramTrainInformation.DoNotShow;
-            }
-            return (DiagramTrainInformation)(Items[SelectedIndex]);
-        }
-
-        public void SetSelected(DiagramTrainInformation info)
-        {
-            int index = FindString(info.GetStringValue());
-            if (index >= 0)
-            {
-                SelectedIndex = index;
             }
         }
     }

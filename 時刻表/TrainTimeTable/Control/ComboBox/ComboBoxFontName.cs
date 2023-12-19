@@ -81,7 +81,7 @@ namespace TrainTimeTable.Control
             }
         }
 
-        private void SetSelected(string name)
+        public void SetSelected(string name)
         {
             int index = FindString(name);
             if (index >= 0)

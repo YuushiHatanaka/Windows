@@ -38,10 +38,20 @@ namespace TrainTimeTable.Control
         public event UpdateEventHandler OnUpdate = delegate { };
         #endregion
 
+        /// <summary>
+        /// TrainTypePropertiesオブジェクト
+        /// </summary>
         private TrainTypeProperties Property { get; set; } = new TrainTypeProperties();
 
+        #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public DataGridViewTrainType()
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType()");
+
             ReadOnly = true;                      // 読取専用
             AllowUserToDeleteRows = false;        // 行削除禁止
             AllowUserToAddRows = false;           // 行挿入禁止
@@ -88,7 +98,11 @@ namespace TrainTimeTable.Control
             ContextMenuStrip = contextMenuStrip;
             ContextMenuStrip.Opened += ContextMenuStripOpened;
             ContextMenuStrip.Items["pasting"].Enabled = false;
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType()");
         }
+        #endregion
 
         private void TrainTypeCutoutOnClick(object sender, System.EventArgs e)
         {

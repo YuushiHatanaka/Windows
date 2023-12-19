@@ -73,7 +73,7 @@ namespace TrainTimeTable.Common
         /// <summary>
         /// 分単位横幅
         /// </summary>
-        public static int MinuteUnitWidth { get; set; } = 6;
+        public static int MinuteUnitWidth { get; set; } = 4;
 
         /// <summary>
         /// 駅単位縦幅

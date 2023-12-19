@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TrainTimeTable.Control;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
 
@@ -44,6 +45,26 @@ namespace TrainTimeTable
         /// TrainTypePropertyオブジェクト生成
         /// </summary>
         public TrainTypeProperty Property { get; set; } = new TrainTypeProperty();
+
+        /// <summary>
+        /// PanelLineオブジェクト
+        /// </summary>
+        private PanelLine m_PanelLine = new PanelLine();
+
+        /// <summary>
+        /// ComboBoxFontNameオブジェクト
+        /// </summary>
+        private ComboBoxFontName m_ComboBoxFontName = new ComboBoxFontName();
+
+        /// <summary>
+        /// ComboBoxLineStyleオブジェクト
+        /// </summary>
+        private ComboBoxLineStyle m_ComboBoxLineStyle = new ComboBoxLineStyle();
+
+        /// <summary>
+        /// ComboBoxStopStationClearlyIndicatedオブジェクト
+        /// </summary>
+        private ComboBoxStopStationClearlyIndicated m_ComboBoxStopStationClearlyIndicated = new ComboBoxStopStationClearlyIndicated();
 
         #region コンストラクタ
         /// <summary>
@@ -97,17 +118,25 @@ namespace TrainTimeTable
             buttonStringColorChange.Dock = DockStyle.Fill;
             groupBoxTimeTableFont.Dock = DockStyle.Fill;
             tableLayoutPanelTimeTableFont.Dock = DockStyle.Fill;
-            panelTimeTableFont.Dock = DockStyle.Fill;
+            tableLayoutPanelTimeTableFont.Controls.Add(m_ComboBoxFontName, 2, 0);
+            m_ComboBoxFontName.Dock = DockStyle.Fill;
+            labelTimeTableFontValue.Dock = DockStyle.Fill;
             labelTimeTableFont.Dock = DockStyle.Fill;
             groupBoxDiagramFont.Dock = DockStyle.Fill;
             tableLayoutPanelDiagramFont.Dock = DockStyle.Fill;
-            panelDiagramLine.Dock = DockStyle.Fill;
+            tableLayoutPanelDiagramFont.Controls.Add(m_PanelLine, 0, 0);
+            m_PanelLine.Dock = DockStyle.Fill;
             buttonDiagramLineChangeColor.Dock = DockStyle.Fill;
             labelDiagramLineStyle.Dock = DockStyle.Fill;
-            comboBoxDiagramLineStyle.Dock = DockStyle.Fill;
             checkBoxDiagramLineBold.Dock = DockStyle.Fill;
             labelStopStationClearlyIndicated.Dock = DockStyle.Fill;
-            comboBoxStopStationClearlyIndicated.Dock = DockStyle.Fill;
+            m_ComboBoxLineStyle.Dock = DockStyle.Fill;
+            tableLayoutPanelDiagramFont.Controls.Add(m_ComboBoxLineStyle, 1, 1);
+            tableLayoutPanelDiagramFont.SetColumnSpan(m_ComboBoxLineStyle, 2);
+            m_ComboBoxLineStyle.SelectedIndexChanged += ComboBoxLineStyle_SelectedIndexChanged;
+            m_ComboBoxStopStationClearlyIndicated.Dock = DockStyle.Fill;
+            tableLayoutPanelDiagramFont.Controls.Add(m_ComboBoxStopStationClearlyIndicated, 1, 2);
+            tableLayoutPanelDiagramFont.SetColumnSpan(m_ComboBoxStopStationClearlyIndicated, 2);
             tableLayoutPanelButton.Dock = DockStyle.Fill;
             buttonOK.Dock = DockStyle.Fill;
             buttonCancel.Dock = DockStyle.Fill;
@@ -117,7 +146,7 @@ namespace TrainTimeTable
         }
         #endregion
 
-        #region buttonイベント
+        #region Buttonイベント
         /// <summary>
         /// buttonOK_Click
         /// </summary>
@@ -184,7 +213,27 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // ColorDialogオブジェクト生成
+            ColorDialog colorDialog = new ColorDialog();
+
+            // 初期設定
+            colorDialog.Color = panelStringColor.BackColor;
+
+            // ColorDialog表示
+            DialogResult dialogResult = colorDialog.ShowDialog();
+
+            // ColorDialog表示結果判定
+            if (dialogResult != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= FormTrainTypeProperty::buttonStringColorChange_Click(object, EventArgs)");
+
+                // 何もしない
+                return;
+            }
+
+            // 結果設定
+            panelStringColor.BackColor = colorDialog.Color;
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::buttonStringColorChange_Click(object, EventArgs)");
@@ -202,10 +251,78 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // ColorDialogオブジェクト生成
+            ColorDialog colorDialog = new ColorDialog();
+
+            // 初期設定
+            colorDialog.Color = m_PanelLine.GetColor();
+
+            // ColorDialog表示
+            DialogResult dialogResult = colorDialog.ShowDialog();
+
+            // ColorDialog表示結果判定
+            if (dialogResult != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= FormTrainTypeProperty::buttonDiagramLineChangeColor_Click(object, EventArgs)");
+
+                // 何もしない
+                return;
+            }
+
+            // 設定
+            m_PanelLine.Bold = checkBoxDiagramLineBold.Checked;
+            m_PanelLine.DashStyle = m_ComboBoxLineStyle.GetSelected();
+            m_PanelLine.SetColor(colorDialog.Color);
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::buttonDiagramLineChangeColor_Click(object, EventArgs)");
+        }
+        #endregion
+
+        #region ComboBoxイベント
+        /// <summary>
+        /// ComboBoxLineStyle_SelectedIndexChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ComboBoxLineStyle_SelectedIndexChanged(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::ComboBoxLineStyle_SelectedIndexChanged(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 設定
+            m_PanelLine.Bold = checkBoxDiagramLineBold.Checked;
+            m_PanelLine.DashStyle = m_ComboBoxLineStyle.GetSelected();
+            m_PanelLine.Refresh();
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::ComboBoxLineStyle_SelectedIndexChanged(object, EventArgs)");
+        }
+        #endregion
+
+        #region CheckBoxイベント
+        /// <summary>
+        /// checkBoxDiagramLineBold_CheckedChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkBoxDiagramLineBold_CheckedChanged(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::checkBoxDiagramLineBold_CheckedChanged(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 設定
+            m_PanelLine.Bold = checkBoxDiagramLineBold.Checked;
+            m_PanelLine.DashStyle = m_ComboBoxLineStyle.GetSelected();
+            m_PanelLine.Refresh();
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::checkBoxDiagramLineBold_CheckedChanged(object, EventArgs)");
         }
         #endregion
         #endregion
@@ -237,8 +354,15 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormTrainTypeProperty::PropertyToControl()");
 
-            // TODO:未実装
+            // 設定
             textBoxTrainTypeName.Text = Property.Name;
+            textBoxAbbreviation.Text = Property.Abbreviation;
+            panelStringColor.BackColor = Property.StringsColor;
+            m_ComboBoxLineStyle.SetSelected(Property.DiagramLineStyle);
+            m_PanelLine.DashStyle = Property.DiagramLineStyle;
+            m_PanelLine.SetColor(Property.DiagramLineColor);
+            checkBoxDiagramLineBold.Checked = Property.DiagramLineBold;
+            // TODO:未実装
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::PropertyToControl()");
@@ -253,8 +377,14 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormTrainTypeProperty::ControlToProperty()");
 
-            // TODO:未実装
+            // 設定
             Property.Name = textBoxTrainTypeName.Text;
+            Property.Abbreviation = textBoxAbbreviation.Text;
+            Property.StringsColor = panelStringColor.BackColor;
+            Property.DiagramLineStyle = m_PanelLine.DashStyle;
+            Property.DiagramLineColor = m_PanelLine.GetColor();
+            Property.DiagramLineBold=checkBoxDiagramLineBold.Checked;
+            // TODO:未実装
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::ControlToProperty()");

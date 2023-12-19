@@ -185,7 +185,15 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormStationProperty::InputCheck()");
 
-            // TODO:未実装
+            // 入力判定
+            if (textBoxStationName.Text == string.Empty)
+            {
+                // メッセージ表示
+                MessageBox.Show("駅名が指定されていません", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                // 異常終了
+                return false;
+            }
 
             // ロギング
             Logger.Debug("<<<<= FormStationProperty::InputCheck()");
@@ -202,8 +210,45 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormStationProperty::PropertyToControl()");
 
-            // TODO:未実装
+            // 設定
             textBoxStationName.Text = Property.Name;
+            switch (Property.StationScale)
+            {
+                case StationScale.GeneralStation:
+                    radioButtonStationScaleGeneral.Checked = true;
+                    break;
+                case StationScale.MainStation:
+                    radioButtonStationScaleMain.Checked = true;
+                    break;
+                default:
+                    throw new AggregateException(string.Format("駅規模の異常を検出しました:[{0}]", Property.StationScale));
+            }
+            switch(Property.TimeFormat)
+            {
+                case TimeFormat.DepartureTime:
+                    radioButtonTimeFormatDepartureTime.Checked = true;
+                    break;
+                case TimeFormat.DepartureAndArrival:
+                    radioButtonTimeFormatDepartureAndArrival.Checked = true;
+                    break;
+                case TimeFormat.OutboundArrivalTime:
+                    radioButtonTimeFormatOutboundArrivalTime.Checked = true;
+                    break;
+                case TimeFormat.InboundArrivalTime:
+                    radioButtonTimeFormatInboundArrivalTime.Checked = true;
+                    break;
+                case TimeFormat.OutboundArrivalAndDeparture:
+                    radioButtonTimeFormatOutboundArrivalAndDeparture.Checked = true;
+                    break;
+                case TimeFormat.InboundDepartureAndArrival:
+                    radioButtonTimeFormatInboundDepartureAndArrival.Checked = true;
+                    break;
+                default:
+                    throw new AggregateException(string.Format("時刻形式の異常を検出しました:[{0}]", Property.TimeFormat));
+            }
+            m_ComboBoxDiagramTrainInformations[DirectionType.Outbound].SetSelected(Property.DiagramTrainInformations[DirectionType.Outbound]);
+            m_ComboBoxDiagramTrainInformations[DirectionType.Inbound].SetSelected(Property.DiagramTrainInformations[DirectionType.Inbound]);
+            checkBoxBorderLine.Checked = Property.Border;
 
             // ロギング
             Logger.Debug("<<<<= FormStationProperty::PropertyToControl()");
@@ -218,13 +263,47 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormStationProperty::ControlToProperty()");
 
-            // TODO:未実装
+            // 設定
             Property.Name = textBoxStationName.Text;
+            if (radioButtonStationScaleMain.Checked)
+            {
+                Property.StationScale = StationScale.MainStation;
+            }
+            else
+            {
+                Property.StationScale = StationScale.GeneralStation;
+            }
+            if (radioButtonTimeFormatDepartureAndArrival.Checked)
+            {
+                Property.TimeFormat = TimeFormat.DepartureAndArrival;
+            }
+            else if (radioButtonTimeFormatOutboundArrivalTime.Checked)
+            {
+                Property.TimeFormat = TimeFormat.OutboundArrivalTime;
+            }
+            else if (radioButtonTimeFormatInboundArrivalTime.Checked)
+            {
+                Property.TimeFormat = TimeFormat.InboundArrivalTime;
+            }
+            else if (radioButtonTimeFormatOutboundArrivalAndDeparture.Checked)
+            {
+                Property.TimeFormat = TimeFormat.OutboundArrivalAndDeparture;
+            }
+            else if (radioButtonTimeFormatInboundDepartureAndArrival.Checked)
+            {
+                Property.TimeFormat = TimeFormat.InboundDepartureAndArrival;
+            }
+            else if (radioButtonTimeFormatDepartureTime.Checked)
+            {
+                Property.TimeFormat = TimeFormat.DepartureTime;
+            }
+            Property.DiagramTrainInformations[DirectionType.Outbound] = m_ComboBoxDiagramTrainInformations[DirectionType.Outbound].GetSelected();
+            Property.DiagramTrainInformations[DirectionType.Inbound] = m_ComboBoxDiagramTrainInformations[DirectionType.Inbound].GetSelected();
+            Property.Border = checkBoxBorderLine.Checked;
 
             // ロギング
             Logger.Debug("<<<<= FormStationProperty::ControlToProperty()");
         }
         #endregion
-
     }
 }
