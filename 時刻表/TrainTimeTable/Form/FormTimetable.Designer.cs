@@ -84,7 +84,7 @@
             // 
             this.panelMain.Location = new System.Drawing.Point(12, 28);
             this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(758, 355);
+            this.panelMain.Size = new System.Drawing.Size(488, 332);
             this.panelMain.TabIndex = 3;
             // 
             // statusStripMain

@@ -97,6 +97,9 @@
     <Compile Include="Component\DictionaryStationTimeProperties.cs" />
     <Compile Include="Component\DictionaryTrain.cs" />
     <Compile Include="Component\DictionaryTrainSequence.cs" />
+    <Compile Include="Control\ComboBox\ComboBoxFonts.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Control\ComboBox\ComboBoxLineStyle.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -232,6 +235,18 @@
     <Compile Include="File\Oudia2File.cs" />
     <Compile Include="File\OudiaFile.cs" />
     <Compile Include="File\WinDiaFile.cs" />
+    <Compile Include="Form\FormStationTimeProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormStationTimeProperty.Designer.cs">
+      <DependentUpon>FormStationTimeProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\FormTrainProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\FormTrainProperty.Designer.cs">
+      <DependentUpon>FormTrainProperty.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form\FormStationProperty.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -389,6 +404,9 @@
     <EmbeddedResource Include="Form\FormStationProperty.resx">
       <DependentUpon>FormStationProperty.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormStationTimeProperty.resx">
+      <DependentUpon>FormStationTimeProperty.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form\FormStationTimetable.resx">
       <DependentUpon>FormStationTimetable.cs</DependentUpon>
     </EmbeddedResource>
@@ -397,6 +415,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form\FormTimetable.resx">
       <DependentUpon>FormTimetable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\FormTrainProperty.resx">
+      <DependentUpon>FormTrainProperty.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form\FormTrainTypeProperties.resx">
       <DependentUpon>FormTrainTypeProperties.cs</DependentUpon>

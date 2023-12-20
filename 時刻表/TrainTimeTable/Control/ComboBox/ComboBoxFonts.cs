@@ -1,24 +1,22 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
-using System.Drawing.Text;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
-using TrainTimeTable.EventArgs;
 using TrainTimeTable.Common;
-using log4net;
-using System.Reflection;
-using System.Xml.Linq;
+using TrainTimeTable.Property;
 
 namespace TrainTimeTable.Control
 {
     /// <summary>
-    /// ComboBoxStopStationClearlyIndicatedクラス
+    /// ComboBoxFontsクラス
     /// </summary>
-    public class ComboBoxStopStationClearlyIndicated : ComboBox
+    public class ComboBoxFonts : ComboBox
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -30,25 +28,26 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public ComboBoxStopStationClearlyIndicated()
+        /// <param name="fonts"></param>
+        public ComboBoxFonts(FontProperties fonts)
             : base()
         {
             DropDownStyle = ComboBoxStyle.DropDownList;
 
             BeginUpdate();
 
-            Initialization();
+            Initialization(fonts);
 
             EndUpdate();
         }
 
-        private void Initialization()
+        private void Initialization(FontProperties fonts)
         {
             Items.Clear();
 
-            for (StopMarkDrawType i = StopMarkDrawType.Nothing; i <= StopMarkDrawType.DrawOnStop; i++)
+            foreach (var name in fonts.Keys)
             {
-                Items.Add(i.GetStringValue());
+                Items.Add(name);
             }
 
             if (Items.Count > 0)
@@ -57,26 +56,18 @@ namespace TrainTimeTable.Control
             }
         }
 
-        public StopMarkDrawType GetSelected()
+        public string GetSelected()
         {
             if (SelectedIndex < 0)
             {
-                return StopMarkDrawType.None;
+                return "";
             }
-            switch (Items[SelectedIndex].ToString())
-            {
-                case "明示しない":
-                    return StopMarkDrawType.Nothing;
-                case "停車駅を明示":
-                    return StopMarkDrawType.DrawOnStop;
-                default:
-                    return StopMarkDrawType.None;
-            }
+            return Items[SelectedIndex].ToString();
         }
 
-        public void SetSelected(StopMarkDrawType type)
+        public void SetSelected(string name)
         {
-            int index = FindString(type.GetStringValue());
+            int index = FindString(name);
             if (index >= 0)
             {
                 SelectedIndex = index;

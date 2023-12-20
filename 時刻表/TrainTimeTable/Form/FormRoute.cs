@@ -623,7 +623,7 @@ namespace TrainTimeTable
             if (!IsMDIChildForm(typeof(FormTrainTypeProperties)))
             {
                 // フォームオブジェクト生成
-                FormTrainTypeProperties form = new FormTrainTypeProperties(m_CurrentRouteFileProperty.TrainTypes);
+                FormTrainTypeProperties form = new FormTrainTypeProperties(m_CurrentRouteFileProperty.Fonts, m_CurrentRouteFileProperty.TrainTypes);
 
                 // イベント設定
                 form.OnUpdate += FormTrainType_OnUpdate;

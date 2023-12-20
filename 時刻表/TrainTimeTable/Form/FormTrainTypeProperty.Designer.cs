@@ -239,7 +239,7 @@
             this.tableLayoutPanelTimeTableFont.ColumnCount = 4;
             this.tableLayoutPanelTimeTableFont.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 64F));
             this.tableLayoutPanelTimeTableFont.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 72F));
-            this.tableLayoutPanelTimeTableFont.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 96F));
+            this.tableLayoutPanelTimeTableFont.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 128F));
             this.tableLayoutPanelTimeTableFont.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelTimeTableFont.Controls.Add(this.labelTimeTableFontValue, 0, 0);
             this.tableLayoutPanelTimeTableFont.Controls.Add(this.labelTimeTableFont, 1, 0);

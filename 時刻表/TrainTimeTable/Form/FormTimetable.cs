@@ -90,6 +90,7 @@ namespace TrainTimeTable
             // DataGridViewTimetableオブジェクト生成
             m_DataGridViewTimetable = new DataGridViewTimetable(text, type, property);
             m_DataGridViewTimetable.Click += DataGridViewTimetable_Click;
+            m_DataGridViewTimetable.OnUpdate += DataGridViewTimetable_OnUpdate;
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::FormTimetable(FormRoute, string, string, DirectionType, RouteFileProperty)");
@@ -110,14 +111,41 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
+            // 描画一時停止
+            SuspendLayout();
+
             // コントコール設定
             m_DataGridViewTimetable.Dock = DockStyle.Fill;
             m_DataGridViewTimetable.Draw();
             panelMain.Controls.Add(m_DataGridViewTimetable);
             panelMain.Dock = DockStyle.Fill;
 
+            // 描画再開
+            ResumeLayout();
+
             // ロギング
             Logger.Debug("<<<<= FormTimetable::FormTimetable_Load(object, EventArgs)");
+        }
+        #endregion
+
+        #region TableLayoutPanelTimetableイベント
+        /// <summary>
+        /// TableLayoutPanelTimetable_Click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TableLayoutPanelTimetable_Click(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::TableLayoutPanelTimetable_Click(object, MouseEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // フォームを前面に表示する
+            BringToFront();
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::TableLayoutPanelTimetable_Click(object, MouseEventArgs)");
         }
         #endregion
 
@@ -139,6 +167,24 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_Click(object, MouseEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_OnUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_OnUpdate(object sender, StationPropertiesUpdateEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::DataGridViewTimetable_OnUpdate(object, StationPropertiesUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_OnUpdate(object, StationPropertiesUpdateEventArgs)");
         }
         #endregion
 

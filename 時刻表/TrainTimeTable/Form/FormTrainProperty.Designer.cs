@@ -1,6 +1,6 @@
 ﻿namespace TrainTimeTable
 {
-    partial class FormStationProperties
+    partial class FormTrainProperty
     {
         /// <summary>
         /// Required designer variable.
@@ -30,15 +30,17 @@
         {
             this.SuspendLayout();
             // 
-            // FormStationProperties
+            // FormTrainProperty
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(624, 441);
-            this.Name = "FormStationProperties";
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "FormTrainProperty";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "駅";
-            this.Load += new System.EventHandler(this.FormStationProperties_Load);
+            this.Text = "列車のプロパティ";
             this.ResumeLayout(false);
 
         }

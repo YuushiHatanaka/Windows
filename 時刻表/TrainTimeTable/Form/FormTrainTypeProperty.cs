@@ -42,7 +42,7 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
-        /// TrainTypePropertyオブジェクト生成
+        /// TrainTypePropertyオブジェクト
         /// </summary>
         public TrainTypeProperty Property { get; set; } = new TrainTypeProperty();
 
@@ -52,9 +52,9 @@ namespace TrainTimeTable
         private PanelLine m_PanelLine = new PanelLine();
 
         /// <summary>
-        /// ComboBoxFontNameオブジェクト
+        /// ComboBoxFontsオブジェクト
         /// </summary>
-        private ComboBoxFontName m_ComboBoxFontName = new ComboBoxFontName();
+        private ComboBoxFonts m_ComboBoxFonts = null;
 
         /// <summary>
         /// ComboBoxLineStyleオブジェクト
@@ -70,21 +70,24 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <param name="fonts"></param>
         /// <param name="property"></param>
-        public FormTrainTypeProperty(TrainTypeProperty property)
+        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(TrainTypeProperty)");
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
+            Logger.DebugFormat("fonts   :[{0}]", fonts);
             Logger.DebugFormat("property:[{0}]", property);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
+            m_ComboBoxFonts = new ComboBoxFonts(fonts);
             Property.Copy(property);
 
             // ロギング
-            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(TrainTypeProperty)");
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
         }
         #endregion
 
@@ -118,8 +121,8 @@ namespace TrainTimeTable
             buttonStringColorChange.Dock = DockStyle.Fill;
             groupBoxTimeTableFont.Dock = DockStyle.Fill;
             tableLayoutPanelTimeTableFont.Dock = DockStyle.Fill;
-            tableLayoutPanelTimeTableFont.Controls.Add(m_ComboBoxFontName, 2, 0);
-            m_ComboBoxFontName.Dock = DockStyle.Fill;
+            tableLayoutPanelTimeTableFont.Controls.Add(m_ComboBoxFonts, 2, 0);
+            m_ComboBoxFonts.Dock = DockStyle.Fill;
             labelTimeTableFontValue.Dock = DockStyle.Fill;
             labelTimeTableFont.Dock = DockStyle.Fill;
             groupBoxDiagramFont.Dock = DockStyle.Fill;
@@ -358,11 +361,12 @@ namespace TrainTimeTable
             textBoxTrainTypeName.Text = Property.Name;
             textBoxAbbreviation.Text = Property.Abbreviation;
             panelStringColor.BackColor = Property.StringsColor;
+            m_ComboBoxFonts.SetSelected(Property.TimetableFontName);
             m_ComboBoxLineStyle.SetSelected(Property.DiagramLineStyle);
             m_PanelLine.DashStyle = Property.DiagramLineStyle;
             m_PanelLine.SetColor(Property.DiagramLineColor);
             checkBoxDiagramLineBold.Checked = Property.DiagramLineBold;
-            // TODO:未実装
+            m_ComboBoxStopStationClearlyIndicated.SetSelected(Property.StopStationClearlyIndicated);
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::PropertyToControl()");
@@ -380,11 +384,12 @@ namespace TrainTimeTable
             // 設定
             Property.Name = textBoxTrainTypeName.Text;
             Property.Abbreviation = textBoxAbbreviation.Text;
+            Property.TimetableFontName = m_ComboBoxFonts.GetSelected();
             Property.StringsColor = panelStringColor.BackColor;
             Property.DiagramLineStyle = m_PanelLine.DashStyle;
             Property.DiagramLineColor = m_PanelLine.GetColor();
-            Property.DiagramLineBold=checkBoxDiagramLineBold.Checked;
-            // TODO:未実装
+            Property.DiagramLineBold = checkBoxDiagramLineBold.Checked;
+            Property.StopStationClearlyIndicated = m_ComboBoxStopStationClearlyIndicated.GetSelected();
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::ControlToProperty()");

@@ -39,6 +39,11 @@ namespace TrainTimeTable.Control
         #endregion
 
         /// <summary>
+        /// m_FontProperties
+        /// </summary>
+        private FontProperties m_FontProperties = null;
+
+        /// <summary>
         /// TrainTypePropertiesオブジェクト
         /// </summary>
         private TrainTypeProperties Property { get; set; } = new TrainTypeProperties();
@@ -101,6 +106,27 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType()");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="fonts"></param>
+        /// <param name="properties"></param>
+        public DataGridViewTrainType(FontProperties fonts, TrainTypeProperties properties)
+            : this()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType(FontProperties, TrainTypeProperties)");
+            Logger.DebugFormat("fonts     :[{0}]", fonts);
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            m_FontProperties = fonts;
+
+            Update(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType(FontProperties, TrainTypeProperties)");
         }
         #endregion
 
@@ -208,7 +234,7 @@ namespace TrainTimeTable.Control
             // 選択状態設定
             if (result != null)
             {
-                FormTrainTypeProperty form = new FormTrainTypeProperty(result);
+                FormTrainTypeProperty form = new FormTrainTypeProperty(m_FontProperties, result);
                 form.OnUpdate += DataGridViewTrainType_OnUpdate;
 
                 DialogResult dialogResult = form.ShowDialog();
@@ -267,12 +293,6 @@ namespace TrainTimeTable.Control
             return result;
         }
 
-        public DataGridViewTrainType(TrainTypeProperties properties)
-            : this()
-        {
-            Update(properties);
-        }
-
         private void DataGridViewTrainType_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             DataGridViewTrainType dataGridViewTrainType = (DataGridViewTrainType)sender;
@@ -324,7 +344,7 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            FormTrainTypeProperty form = new FormTrainTypeProperty(Property[e.RowIndex]);
+            FormTrainTypeProperty form = new FormTrainTypeProperty(m_FontProperties, Property[e.RowIndex]);
             form.OnUpdate += DataGridViewTrainType_OnUpdate;
 
             DialogResult dialogResult = form.ShowDialog();

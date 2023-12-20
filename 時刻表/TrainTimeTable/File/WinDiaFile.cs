@@ -373,6 +373,7 @@ namespace TrainTimeTable.File
                     {
                         // TrainTypePropertyオブジェクト生成
                         TrainTypeProperty trainTypeProperty = new TrainTypeProperty();
+                        trainTypeProperty.TimetableFontName = "時刻表ビュー 1";
                         trainTypeProperty.TimetableFontIndex = 0;
 
                         // 数値変換

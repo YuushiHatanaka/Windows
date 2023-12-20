@@ -56,11 +56,13 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <param name="fonts"></param>
         /// <param name="properties"></param>
-        public FormTrainTypeProperties(TrainTypeProperties properties)
+        public FormTrainTypeProperties(FontProperties fonts, TrainTypeProperties properties)
         {
             // ロギング
             Logger.Debug("=>>>> FormTrainTypeProperties::FormTrainTypeProperties(StationProperties)");
+            Logger.DebugFormat("fonts     :[{0}]", fonts);
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // コンポーネント初期化
@@ -68,7 +70,7 @@ namespace TrainTimeTable
 
             // 設定
             m_TrainTypeProperties = properties;
-            m_DataGridViewTrainType = new DataGridViewTrainType(properties);
+            m_DataGridViewTrainType = new DataGridViewTrainType(fonts, properties);
             m_DataGridViewTrainType.OnUpdate += DataGridViewTrainType_OnUpdate;
 
             // ロギング

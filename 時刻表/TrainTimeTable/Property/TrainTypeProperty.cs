@@ -48,8 +48,14 @@ namespace TrainTimeTable.Property
         public Color StringsColor { get; set; } = Color.Black;
 
         /// <summary>
+        /// 時刻表Font名
+        /// </summary>
+        public string TimetableFontName { get; set; } = "時刻表ビュー 1";
+
+        /// <summary>
         /// 時刻表Fontインデックス
         /// </summary>
+        [Obsolete("TrainTypePropertyクラスの時刻表Fontインデックスは今後使用不可となる予定です", false)]
         public int TimetableFontIndex { get; set; } = 1;
 
         /// <summary>
@@ -122,6 +128,7 @@ namespace TrainTimeTable.Property
                 Seq = property.Seq;
                 Abbreviation = property.Abbreviation;
                 StringsColor = property.StringsColor;
+                TimetableFontName = property.TimetableFontName;
                 TimetableFontIndex = property.TimetableFontIndex;
                 DiagramLineColor = property.DiagramLineColor;
                 DiagramLineStyle = property.DiagramLineStyle;
@@ -178,6 +185,15 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("StringsColor:[不一致][{0}][{1}]", StringsColor, property.StringsColor);
+                Logger.Debug("<<<<= TrainTypeProperty::Compare(TrainTypeProperty)");
+
+                // 不一致
+                return false;
+            }
+            if (TimetableFontName != property.TimetableFontName)
+            {
+                // ロギング
+                Logger.DebugFormat("TimetableFontName:[不一致][{0}][{1}]", TimetableFontName, property.TimetableFontName);
                 Logger.Debug("<<<<= TrainTypeProperty::Compare(TrainTypeProperty)");
 
                 // 不一致
@@ -291,6 +307,7 @@ namespace TrainTimeTable.Property
             result.AppendLine(indentstr + string.Format("　シーケンス番号              :[{0}]", Seq));
             result.AppendLine(indentstr + string.Format("　略称                        :[{0}]", Abbreviation));
             result.AppendLine(indentstr + string.Format("　文字色                      :[{0}]", StringsColor));
+            result.AppendLine(indentstr + string.Format("　時刻表Font名                :[{0}]", TimetableFontName));
             result.AppendLine(indentstr + string.Format("　時刻表Fontインデックス      :[{0}]", TimetableFontIndex));
             result.AppendLine(indentstr + string.Format("　ダイヤグラム線色            :[{0}]", DiagramLineColor));
             result.AppendLine(indentstr + string.Format("　ダイヤグラム線スタイル      :[{0}]", DiagramLineStyle));

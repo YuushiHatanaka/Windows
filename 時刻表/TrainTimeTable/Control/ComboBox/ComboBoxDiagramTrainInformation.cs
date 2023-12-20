@@ -63,7 +63,17 @@ namespace TrainTimeTable.Control
             {
                 return DiagramTrainInformation.DoNotShow;
             }
-            return (DiagramTrainInformation)(Items[SelectedIndex]);
+            switch(Items[SelectedIndex].ToString())
+            {
+                case "始発なら表示":
+                    return DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
+                case "常に表示":
+                    return DiagramTrainInformation.AlwaysVisible;
+                case "表示しない":
+                    return DiagramTrainInformation.DoNotShow;
+                default:
+                    return DiagramTrainInformation.None;
+            }
         }
 
         public void SetSelected(DiagramTrainInformation info)

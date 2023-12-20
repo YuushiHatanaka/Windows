@@ -422,6 +422,7 @@ namespace TrainTimeTable.File
                 // 時刻表Fontインデックス
                 case "JikokuhyouFontIndex":
                     {
+                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].TimetableFontName = string.Format("時刻表ビュー {0}", int.Parse(keyValue[1]) + 1);
                         m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].TimetableFontIndex = int.Parse(keyValue[1]);
                     }
                     break;

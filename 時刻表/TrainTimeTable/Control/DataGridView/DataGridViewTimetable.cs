@@ -12,10 +12,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.UI.WebControls.WebParts;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using TrainTimeTable.Common;
 using TrainTimeTable.Dialog;
+using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
@@ -32,6 +34,20 @@ namespace TrainTimeTable.Control
         /// ロガーオブジェクト
         /// </summary>
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #endregion
+
+        #region 更新 Event
+        /// <summary>
+        /// 更新 event delegate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void UpdateEventHandler(object sender, StationPropertiesUpdateEventArgs e);
+
+        /// <summary>
+        /// 更新 event
+        /// </summary>
+        public event UpdateEventHandler OnUpdate = delegate { };
         #endregion
 
         /// <summary>
@@ -71,7 +87,6 @@ namespace TrainTimeTable.Control
         /// <param name="text"></param>
         /// <param name="type"></param>
         /// <param name="property"></param>
-
         public DataGridViewTimetable(string text, DirectionType type, RouteFileProperty property)
         {
             // ロギング
@@ -156,6 +171,7 @@ namespace TrainTimeTable.Control
             ColumnAdded += DataGridViewTimetable_ColumnAdded;
             CellPainting += DataGridViewTimetable_CellPainting;
             CellFormatting += DataGridViewTimetable_CellFormatting;
+            MouseDoubleClick += DataGridViewTimetable_MouseDoubleClick;
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::Initialization()");
@@ -171,35 +187,39 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("=>>>> DataGridViewTimetable::Draw()");
 
+            // 描画一時停止
+            SuspendLayout();
+
+            // 列、行削除
+            RowCount = 0;
+            ColumnCount = 0;
+
+            // 呼び出しAction一覧
+            List<Action<TrainProperties>> actions = new List<Action<TrainProperties>>()
+            {
+                DrawColumns,                // 列描画
+                DrawRowsTrainNumber,        // 列車番号描画
+                DrawRowsTrainType,          // 列車種別描画
+                DrawRowsTrainName,          // 列車名描画
+                DrawRowsTrainMark,          // 列車記号描画
+                DrawRowsDepartingStation,   // 始発駅描画
+                DrawRowsDestinationStation, // 終着駅描画
+                DrawRowsStationTime,        // 駅時刻描画
+                DrawRowsRemarksStation,     // 備考初描画
+            };
+
             // TrainPropertiesオブジェクト取得
             TrainProperties trains = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType];
 
-            // 列描画
-            DrawColumns(trains);
+            // Actionを繰り返す
+            foreach (Action<TrainProperties> action in actions)
+            {
+                // Action実行
+                action(trains);
+            }
 
-            // 列車番号描画
-            DrawRowsTrainNumber(trains);
-
-            // 列車種別描画
-            DrawRowsTrainType(trains);
-
-            // 列車名描画
-            DrawRowsTrainName(trains);
-
-            // 列車記号描画
-            DrawRowsTrainMark(trains);
-
-            // 始発駅描画
-            DrawRowsDepartingStation(trains);
-
-            // 終着駅描画
-            DrawRowsDestinationStation(trains);
-
-            // 駅時刻描画
-            DrawRowsStationTime(trains);
-
-            // 備考初描画
-            DrawRowsRemarksStation(trains);
+            // 描画再開
+            ResumeLayout();
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::Draw()");
@@ -761,7 +781,6 @@ namespace TrainTimeTable.Control
         /// <param name="station"></param>
         /// <param name="properties"></param>
         /// <returns></returns>
-
         private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station, TrainProperties trains)
         {
             // ロギング
@@ -1508,6 +1527,77 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_MouseDoubleClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ダブルクリックされたセルの位置を取得
+            HitTestInfo hti = ((DataGridViewTimetable)sender).HitTest(e.X, e.Y);
+
+            // 列車列か？
+            if ((hti.ColumnIndex >= 4) && (hti.RowIndex >= 0 && hti.RowIndex < 6))
+            {
+                // 列車情報を取得
+                TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][hti.ColumnIndex - 4];
+
+                // TODO:未実装
+                FormTrainProperty form = new FormTrainProperty(property);
+                form.ShowDialog();
+            }
+            // 列車列の時刻部分か？
+            else if ((hti.ColumnIndex >= 4) && (hti.RowIndex >= 6))
+            {
+                // 列車情報を取得
+                TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][hti.ColumnIndex - 4];
+
+                // 列車時刻を取得
+                StationTimeProperty stationTimeProperty = property.StationTimes[hti.RowIndex-6];
+
+                // TODO:未実装
+                FormStationTimeProperty form = new FormStationTimeProperty(stationTimeProperty);
+                form.ShowDialog();
+
+            }
+            // 駅列か？
+            else if ((hti.ColumnIndex < 4) && (hti.RowIndex >= 6))
+            {
+                // 駅名セルを取得
+                DataGridViewCell stationCell = this[2, hti.RowIndex];
+
+                // 駅情報を取得
+                StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
+
+                // FormStationPropertyオブジェクト生成
+                FormStationProperty form = new FormStationProperty(property);
+
+                // FormStationProperty表示
+                DialogResult dialogResult = form.ShowDialog();
+
+                // FormStationProperty表示結果判定
+                if (dialogResult == DialogResult.OK)
+                {
+                    // 結果保存
+                    property.Copy(form.Property);
+
+                    // TODO:再描画
+
+                    // 更新通知
+                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Property = m_RouteFileProperty.Stations });
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
         }
         #endregion
         #endregion
