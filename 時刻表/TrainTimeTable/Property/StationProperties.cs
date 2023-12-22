@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using TrainTimeTable.Common;
 using TrainTimeTable.Property;
@@ -208,6 +209,64 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationProperties::SetNextStation()");
+        }
+        #endregion
+
+        #region 次駅一覧取得
+        /// <summary>
+        /// 次駅一覧取得
+        /// </summary>
+        /// <returns></returns>
+        public NextStationProperties GetNextStations()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationProperties::GetNextStations()");
+
+            // 結果オブジェクト生成
+            NextStationProperties result = new NextStationProperties();
+
+            // 駅数分繰り返す
+            foreach (var station in this)
+            {
+                // 次駅登録
+                result.AddRange(station.NextStations);
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= StationProperties::GetNextStations()");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
+        #region 駅名変更
+        /// <summary>
+        /// 駅名変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeStationName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationProperties::ChangeStationName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 旧駅名⇒新駅名変換
+            FindAll(t => t.Name == oldName).ForEach(t => t.Name = newName);
+
+            // 登録数分繰り返す
+            foreach (var stationProperty in this)
+            {
+                // 旧駅名⇒新駅名変換
+                stationProperty.NextStations.FindAll(t => t.Name == oldName).ForEach(t => t.Name = newName);
+                stationProperty.NextStations.FindAll(t => t.NextStationName == oldName).ForEach(t => t.NextStationName = newName);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationProperties::ChangeStationName(string, string)");
         }
         #endregion
 

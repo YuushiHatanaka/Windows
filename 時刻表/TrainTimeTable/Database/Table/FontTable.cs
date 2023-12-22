@@ -95,6 +95,55 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override FontProperties GetRemoveKeys(FontProperties srcProperties, FontProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FontProperties::GetRemoveKeys(FontProperties, FontProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            FontProperties result = new FontProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if (src.Key == dst.Key)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src.Key, src.Value);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= FontProperties::GetRemoveKeys(FontProperties, FontProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -183,6 +232,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= FontTable::Update(KeyValuePair<string, FontProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="removeKeys"></param>
+        protected override void Remove(FontProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FontTable::Remove(FontProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE Name = '" + property.Key + "';");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FontTable::Remove(FontProperties)");
         }
         #endregion
     }

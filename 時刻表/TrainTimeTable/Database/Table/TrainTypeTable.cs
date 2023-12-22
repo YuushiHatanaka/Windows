@@ -105,6 +105,55 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override TrainTypeProperties GetRemoveKeys(TrainTypeProperties srcProperties, TrainTypeProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeTable::GetRemoveKeys(TrainTypeProperties, TrainTypeProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            TrainTypeProperties result = new TrainTypeProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if (src.Name == dst.Name)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainTypeTable::GetRemoveKeys(TrainTypeProperties, TrainTypeProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -209,6 +258,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= TrainTypeTable::Update(TrainTypeProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="removeKeys"></param>
+        protected override void Remove(TrainTypeProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeTable::Rebuilding(TrainTypeProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE Name = '" + property.Name + "';");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeTable::Rebuilding(TrainTypeProperties)");
         }
         #endregion
     }

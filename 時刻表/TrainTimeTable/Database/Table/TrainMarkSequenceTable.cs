@@ -156,11 +156,10 @@ namespace TrainTimeTable.Database.Table
                 // 方向種別分繰り返す
                 foreach (var value in property.Trains.Values)
                 {
-
                     // 列車分繰り返す
                     foreach (var train in value)
                     {
-                        // 列車記号分繰り返す
+                        // 列車記号シーケンス分繰り返す
                         foreach (var markSequences in train.MarkSequences)
                         {
                             // 存在判定
@@ -181,6 +180,86 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= TrainMarkSequenceTable::Save(DiagramProperties)");
+        }
+        #endregion
+
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Rebuilding(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Rebuilding(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラム分繰り返す
+            foreach (var property in properties)
+            {
+                // 方向種別分繰り返す
+                foreach (var value in property.Trains.Values)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in value)
+                    {
+                        // 再構築
+                        Rebuilding(train.MarkSequences);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Rebuilding(DiagramProperties)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override TrainMarkSequenceProperties GetRemoveKeys(TrainMarkSequenceProperties srcProperties, TrainMarkSequenceProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainMarkSequenceTable::GetRemoveKeys(TrainMarkSequenceProperties, TrainMarkSequenceProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            TrainMarkSequenceProperties result = new TrainMarkSequenceProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if ((src.DiagramId == dst.DiagramId) && (src.Direction == dst.Direction) && (src.TrainId == dst.TrainId) && (src.MarkName == dst.MarkName))
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainMarkSequenceTable::GetRemoveKeys(TrainMarkSequenceProperties, TrainMarkSequenceProperties)");
+
+            // 返却
+            return result;
         }
         #endregion
 
@@ -269,6 +348,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= TrainMarkSequenceTable::Update(TrainMarkSequenceProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected override void Remove(TrainMarkSequenceProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Remove(TrainMarkSequenceProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE DiagramId = " + property.DiagramId + " AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Remove(TrainMarkSequenceProperties)");
         }
         #endregion
     }

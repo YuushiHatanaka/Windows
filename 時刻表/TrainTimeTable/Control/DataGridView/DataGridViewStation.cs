@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -40,9 +41,9 @@ namespace TrainTimeTable.Control
         #endregion
 
         /// <summary>
-        /// StationPropertiesオブジェクト
+        /// RouteFilePropertyオブジェクト
         /// </summary>
-        private StationProperties Property { get; set; } = new StationProperties();
+        private RouteFileProperty m_RouteFileProperty { get; set; } = null;
 
         public DataGridViewStation()
         {
@@ -172,7 +173,7 @@ namespace TrainTimeTable.Control
                 if (dialogResult == DialogResult.OK)
                 {
                     // イベント呼出
-                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Property = this.Property });
+                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations });
                 }
             }
 
@@ -218,16 +219,17 @@ namespace TrainTimeTable.Control
             }
 
             // 選択オブジェクト
-            StationProperty result = Property[SelectedCells[0].RowIndex];
+            StationProperty result = m_RouteFileProperty.Stations[SelectedCells[0].RowIndex];
 
             // 返却
             return result;
         }
 
-        public DataGridViewStation(StationProperties properties)
+        public DataGridViewStation(RouteFileProperty property)
             : this()
         {
-            Update(properties);
+            m_RouteFileProperty = property;
+            Update(m_RouteFileProperty.Stations);
         }
 
         private void DataGridViewStation_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -243,14 +245,68 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            FormStationProperty form = new FormStationProperty(Property[e.RowIndex]);
-            form.OnUpdate += DataGridViewStation_OnUpdate;
+            // 駅名セルを取得
+            DataGridViewCell stationCell = this[0, e.RowIndex];
 
-            DialogResult dialogResult = form.ShowDialog();
-            if (dialogResult == DialogResult.OK)
+            // 駅情報を取得
+            StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
+
+            // 駅情報判定
+            if (property != null)
             {
-                // イベント呼出
-                OnUpdate(this, new StationPropertiesUpdateEventArgs() { Property = this.Property });
+                // StationPropertiesUpdateEventArgsオブジェクト生成
+                StationPropertiesUpdateEventArgs eventArgs = new StationPropertiesUpdateEventArgs();
+                eventArgs.OldProperties.Copy(m_RouteFileProperty.Stations);
+                eventArgs.Properties = m_RouteFileProperty.Stations;
+
+                // 旧駅名保存
+                string oldStationName = property.Name;
+
+                // FormStationPropertyオブジェクト生成
+                FormStationProperty form = new FormStationProperty(property);
+
+                // FormStationProperty表示
+                DialogResult dialogResult = form.ShowDialog();
+
+                // FormStationProperty表示結果判定
+                if (dialogResult == DialogResult.OK)
+                {
+                    // 同一名判定
+                    if (m_RouteFileProperty.Stations.Find(t=>t.Name == form.Property.Name) != null)
+                    {
+                        // エラーメッセージ
+                        MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        return;
+                    }
+
+                    // 駅名(キーが変更されたか？)
+                    if (oldStationName != form.Property.Name)
+                    {
+                        eventArgs.OldStationName = oldStationName;
+                        eventArgs.NewStationName = form.Property.Name;
+
+                        // 駅名変換
+                        m_RouteFileProperty.ChangeStationName(oldStationName, form.Property.Name);
+                    }
+
+                    // 結果保存
+                    property.Copy(form.Property);
+
+                    // 変更されたか？
+                    if (!eventArgs.OldProperties.Compare(m_RouteFileProperty.Stations))
+                    {
+                        Update(m_RouteFileProperty.Stations);
+
+                        // 更新通知
+                        OnUpdate(this, eventArgs);
+                    }
+                }
+            }
+            else
+            {
+                // ロギング
+                Logger.WarnFormat("選択対象駅が存在していません：[{0}]", stationCell.Value.ToString());
+                Logger.Warn(m_RouteFileProperty.Stations.ToString());
             }
         }
 
@@ -261,21 +317,29 @@ namespace TrainTimeTable.Control
 
         private void Update(StationProperty property)
         {
-            Property[property.Seq - 1].Copy(property);
-            Update(Property);
+            m_RouteFileProperty.Stations[property.Seq - 1].Copy(property);
+            Update(m_RouteFileProperty.Stations);
         }
 
         private void Update(StationProperties properties)
         {
+
             Rows.Clear();
 
-            foreach (var property in properties)
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 List<string> values = new List<string>
                 {
-                    property.Name,
-                    property.TimeFormat.GetStringValue(),
-                    property.StationScale.GetStringValue()
+                    station.Name,
+                    station.TimeFormat.GetStringValue(),
+                    station.StationScale.GetStringValue()
                 };
 
                 // 行追加
@@ -288,7 +352,7 @@ namespace TrainTimeTable.Control
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
-            Property.Copy(properties);
+            m_RouteFileProperty.Stations.Copy(properties);
         }
     }
 }

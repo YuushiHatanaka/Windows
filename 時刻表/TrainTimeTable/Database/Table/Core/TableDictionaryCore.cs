@@ -112,6 +112,48 @@ namespace TrainTimeTable.Database.Table.Core
         }
         #endregion
 
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public virtual void Rebuilding(T properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TableDictionaryCore::Rebuilding(T)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            T orignalProperties = Load();
+
+            // 削除対象キーを取得
+            T removeKeys = GetRemoveKeys(orignalProperties, properties);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= TableDictionaryCore::Rebuilding(T)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        protected virtual T GetRemoveKeys(T src, T dst)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -212,6 +254,18 @@ namespace TrainTimeTable.Database.Table.Core
 
         protected virtual void Update(KeyValuePair<K, V> property)
         {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected virtual void Remove(T properties)
+        {
+            // 例外
             throw new NotImplementedException();
         }
         #endregion

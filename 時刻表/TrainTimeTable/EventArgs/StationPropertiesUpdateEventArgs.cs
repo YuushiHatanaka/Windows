@@ -9,6 +9,12 @@ namespace TrainTimeTable.EventArgs
 {
     public class StationPropertiesUpdateEventArgs : System.EventArgs
     {
-        public StationProperties Property { get; set; } = null;
+        public string OldStationName { get; set; } = string.Empty;
+
+        public string NewStationName { get; set; } = string.Empty;
+
+        public StationProperties OldProperties { get; set; } = new StationProperties();
+
+        public StationProperties Properties { get; set; } = null;
     }
 }

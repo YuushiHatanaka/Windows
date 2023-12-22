@@ -253,15 +253,22 @@ namespace TrainTimeTable.Common
             // リストクリア
             m_DiagramDrawProperties.Clear();
 
-            // 駅数分繰り返す
-            for (int station = 0; station < m_RouteFileProperty.Stations.Count; station++)
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            int stationIndex = 0;
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // DiagramDrawPropertyオブジェクト生成
                 DiagramDrawProperty diagramDrawProperty = new DiagramDrawProperty();
-                diagramDrawProperty.Station = new StationProperty(m_RouteFileProperty.Stations[station]);
-                diagramDrawProperty.DrawHeight = GetStationPosition(station);
-                diagramDrawProperty.PenSize = GetStationPenSize(m_RouteFileProperty.Stations[station].StationScale, 2, 1);
-                diagramDrawProperty.Font = GetStationFont(m_RouteFileProperty.Fonts, m_RouteFileProperty.Stations[station].StationScale);
+                diagramDrawProperty.Station = new StationProperty(station);
+                diagramDrawProperty.DrawHeight = GetStationPosition(stationIndex++);
+                diagramDrawProperty.PenSize = GetStationPenSize(station.StationScale, 2, 1);
+                diagramDrawProperty.Font = GetStationFont(m_RouteFileProperty.Fonts, station.StationScale);
 
                 // 登録
                 m_DiagramDrawProperties.Add(diagramDrawProperty);
@@ -579,11 +586,17 @@ namespace TrainTimeTable.Common
             // ロギング
             Logger.Debug("=>>>> DiagramDrawLibrary::DrawStationsGrids()");
 
-            // 駅数分繰り返す
-            for (int station = 0; station < m_RouteFileProperty.Stations.Count; station++)
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // DiagramDrawPropertyオブジェクト取得
-                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties[station];
+                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties.Find(t => t.Station.Compare(station));
 
                 // 駅Penオブジェクト取得
                 using (Pen stationPen = new Pen(Color.DarkGray, diagramDrawProperty.PenSize))
@@ -607,17 +620,23 @@ namespace TrainTimeTable.Common
             Logger.Debug("=>>>> DiagramDrawLibrary::DrawStationsGrids(Brush)");
             Logger.DebugFormat("brash:[{0}]", brash);
 
-            // 駅数分繰り返す
-            for (int station = 0; station < m_RouteFileProperty.Stations.Count; station++)
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // DiagramDrawPropertyオブジェクト取得
-                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties[station];
+                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties.Find(t => t.Station.Compare(station));
 
                 // 駅Penオブジェクト取得
                 using (Pen stationPen = new Pen(Color.DarkGray, diagramDrawProperty.PenSize))
                 {
                     // 駅文字列描画
-                    m_Graphics.DrawString(m_RouteFileProperty.Stations[station].Name, diagramDrawProperty.Font, brash, 0, diagramDrawProperty.DrawHeight - diagramDrawProperty.Font.GetHeight());
+                    m_Graphics.DrawString(station.Name, diagramDrawProperty.Font, brash, 0, diagramDrawProperty.DrawHeight - diagramDrawProperty.Font.GetHeight());
 
                     // 駅単位線描画
                     m_Graphics.DrawLine(stationPen, 0, diagramDrawProperty.DrawHeight, Width, diagramDrawProperty.DrawHeight);
@@ -775,9 +794,6 @@ namespace TrainTimeTable.Common
                     // 見つからなかった場合
                     if (startTimes == null || endTimes == null)
                     {
-                        // DEBUG
-                        Console.WriteLine("以下の列車のダイヤグラム描画ができませんでした。\r\n{0}", train.ToString());
-
                         // ロギング
                         Logger.WarnFormat("以下の列車のダイヤグラム描画ができませんでした。\r\n{0}", train.ToString());
                         continue;
@@ -873,9 +889,6 @@ namespace TrainTimeTable.Common
                     // 見つからなかった場合
                     if (startTimes == null || endTimes == null)
                     {
-                        // DEBUG
-                        Console.WriteLine("以下の列車のダイヤグラム描画ができませんでした。\r\n{0}", train.ToString());
-
                         // ロギング
                         Logger.WarnFormat("以下の列車のダイヤグラム描画ができませんでした。\r\n{0}", train.ToString());
                         continue;
@@ -1399,8 +1412,8 @@ namespace TrainTimeTable.Common
             // 着、発時刻両方が設定されていない場合
             else
             {
-                // TODO:未実装
-                Console.WriteLine("着、発時刻両方が設定されていない:[current]");
+                // ロギング
+                Logger.WarnFormat("着、発時刻両方が設定されていません:[current][{0}][{1}][{2}]", train.DiagramId, train.Direction.GetStringValue(), train.Id);
                 return;
             }
 
@@ -1425,8 +1438,8 @@ namespace TrainTimeTable.Common
             // 着、発時刻両方が設定されていない場合
             else
             {
-                // TODO:未実装
-                Console.WriteLine("着、発時刻両方が設定されていない:[next]");
+                // ロギング
+                Logger.WarnFormat("着、発時刻両方が設定されていません:[next][{0}][{1}][{2}]", train.DiagramId, train.Direction.GetStringValue(), train.Id);
                 return;
             }
 

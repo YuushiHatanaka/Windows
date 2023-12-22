@@ -40,12 +40,12 @@ namespace TrainTimeTable
         /// </summary>
         /// <param name="text"></param>
         /// <param name="type"></param>
-        /// <param name="stationIndex"></param>
+        /// <param name="station"></param>
         /// <param name="property"></param>
-        public FormStationTimetableDisplay(string text, DirectionType type, int station, RouteFileProperty property)
+        public FormStationTimetableDisplay(string text, DirectionType type, StationProperty station, RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormStationTimetableDisplay::FormStationTimetableDisplay(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("=>>>> FormStationTimetableDisplay::FormStationTimetableDisplay(string, DirectionType, StationProperty, RouteFileProperty)");
             Logger.DebugFormat("text    :[{0}]", text);
             Logger.DebugFormat("type    :[{0}]", type);
             Logger.DebugFormat("station :[{0}]", station);
@@ -58,13 +58,13 @@ namespace TrainTimeTable
             int diagramIndex = property.Diagrams.GetIndex(text);
 
             // タイトル取得
-            Text = GetTitle(type, property.Stations[station].Name, property.Diagrams[diagramIndex].Name);
+            Text = GetTitle(type, station.Name, property.Diagrams[diagramIndex].Name);
 
             // DataGridViewStationTimetableDisplayオブジェクト生成
             m_DataGridViewStationTimetableDisplay = new DataGridViewStationTimetableDisplay(text, type, station, property);
 
             // ロギング
-            Logger.Debug("<<<<= FormStationTimetableDisplay::FormStationTimetableDisplay(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= FormStationTimetableDisplay::FormStationTimetableDisplay(string, DirectionType, StationProperty, RouteFileProperty)");
         }
         #endregion
 

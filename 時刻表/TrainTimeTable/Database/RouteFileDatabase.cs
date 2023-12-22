@@ -292,7 +292,6 @@ namespace TrainTimeTable.Database
         /// <summary>
         /// 保存
         /// </summary>
-        /// <param name="property"></param>
         public void Save(RouteFileProperty property)
         {
             // ロギング
@@ -328,6 +327,47 @@ namespace TrainTimeTable.Database
 
             // ロギング
             Logger.Debug("<<<<= RouteFileDatabase::Save(RouteProperties)");
+        }
+
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="property"></param>
+        public void Rebuilding(RouteFileProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileDatabase::Rebuilding(RouteProperties)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 保存
+            // トランザクション開始
+            using (SQLiteTransaction sqliteTransaction = m_SqliteConnection.BeginTransaction())
+            {
+                m_FileInfomationTable.Rebuilding(property.FileInfo);
+                m_RouteTable.Rebuilding(property.Route);
+                m_FontTable.Rebuilding(property.Fonts);
+                m_ColorTable.Rebuilding(property.Colors);
+                m_DiagramScreenTable.Rebuilding(property.DiagramScreen);
+                m_StationTable.Rebuilding(property.Stations);
+                m_StationSequenceTable.Rebuilding(property.StationSequences);
+                m_NextStationTable.Rebuilding(property.Stations);
+                m_TrainTypeTable.Rebuilding(property.TrainTypes);
+                m_TrainTypeSequenceTable.Rebuilding(property.TrainTypeSequences);
+                m_CommentTable.Rebuilding(property.Comment);
+                m_DiagramTable.Rebuilding(property.Diagrams);
+                m_DiagramSequenceTable.Rebuilding(property.DiagramSequences);
+                m_TrainTable.Rebuilding(property.Diagrams);
+                m_TrainSequenceTable.Rebuilding(property.Diagrams);
+                m_TrainMarkTable.Rebuilding(property.Diagrams);
+                m_TrainMarkSequenceTable.Rebuilding(property.Diagrams);
+                m_StationTimeTable.Rebuilding(property.Diagrams);
+
+                // トランザクションコミット
+                sqliteTransaction.Commit();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileDatabase::Rebuilding(RouteFileProperty, RouteProperties)");
         }
         #endregion
 

@@ -185,6 +185,82 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Rebuilding(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceTable::Rebuilding(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラム分繰り返す
+            foreach (var property in properties)
+            {
+                // 方向種別分繰り返す
+                foreach (var direction in property.TrainSequence.Keys)
+                {
+                    // 再構築
+                    Rebuilding(property.TrainSequence[direction]);
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceTable::Rebuilding(DiagramProperties)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override TrainSequenceProperties GetRemoveKeys(TrainSequenceProperties srcProperties, TrainSequenceProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceTable::GetRemoveKeys(TrainSequenceProperties, TrainSequenceProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            TrainSequenceProperties result = new TrainSequenceProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if ((src.DiagramId == dst.DiagramId) && (src.Direction == dst.Direction) && (src.Id == dst.Id))
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainSequenceTable::GetRemoveKeys(TrainSequenceProperties, TrainSequenceProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -267,6 +343,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= TrainSequenceTable::Update(TrainSequenceProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected override void Remove(TrainSequenceProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceTable::Remove(TrainSequenceProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE DiagramId = " + property.DiagramId + " AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq + ";");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceTable::Remove(TrainSequenceProperties)");
         }
         #endregion
     }

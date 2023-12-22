@@ -132,6 +132,28 @@ namespace TrainTimeTable.Property
             return true;
         }
         #endregion
+
+        #region 駅名変更
+        /// <summary>
+        /// 駅名変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeStationName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::ChangeStationName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 旧駅名⇒新駅名変換
+            FindAll(t => t.Name == oldName).ForEach(t => t.Name = newName);
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperties::ChangeStationName(string, string)");
+        }
+        #endregion
+
         #region 文字列化
         /// <summary>
         /// 文字列化

@@ -519,7 +519,7 @@ namespace TrainTimeTable.File
             m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].Add(trainSequenceProperty);
 
             // 設定
-            SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count - 1, line);
+            SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count, line);
 
             // ロギング
             Logger.Debug("<<<<= WinDiaFile::SetOutboundSection(string)");
@@ -554,7 +554,7 @@ namespace TrainTimeTable.File
             m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].Add(trainSequenceProperty);
 
             // 設定
-            SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count - 1, line);
+            SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count, line);
 
             // ロギング
             Logger.Debug("<<<<= WinDiaFile::SetInboundSection(string)");

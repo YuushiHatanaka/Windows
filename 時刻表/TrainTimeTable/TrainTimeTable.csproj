@@ -227,8 +227,10 @@
     <Compile Include="EventArgs\RouteFilePropertyUpdateEventArgs.cs" />
     <Compile Include="EventArgs\StationPropertiesUpdateEventArgs.cs" />
     <Compile Include="EventArgs\StationPropertyUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\StationTimePropertyUpdateEventArgs.cs" />
     <Compile Include="EventArgs\StationTimetableUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TimetableUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\TrainPropertyUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TrainTypePropertiesUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TrainTypePropertyUpdateEventArgs.cs" />
     <Compile Include="File\Core\FileCore.cs" />

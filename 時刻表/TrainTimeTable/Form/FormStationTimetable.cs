@@ -141,35 +141,53 @@ namespace TrainTimeTable
                     directionType = DirectionType.Inbound;
                     break;
                 default:
+                    // ロギング
+                    Logger.Debug("<<<<= FormStationTimetable::DataGridViewStationTimetable_CellClick(object, DataGridViewCellEventArgs)");
+                    // 何もしない
                     return;
             }
 
-            // StationPropertyオブジェクト取得
-            StationProperty stationProperty = m_RouteFileProperty.Stations[e.RowIndex];
+            DataGridViewStationTimetable stationTimetable = (DataGridViewStationTimetable)sender;
 
-            // 登録名設定
-            string regName = FormStationTimetableDisplay.GetTitle(directionType, stationProperty.Name, m_RouteFileProperty.Diagrams[m_DiagramId].Name);
+            // 駅名セルを取得
+            DataGridViewCell stationCell = stationTimetable[1, e.RowIndex];
 
-            // 登録判定
-            if (!m_Owner.IsMDIChildForm(typeof(FormStationTimetableDisplay), regName))
+            // 駅情報を取得
+            StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
+
+            // 駅情報判定
+            if (property != null)
             {
-                // フォーム生成
-                FormStationTimetableDisplay form = new FormStationTimetableDisplay(m_RouteFileProperty.Diagrams[m_DiagramId].Name, directionType, e.RowIndex, m_RouteFileProperty);
+                // 登録名設定
+                string regName = FormStationTimetableDisplay.GetTitle(directionType, property.Name, m_RouteFileProperty.Diagrams[m_DiagramId].Name);
 
-                // フォーム登録
-                m_Owner.AddMDIChildForm(form);
+                // 登録判定
+                if (!m_Owner.IsMDIChildForm(typeof(FormStationTimetableDisplay), regName))
+                {
+                    // フォーム生成
+                    FormStationTimetableDisplay form = new FormStationTimetableDisplay(m_RouteFileProperty.Diagrams[m_DiagramId].Name, directionType, property, m_RouteFileProperty);
 
-                // フォーム表示
-                form.Show();
+                    // フォーム登録
+                    m_Owner.AddMDIChildForm(form);
+
+                    // フォーム表示
+                    form.Show();
+                }
+                else
+                {
+                    // フォーム取得
+                    FormStationTimetableDisplay form = m_Owner.GetMDIChildForm(typeof(FormStationTimetableDisplay), regName) as FormStationTimetableDisplay;
+
+                    // フォームを前面表示する
+                    form.BringToFront();
+                    form.WindowState = FormWindowState.Normal;
+                }
             }
             else
             {
-                // フォーム取得
-                FormStationTimetableDisplay form = m_Owner.GetMDIChildForm(typeof(FormStationTimetableDisplay), regName) as FormStationTimetableDisplay;
-
-                // フォームを前面表示する
-                form.BringToFront();
-                form.WindowState = FormWindowState.Normal;
+                // ロギング
+                Logger.WarnFormat("選択対象駅が存在していません：[{0}]", stationCell.Value.ToString());
+                Logger.Warn(m_RouteFileProperty.Stations.ToString());
             }
 
             // ロギング

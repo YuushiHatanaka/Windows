@@ -113,9 +113,15 @@ namespace TrainTimeTable.Control
             // 全行クリア
             Rows.Clear();
 
-            // 駅毎に繰り返す
-            foreach (var station in property.Stations)
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
             {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
                 // カラムリスト初期化
                 List<string> values = new List<string>();
 

@@ -52,12 +52,12 @@ namespace TrainTimeTable.Control
         /// </summary>
         /// <param name="text"></param>
         /// <param name="type"></param>
-        /// <param name="stationIndex"></param>
+        /// <param name="station"></param>
         /// <param name="property"></param>
-        public DataGridViewStationTimetableDisplay(string text, DirectionType type, int station, RouteFileProperty property)
+        public DataGridViewStationTimetableDisplay(string text, DirectionType type, StationProperty station, RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewStationTimetableDisplay::DataGridViewStationTimetableDisplay(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("=>>>> DataGridViewStationTimetableDisplay::DataGridViewStationTimetableDisplay(string, DirectionType, StationProperty, RouteFileProperty)");
             Logger.DebugFormat("text    :[{0}]", text);
             Logger.DebugFormat("type    :[{0}]", type);
             Logger.DebugFormat("station :[{0}]", station);
@@ -86,7 +86,7 @@ namespace TrainTimeTable.Control
             Update(diagramIndex, type, station);
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewStationTimetableDisplay::DataGridViewStationTimetableDisplay(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= DataGridViewStationTimetableDisplay::DataGridViewStationTimetableDisplay(string, DirectionType, StationProperty, RouteFileProperty)");
         }
         #endregion
 
@@ -135,16 +135,13 @@ namespace TrainTimeTable.Control
         /// <param name="index"></param>
         /// <param name="type"></param>
         /// <param name="station"></param>
-        private void Update(int index, DirectionType type, int station)
+        private void Update(int index, DirectionType type, StationProperty station)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewStationTimetableDisplay::Update(int, DirectionType, int)");
+            Logger.Debug("=>>>> DataGridViewStationTimetableDisplay::Update(int, DirectionType, StationProperty)");
             Logger.DebugFormat("index  :[{0}]", index);
             Logger.DebugFormat("type   :[{0}]", type);
             Logger.DebugFormat("station:[{0}]", station);
-
-            // StationPropertyオブジェクト取得
-            StationProperty stationProperty = m_RouteFileProperty.Stations[station];
 
             // 列車分繰り返す
             foreach (var trainProperty in m_RouteFileProperty.Diagrams[index].Trains[type])
@@ -153,7 +150,7 @@ namespace TrainTimeTable.Control
                 if (trainProperty.StationTimes.Count == 0)
                 {
                     // ロギング
-                    Logger.WarnFormat("{0}駅({1})の以下の列車は時刻表登録がありません", stationProperty.Name, stationProperty.Seq);
+                    Logger.WarnFormat("{0}駅({1})の以下の列車は時刻表登録がありません", station.Name, station.Seq);
                     Logger.Warn(trainProperty.ToString());
 
                     // 登録がないのでスキップ
@@ -161,7 +158,7 @@ namespace TrainTimeTable.Control
                 }
 
                 // StationTimePropertyオブジェクト取得
-                StationTimeProperty stationTimeProperty = trainProperty.StationTimes[stationProperty.Seq - 1];
+                StationTimeProperty stationTimeProperty = trainProperty.StationTimes.Find(t => t.StationName == station.Name);
 
                 // 駅扱い判定
                 if (stationTimeProperty.StationTreatment != StationTreatment.Stop)
@@ -174,7 +171,7 @@ namespace TrainTimeTable.Control
                 if (stationTimeProperty.DepartureTime == string.Empty && !stationTimeProperty.EstimatedDepartureTime)
                 {
                     // ロギング
-                    Logger.WarnFormat("{0}駅({1})の以下の列車は発時刻登録がありません", stationProperty.Name, stationProperty.Seq);
+                    Logger.WarnFormat("{0}駅({1})の以下の列車は発時刻登録がありません", station.Name, station.Seq);
                     Logger.Warn(trainProperty.ToString());
                     Logger.Warn(stationTimeProperty.ToString());
 
@@ -199,7 +196,7 @@ namespace TrainTimeTable.Control
             RowsAdd(columnMax, m_RouteFileProperty.DiagramScreen, m_RouteFileProperty.TrainTypes, m_RouteFileProperty.Diagrams[index].Trains[type]);
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewStationTimetableDisplay::Update(int, DirectionType, int)");
+            Logger.Debug("<<<<= DataGridViewStationTimetableDisplay::Update(int, DirectionType, StationProperty)");
         }
 
         /// <summary>
@@ -256,19 +253,24 @@ namespace TrainTimeTable.Control
                 // 当該時間の列車時刻が存在しているか？
                 if (m_StationTimeProperties.ContainsKey(currentDateTime.Hour))
                 {
+                    // 表示ソート
+                    var sortStationTimeProperties = m_StationTimeProperties[currentDateTime.Hour].OrderBy(t => t.DepartureTime);
+
                     // 存在していたら列車時刻分繰り返す
-                    foreach (var property in m_StationTimeProperties[currentDateTime.Hour])
+                    foreach (var property in sortStationTimeProperties)//m_StationTimeProperties[currentDateTime.Hour])
                     {
                         // 追加文字列オブジェクト
                         StringBuilder sb = new StringBuilder();
 
+                        // 列車情報取得
+                        TrainProperty trainProperty = trainProperties.Find(t => t.Id == property.TrainId);
+
                         // 列車種別
-                        string trainType = m_DiaProFont[trainTypeProperties[trainProperties[property.TrainId].TrainType].Name];
+                        string trainType = m_DiaProFont[trainTypeProperties[trainProperty.TrainType].Name];
                         if (trainType != string.Empty) { sb.AppendLine(trainType); }
 
-
                         // 列車名取得
-                        string trainName = string.Format("{0}{1}", trainProperties[property.TrainId].Name, trainProperties[property.TrainId].Number);
+                        string trainName = string.Format("{0}{1}", trainProperty.Name, trainProperty.Number);
                         if (trainName != string.Empty) { sb.AppendLine(trainName); }
 
                         // 発時刻(分)取得
@@ -276,12 +278,12 @@ namespace TrainTimeTable.Control
                         sb.AppendLine(departureTime);
 
                         // 行先取得
-                        string destination = trainProperties[property.TrainId].DestinationStation;
+                        string destination = trainProperty.DestinationStation;
                         sb.Append(destination);
 
                         // 登録
                         columns.Add(sb.ToString());
-                        colors.Add(trainTypeProperties[trainProperties[property.TrainId].TrainType].StringsColor);
+                        colors.Add(trainTypeProperties[trainProperty.TrainType].StringsColor);
                     }
                 }
 

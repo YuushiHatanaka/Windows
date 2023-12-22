@@ -86,6 +86,55 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override DiagramProperties GetRemoveKeys(DiagramProperties srcProperties, DiagramProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramTable::GetRemoveKeys(DiagramProperties, DiagramProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            DiagramProperties result = new DiagramProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if (src.Name == dst.Name)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DiagramTable::GetRemoveKeys(DiagramProperties, DiagramProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -169,6 +218,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= DiagramTable::Update(DiagramProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected override void Remove(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramTable::Remove(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE Name = '" + property.Name + "';");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramTable::Remove(DiagramProperties)");
         }
         #endregion
     }

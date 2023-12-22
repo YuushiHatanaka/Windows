@@ -199,6 +199,82 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Rebuilding(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::Rebuilding(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラム分繰り返す
+            foreach (var property in properties)
+            {
+                // 方向種別分繰り返す
+                foreach (var direction in property.Trains.Keys)
+                {
+                    // 再構築
+                    Rebuilding(property.Trains[direction]);
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTable::Rebuilding(DiagramProperties)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override TrainProperties GetRemoveKeys(TrainProperties srcProperties, TrainProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::GetRemoveKeys(TrainProperties, TrainProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            TrainProperties result = new TrainProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if (src.Name == dst.Name)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainTable::GetRemoveKeys(TrainProperties, TrainProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
@@ -344,6 +420,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= TrainTable::Update(TrainProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected override void Remove(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::Remove(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE DiagramId = " + property.DiagramId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTable::Remove(DiagramProperties)");
         }
         #endregion
     }

@@ -86,7 +86,7 @@ namespace TrainTimeTable.Database.Table
             {
                 // SQLクエリ生成
                 StringBuilder query = new StringBuilder();
-                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramId = {1} AND TrainId = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramId, train.Seq - 1, (int)train.Direction));
+                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramId = {1} AND TrainId = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramId, train.Id, (int)train.Direction));
 
                 // クエリ実行
                 using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
@@ -112,6 +112,43 @@ namespace TrainTimeTable.Database.Table
 
             // 返却
             return keyValuePair.Value;
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <param name="train"></param>
+        /// <returns></returns>
+        private StationTimeProperties Load(TrainProperty train)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeTable::Load(TrainProperty)");
+            Logger.DebugFormat("train:[{0}]", train);
+
+            // SQLクエリ生成
+            StringBuilder query = new StringBuilder();
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramId = {1} AND TrainId = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramId, train.Id, (int)train.Direction));
+
+            // 結果オブジェクト生成
+            StationTimeProperties result = new StationTimeProperties();
+
+            // クエリ実行
+            using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
+            {
+
+                // データを取得
+                while (sqliteDataReader.Read())
+                {
+                    // SELECTデータ登録
+                    SelectDataRegston(sqliteDataReader, ref result);
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeTable::Load(TrainProperty)");
+
+            // 返却
+            return result;
         }
         #endregion
 
@@ -192,6 +229,112 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= StationTimeTable::Save(DiagramProperties)");
+        }
+        #endregion
+
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Rebuilding(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeTable::Rebuilding(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラム分繰り返す
+            foreach (var property in properties)
+            {
+                // 方向種別分繰り返す
+                foreach (var directionType in property.Trains.Keys)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in property.Trains[directionType])
+                    {
+                        // 再構築
+                        Rebuilding(train, train.StationTimes);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeTable::Rebuilding(DiagramProperties)");
+        }
+
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        private void Rebuilding(TrainProperty train, StationTimeProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeTable::Rebuilding(StationTimeProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            StationTimeProperties orignalProperties = Load(train);
+
+            // 削除対象キーを取得
+            StationTimeProperties removeKeys = GetRemoveKeys(orignalProperties, properties);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeTable::Rebuilding(StationTimeProperties)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override StationTimeProperties GetRemoveKeys(StationTimeProperties srcProperties, StationTimeProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeTable::GetRemoveKeys(StationTimeProperties, StationTimeProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            StationTimeProperties result = new StationTimeProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if ((src.DiagramId == dst.DiagramId) && (src.Direction == dst.Direction) && (src.TrainId == dst.TrainId) && (src.StationName == dst.StationName))
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= StationTimeTable::GetRemoveKeys(StationTimeProperties, StationTimeProperties)");
+
+            // 返却
+            return result;
         }
         #endregion
 
@@ -299,6 +442,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= StationTimeTable::Update(StationTimeProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        protected override void Remove(StationTimeProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeTable::Remove(StationTimeProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE DiagramId = " + property.DiagramId + " AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeTable::Remove(StationTimeProperties)");
         }
         #endregion
     }

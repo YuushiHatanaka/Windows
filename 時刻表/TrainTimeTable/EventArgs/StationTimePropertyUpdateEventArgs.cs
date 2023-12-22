@@ -8,13 +8,13 @@ using TrainTimeTable.Property;
 namespace TrainTimeTable.EventArgs
 {
     /// <summary>
-    /// DiagramPropertiesUpdateEventArgsクラス
+    /// StationTimePropertyUpdateEventArgsクラス
     /// </summary>
-    public class DiagramPropertiesUpdateEventArgs : System.EventArgs
+    public class StationTimePropertyUpdateEventArgs : System.EventArgs
     {
         /// <summary>
-        /// DiagramPropertiesオブジェクト
+        /// StationTimePropertyオブジェクト
         /// </summary>
-        public DiagramProperties Properties { get; set; } = null;
+        public StationTimeProperty Property { get; set; } = null;
     }
 }

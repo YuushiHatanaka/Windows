@@ -89,6 +89,32 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="property"></param>
+        public void Rebuilding(RouteProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteTable::Rebuilding(RouteProperty)");
+            Logger.DebugFormat("properties:[{0}]", property);
+
+            // データを読込
+            RouteProperty orignalProperties = Load();
+
+            // 比較
+            if (!orignalProperties.Compare(property))
+            {
+                // 保存
+                Save(property);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= RouteTable::Rebuilding(RouteProperty)");
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定

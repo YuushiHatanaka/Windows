@@ -28,62 +28,62 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ファイル情報プロパティ
         /// </summary>
-        public FileInfomationProperty FileInfo = new FileInfomationProperty();
+        public FileInfomationProperty FileInfo { get; set; } = new FileInfomationProperty();
 
         /// <summary>
         /// 路線プロパティ
         /// </summary>
-        public RouteProperty Route = new RouteProperty();
+        public RouteProperty Route { get; set; } = new RouteProperty();
 
         /// <summary>
         /// フォントプロパティ
         /// </summary>
-        public FontProperties Fonts = new FontProperties();
+        public FontProperties Fonts { get; set; } = new FontProperties();
 
         /// <summary>
         /// 色プロパティ
         /// </summary>
-        public ColorProperties Colors = new ColorProperties();
+        public ColorProperties Colors { get; set; } = new ColorProperties();
 
         /// <summary>
         /// ダイヤグラム画面プロパティ
         /// </summary>
-        public DiagramScreenProperty DiagramScreen = new DiagramScreenProperty();
+        public DiagramScreenProperty DiagramScreen { get; set; } = new DiagramScreenProperty();
 
         /// <summary>
         /// 駅プロパティ
         /// </summary>
-        public StationProperties Stations = new StationProperties();
+        public StationProperties Stations { get; set; } = new StationProperties();
 
         /// <summary>
         /// 駅シーケンスプロパティ
         /// </summary>
-        public StationSequenceProperties StationSequences = new StationSequenceProperties();
+        public StationSequenceProperties StationSequences { get; set; } = new StationSequenceProperties();
 
         /// <summary>
         /// 列車種別プロパティ
         /// </summary>
-        public TrainTypeProperties TrainTypes = new TrainTypeProperties();
+        public TrainTypeProperties TrainTypes { get; set; } = new TrainTypeProperties();
 
         /// <summary>
         /// 列車種別シーケンスプロパティ
         /// </summary>
-        public TrainTypeSequenceProperties TrainTypeSequences = new TrainTypeSequenceProperties();
+        public TrainTypeSequenceProperties TrainTypeSequences { get; set; } = new TrainTypeSequenceProperties();
 
         /// <summary>
         /// コメントプロパティ
         /// </summary>
-        public StringBuilder Comment = new StringBuilder();
+        public StringBuilder Comment { get; set; } = new StringBuilder();
 
         /// <summary>
         /// ダイヤグラムプロパティ
         /// </summary>
-        public DiagramProperties Diagrams = new DiagramProperties();
+        public DiagramProperties Diagrams { get; set; } = new DiagramProperties();
 
         /// <summary>
         /// ダイアグラムシーケンスプロパティ
         /// </summary>
-        public DiagramSequenceProperties DiagramSequences = new DiagramSequenceProperties();
+        public DiagramSequenceProperties DiagramSequences { get; set; } = new DiagramSequenceProperties();
 
         #region コンストラクタ
         /// <summary>
@@ -259,6 +259,29 @@ namespace TrainTimeTable.Property
 
             // 一致
             return true;
+        }
+        #endregion
+
+        #region 駅名変更
+        /// <summary>
+        /// 駅名変更
+        /// </summary>
+        /// <param name="oldStationName"></param>
+        /// <param name="name"></param>
+        public void ChangeStationName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::ChangeStationName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 各プロパティで駅名変更
+            Stations.ChangeStationName(oldName, newName);
+            StationSequences.ChangeStationName(oldName, newName);
+            Diagrams.ChangeStationName(oldName, newName);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::ChangeStationName(string, string)");
         }
         #endregion
 

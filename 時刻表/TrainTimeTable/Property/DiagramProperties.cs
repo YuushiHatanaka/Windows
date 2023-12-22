@@ -195,6 +195,53 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 駅名変更
+        /// <summary>
+        /// 駅名変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeStationName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::ChangeStationName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach(var direction  in property.Trains.Values)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in direction)
+                    {
+                        // 発駅
+                        if (train.DepartingStation == oldName)
+                        {
+                            // 旧駅名⇒新駅名変換
+                            train.DepartingStation = newName;
+                        }
+
+                        // 着駅
+                        if (train.DestinationStation == oldName)
+                        {
+                            // 旧駅名⇒新駅名変換
+                            train.DestinationStation = newName;
+                        }
+
+                        // 旧駅名⇒新駅名変換
+                        train.StationTimes.FindAll(t => t.StationName == oldName).ForEach(t => t.StationName = newName);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::ChangeStationName(string, string)");
+        }
+        #endregion
+
         #region 文字列化
         /// <summary>
         /// 文字列化

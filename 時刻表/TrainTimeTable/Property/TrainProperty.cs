@@ -66,12 +66,12 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 列車記号
         /// </summary>
-        public List<TrainMarkProperty> Marks { get; set; } = new List<TrainMarkProperty>();
+        public TrainMarkProperties Marks { get; set; } = new TrainMarkProperties();
 
         /// <summary>
         /// 列車記号シーケンス
         /// </summary>
-        public List<TrainMarkSequenceProperty> MarkSequences { get; set; } = new List<TrainMarkSequenceProperty>();
+        public TrainMarkSequenceProperties MarkSequences { get; set; } = new TrainMarkSequenceProperties();
 
         /// <summary>
         /// 発駅

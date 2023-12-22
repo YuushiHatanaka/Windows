@@ -43,36 +43,36 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
-        /// StationPropertiesオブジェクト
+        /// RouteFilePropertyオブジェクト
         /// </summary>
-        private StationProperties m_StationProperties = null;
+        private RouteFileProperty m_RouteFileProperty { get; set; } = null;
 
         /// <summary>
         /// DataGridViewStationオブジェクト
         /// </summary>
-        private DataGridViewStation m_DataGridViewStation = null;
+        private DataGridViewStation m_DataGridViewStation { get; set; } = null;
 
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="properties"></param>
-        public FormStationProperties(StationProperties properties)
+        public FormStationProperties(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormStationProperties::FormStationProperties(StationProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> FormStationProperties::FormStationProperties(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
-            m_StationProperties = properties;
-            m_DataGridViewStation = new DataGridViewStation(properties);
+            m_RouteFileProperty = property;
+            m_DataGridViewStation = new DataGridViewStation(property);
             m_DataGridViewStation.OnUpdate += DataGridViewStation_OnUpdate;
 
             // ロギング
-            Logger.Debug("<<<<= FormStationProperties::FormStationProperties(StationProperties)");
+            Logger.Debug("<<<<= FormStationProperties::FormStationProperties(RouteFileProperty)");
         }
         #endregion
 

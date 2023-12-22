@@ -16,6 +16,7 @@ using TrainTimeTable.Control;
 using TrainTimeTable.Dialog;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TrainTimeTable
@@ -52,6 +53,26 @@ namespace TrainTimeTable
         private FormRoute m_Owner = null;
 
         /// <summary>
+        /// ダイヤグラムID
+        /// </summary>
+        private int m_DiagramId = 0;
+
+        /// <summary>
+        /// ダイアログ名
+        /// </summary>
+        private string m_DiagramName = string.Empty;
+
+        /// <summary>
+        /// 方向種別
+        /// </summary>
+        private DirectionType m_DirectionType = DirectionType.None;
+
+        /// <summary>
+        /// RouteFilePropertyオブジェクト
+        /// </summary>
+        private RouteFileProperty m_RouteFileProperty = null;
+
+        /// <summary>
         /// DataGridViewTimetableオブジェクト
         /// </summary>
         private DataGridViewTimetable m_DataGridViewTimetable = null;
@@ -85,12 +106,17 @@ namespace TrainTimeTable
 
             // 設定
             m_Owner = owner;
+            m_DiagramName = text;
+            m_DirectionType = type;
+            m_RouteFileProperty = property;
             Text = regName;
 
             // DataGridViewTimetableオブジェクト生成
-            m_DataGridViewTimetable = new DataGridViewTimetable(text, type, property);
+            m_DataGridViewTimetable = new DataGridViewTimetable(m_DiagramName, m_DirectionType, m_RouteFileProperty);
             m_DataGridViewTimetable.Click += DataGridViewTimetable_Click;
-            m_DataGridViewTimetable.OnUpdate += DataGridViewTimetable_OnUpdate;
+            m_DataGridViewTimetable.OnTrainPropertyUpdate += DataGridViewTimetable_OnTrainPropertyUpdate;
+            m_DataGridViewTimetable.OnStationPropertiesUpdate += DataGridViewTimetable_OnStationPropertiesUpdate;
+            m_DataGridViewTimetable.OnStationTimePropertyUpdate += DataGridViewTimetable_OnStationTimePropertyUpdate;
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::FormTimetable(FormRoute, string, string, DirectionType, RouteFileProperty)");
@@ -170,21 +196,90 @@ namespace TrainTimeTable
         }
 
         /// <summary>
-        /// DataGridViewTimetable_OnUpdate
+        /// DataGridViewTimetable_OnTrainPropertyUpdate
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DataGridViewTimetable_OnUpdate(object sender, StationPropertiesUpdateEventArgs e)
+        private void DataGridViewTimetable_OnTrainPropertyUpdate(object sender, TrainPropertyUpdateEventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> FormTimetable::DataGridViewTimetable_OnUpdate(object, StationPropertiesUpdateEventArgs)");
+            Logger.Debug("=>>>> FormTimetable::DataGridViewTimetable_OnTrainPropertyUpdate(object, TrainPropertyUpdateEventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // TODO:関連するデータを全て変更
+
+            // TimetableUpdateEventArgsオブジェクト
+            TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
+            eventArgs.UpdateType = e.Property.GetType();
+            eventArgs.DiagramId = m_DiagramId;
+            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DirectionType = m_DirectionType;
+            eventArgs.RouteFileProperty = m_RouteFileProperty;
+
+            // 更新通知
+            OnUpdate(this, eventArgs);
 
             // ロギング
-            Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_OnUpdate(object, StationPropertiesUpdateEventArgs)");
+            Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_OnTrainPropertyUpdate(object, TrainPropertyUpdateEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_OnStationPropertiesUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_OnStationPropertiesUpdate(object sender, StationPropertiesUpdateEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::DataGridViewTimetable_OnStationPropertiesUpdate(object, StationPropertiesUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:関連するデータを全て変更
+
+            // TimetableUpdateEventArgsオブジェクト
+            TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
+            eventArgs.UpdateType = e.Properties.GetType();
+            eventArgs.DiagramId = m_DiagramId;
+            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DirectionType = m_DirectionType;
+            eventArgs.RouteFileProperty = m_RouteFileProperty;
+
+            // 更新通知
+            OnUpdate(this, eventArgs);
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_OnStationPropertiesUpdate(object, StationPropertiesUpdateEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_OnStationTimePropertyUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_OnStationTimePropertyUpdate(object sender, StationTimePropertyUpdateEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::DataGridViewTimetable_OnStationTimePropertyUpdate(object, StationTimePropertyUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:関連するデータを全て変更
+
+            // TimetableUpdateEventArgsオブジェクト
+            TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
+            eventArgs.UpdateType = e.Property.GetType();
+            eventArgs.DiagramId = m_DiagramId;
+            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DirectionType = m_DirectionType;
+            eventArgs.RouteFileProperty = m_RouteFileProperty;
+
+            // 更新通知
+            OnUpdate(this, eventArgs);
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::DataGridViewTimetable_OnStationTimePropertyUpdate(object, StationTimePropertyUpdateEventArgs)");
         }
         #endregion
 
@@ -334,7 +429,11 @@ namespace TrainTimeTable
             Logger.Debug("=>>>> FormTimetable::Update(RouteFileProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
-            // TODO:未実装
+            // 設定
+            m_RouteFileProperty = property;
+
+            // DataGridViewTimetable
+            m_DataGridViewTimetable.Update(m_RouteFileProperty);
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::Update(RouteFileProperty)");

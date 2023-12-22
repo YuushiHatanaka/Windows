@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrainTimeTable.Property;
 
 namespace TrainTimeTable.Database.Table.Core
 {
@@ -108,6 +109,48 @@ namespace TrainTimeTable.Database.Table.Core
         /// <param name="result"></param>
         /// <exception cref="NotImplementedException"></exception>
         protected virtual void SelectDataRegston(SQLiteDataReader sqliteDataReader, ref T result)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public virtual void Rebuilding(T properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TableListCore::Rebuilding(T)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            T orignalProperties = Load();
+
+            // 削除対象キーを取得
+            T removeKeys = GetRemoveKeys(orignalProperties, properties);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= TableListCore::Rebuilding(T)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        protected virtual T GetRemoveKeys(T src, T dst)
         {
             throw new NotImplementedException();
         }

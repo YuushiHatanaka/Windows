@@ -684,7 +684,7 @@ namespace TrainTimeTable.File
                         // 駅時刻設定
                         SetStationTime(
                             m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].Direction,
-                            trainsArrayIndex,
+                            trainsArrayIndex + 1,
                             m_RouteFileProperty.Stations,
                             m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].StationTimes,
                             keyValue[1]);

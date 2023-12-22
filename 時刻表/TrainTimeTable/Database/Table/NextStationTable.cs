@@ -174,7 +174,7 @@ namespace TrainTimeTable.Database.Table
         /// 保存
         /// </summary>
         /// <param name="properties"></param>
-        internal void Save(StationProperties properties)
+        public void Save(StationProperties properties)
         {
             // ロギング
             Logger.Debug("=>>>> NextStationTable::Update(StationProperties)");
@@ -189,6 +189,86 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= NextStationTable::Update(StationProperties)");
+        }
+        #endregion
+
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Rebuilding(StationProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> NextStationTable::Rebuilding(StationProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            NextStationProperties orignalProperties = Load();
+
+            // 次駅一覧取得
+            NextStationProperties nextStations = properties.GetNextStations();
+
+            // 削除対象キーを取得
+            NextStationProperties removeKeys = GetRemoveKeys(orignalProperties, nextStations);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= NextStationTable::Rebuilding(StationProperties)");
+        }
+        #endregion
+
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        protected override NextStationProperties GetRemoveKeys(NextStationProperties srcProperties, NextStationProperties dstProperties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> NextStationTable::GetRemoveKeys(StationProperties, StationProperties)");
+            Logger.DebugFormat("srcProperties:[{0}]", srcProperties);
+            Logger.DebugFormat("dstProperties:[{0}]", dstProperties);
+
+            // 結果オブジェクト生成
+            NextStationProperties result = new NextStationProperties();
+
+            // 削除要素作成
+            foreach (var src in srcProperties)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in dstProperties)
+                {
+                    // キーを比較
+                    if ((src.Name == dst.Name) && (src.Direction == dst.Direction) && (src.NextStationSeq == dst.NextStationSeq))
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= NextStationTable::GetRemoveKeys(StationProperties, StationProperties)");
+
+            // 返却
+            return result;
         }
         #endregion
 
@@ -278,6 +358,39 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.Debug("<<<<= NextStationTable::Update(NextStationProperty)");
+        }
+        #endregion
+
+        #region 削除
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="removeKeys"></param>
+        protected override void Remove(NextStationProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> NextStationTable::Rebuilding(NextStationProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 件数判定
+            if (properties.Count > 0)
+            {
+                // SQLクエリ
+                StringBuilder query = new StringBuilder();
+
+                // 削除対象プロパティ分繰り返す
+                foreach (var property in properties)
+                {
+                    query.Append(string.Format("DELETE FROM {0} ", m_TableName));
+                    query.Append("WHERE Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationSeq = " + property.NextStationSeq + ";");
+                }
+
+                // 削除実行
+                Remove(query.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= NextStationTable::Rebuilding(NextStationProperties)");
         }
         #endregion
     }

@@ -38,16 +38,40 @@ namespace TrainTimeTable.Control
 
         #region 更新 Event
         /// <summary>
-        /// 更新 event delegate
+        /// 更新 event delegate(列車情報)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void UpdateEventHandler(object sender, StationPropertiesUpdateEventArgs e);
+        public delegate void TrainPropertyUpdateHandler(object sender, TrainPropertyUpdateEventArgs e);
 
         /// <summary>
-        /// 更新 event
+        /// 更新 event delegate(駅時刻情報)
         /// </summary>
-        public event UpdateEventHandler OnUpdate = delegate { };
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void StationTimePropertyHandler(object sender, StationTimePropertyUpdateEventArgs e);
+
+        /// <summary>
+        /// 更新 event delegate(駅情報)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void StationPropertiesUpdateEventHandler(object sender, StationPropertiesUpdateEventArgs e);
+
+        /// <summary>
+        /// 更新 event(列車情報)
+        /// </summary>
+        public event TrainPropertyUpdateHandler OnTrainPropertyUpdate = delegate { };
+
+        /// <summary>
+        /// 更新 event(駅時刻情報)
+        /// </summary>
+        public event StationTimePropertyHandler OnStationTimePropertyUpdate = delegate { };
+
+        /// <summary>
+        /// 更新 event(駅情報)
+        /// </summary>
+        public event StationPropertiesUpdateEventHandler OnStationPropertiesUpdate = delegate { };
         #endregion
 
         /// <summary>
@@ -64,6 +88,11 @@ namespace TrainTimeTable.Control
         /// 方向種別
         /// </summary>
         private DirectionType m_DirectionType = DirectionType.None;
+
+        /// <summary>
+        /// 旧RouteFilePropertyオブジェクト
+        /// </summary>
+        private RouteFileProperty m_OldRouteFileProperty = new RouteFileProperty();
 
         /// <summary>
         /// RouteFilePropertyオブジェクト
@@ -99,6 +128,7 @@ namespace TrainTimeTable.Control
             m_DiagramName = text;
             m_DirectionType = type;
             m_RouteFileProperty = property;
+            m_OldRouteFileProperty.Copy(property);
             m_FontDictionary = m_RouteFileProperty.Fonts.GetFonts(
                 new List<string>()
                 {
@@ -613,6 +643,191 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsRemarksStation(TrainProperties)");
+        }
+        #endregion
+
+        #region イベント
+        #region DataGridViewTimetableイベント
+        /// <summary>
+        /// DataGridViewTimetable_ColumnAdded
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 設定
+            e.Column.FillWeight = 1;
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_CellFormatting
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+
+        private void DataGridViewTimetable_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 4カラム目(駅名)以外は処理しない
+            if ((e.ColumnIndex == 2) && (e.RowIndex > 0))
+            {
+                // 前カラムと値が同じか判定
+                if (IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
+                {
+                    e.Value = "";
+                    e.FormattingApplied = true; // 以降の書式設定は不要
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_CellPainting
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void DataGridViewTimetable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // セルの下側の境界線を「境界線なし」に設定
+            e.AdvancedBorderStyle.Bottom = DataGridViewAdvancedCellBorderStyle.None;
+
+            // 設定
+            if (e.ColumnIndex == 2)
+            {
+                // セルの上側の境界線を「境界線なし」に設定
+                e.AdvancedBorderStyle.Top = DataGridViewAdvancedCellBorderStyle.None;
+
+                // 最初の行は上側境界線を「境界線あり」に設定する
+                if (e.RowIndex == 0)
+                {
+                    // セルの上側の境界線を既定の境界線に設定
+                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+                }
+                // 最終行は下側境界線を「境界線あり」に設定する
+                else if (e.RowIndex == Rows.Count - 1)
+                {
+                    // セルの上側の境界線を既定の境界線に設定
+                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+
+                    // セルの下側の境界線を既定の境界線に設定
+                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
+                }
+                else
+                {
+                    // 前カラムと値が同じか判定
+                    if (!IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
+                    {
+                        // セルの上側の境界線を既定の境界線に設定
+                        e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+                    }
+                }
+            }
+            else
+            {
+                // セルの上側の境界線を既定の境界線に設定
+                e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+
+                // 最終行は下側境界線を「境界線あり」に設定する
+                if (e.RowIndex == Rows.Count - 1)
+                {
+                    // セルの下側の境界線を既定の境界線に設定
+                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+        }
+
+        /// <summary>
+        /// DataGridViewTimetable_MouseDoubleClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGridViewTimetable_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ダブルクリックされたセルの位置を取得
+            HitTestInfo hitTestInfo = ((DataGridViewTimetable)sender).HitTest(e.X, e.Y);
+
+            // 列車列か？
+            if ((hitTestInfo.ColumnIndex >= 4) && (hitTestInfo.RowIndex >= 0 && hitTestInfo.RowIndex < 6))
+            {
+                // 列車情報編集
+                EditTrainInformation(hitTestInfo);
+            }
+            // 列車列の時刻部分か？
+            else if ((hitTestInfo.ColumnIndex >= 4) && (hitTestInfo.RowIndex >= 6))
+            {
+                // 列車時刻編集
+                EditTrainTimeInformation(hitTestInfo);
+            }
+            // 駅列か？
+            else if ((hitTestInfo.ColumnIndex < 4) && (hitTestInfo.RowIndex >= 6))
+            {
+                // 駅情報編集
+                EditStationInformation(hitTestInfo);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+        }
+        #endregion
+        #endregion
+
+        #region publicメソッド
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="property"></param>
+        public void Update(RouteFileProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::Update(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 旧データと同一か？
+            if (m_OldRouteFileProperty.Compare(property))
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTimetable::Update(RouteFileProperty)");
+
+                // 何もしない
+                return;
+            }
+
+            // 描画
+            Draw();
+
+            // 旧データ更新
+            m_OldRouteFileProperty.Copy(property);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::Update(RouteFileProperty)");
         }
         #endregion
 
@@ -1414,168 +1629,85 @@ namespace TrainTimeTable.Control
                 return false;
             }
         }
-        #endregion
 
-        #region イベント
-        #region DataGridViewTimetableイベント
+
         /// <summary>
-        /// DataGridViewTimetable_ColumnAdded
+        /// 列車情報編集
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DataGridViewTimetable_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        /// <param name="info"></param>
+        private void EditTrainInformation(HitTestInfo info)
         {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
+            // 列車情報を取得
+            TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
-            // 設定
-            e.Column.FillWeight = 1;
+            // FormTrainPropertyオブジェクト生成
+            FormTrainProperty form = new FormTrainProperty(property);
 
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            // FormTrainProperty表示
+            DialogResult dialogResult = form.ShowDialog();
+
+            // FormTrainProperty表示結果判定
+            if (dialogResult == DialogResult.OK)
+            {
+                // 結果保存
+                property.Copy(form.Property);
+
+                // 更新通知
+                OnTrainPropertyUpdate(this, new TrainPropertyUpdateEventArgs() { Property = property });
+            }
         }
 
         /// <summary>
-        /// DataGridViewTimetable_CellFormatting
+        /// 列車時刻編集
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-
-        private void DataGridViewTimetable_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        /// <param name="info"></param>
+        private void EditTrainTimeInformation(HitTestInfo info)
         {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
+            // 列車情報を取得
+            TrainProperty trainProperty = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
-            // 4カラム目(駅名)以外は処理しない
-            if ((e.ColumnIndex == 2) && (e.RowIndex > 0))
+            // 列車時刻情報を取得
+            StationTimeProperty property = trainProperty.StationTimes[info.RowIndex - 6];
+
+            // FormStationTimePropertyオブジェクト生成
+            FormStationTimeProperty form = new FormStationTimeProperty(property);
+
+            // FormStationTimeProperty表示
+            DialogResult dialogResult = form.ShowDialog();
+
+            // FormStationTimeProperty表示結果判定
+            if (dialogResult == DialogResult.OK)
             {
-                // 前カラムと値が同じか判定
-                if (IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
-                {
-                    e.Value = "";
-                    e.FormattingApplied = true; // 以降の書式設定は不要
-                }
-            }
+                // 結果保存
+                property.Copy(form.Property);
 
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
+                // 更新通知
+                OnStationTimePropertyUpdate(this, new StationTimePropertyUpdateEventArgs() { Property = property });
+            }
         }
 
         /// <summary>
-        /// DataGridViewTimetable_CellPainting
+        /// 駅情報編集
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private void DataGridViewTimetable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        /// <param name="info"></param>
+        private void EditStationInformation(HitTestInfo info)
         {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
+            // 駅名セルを取得
+            DataGridViewCell stationCell = this[2, info.RowIndex];
 
-            // セルの下側の境界線を「境界線なし」に設定
-            e.AdvancedBorderStyle.Bottom = DataGridViewAdvancedCellBorderStyle.None;
+            // 駅情報を取得
+            StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
 
-            // 設定
-            if (e.ColumnIndex == 2)
+            // 駅情報判定
+            if (property != null)
             {
-                // セルの上側の境界線を「境界線なし」に設定
-                e.AdvancedBorderStyle.Top = DataGridViewAdvancedCellBorderStyle.None;
+                // StationPropertiesUpdateEventArgsオブジェクト生成
+                StationPropertiesUpdateEventArgs eventArgs = new StationPropertiesUpdateEventArgs();
+                eventArgs.OldProperties.Copy(m_RouteFileProperty.Stations);
+                eventArgs.Properties = m_RouteFileProperty.Stations;
 
-                // 最初の行は上側境界線を「境界線あり」に設定する
-                if (e.RowIndex == 0)
-                {
-                    // セルの上側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
-                }
-                // 最終行は下側境界線を「境界線あり」に設定する
-                else if (e.RowIndex == Rows.Count - 1)
-                {
-                    // セルの上側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
-
-                    // セルの下側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
-                }
-                else
-                {
-                    // 前カラムと値が同じか判定
-                    if (!IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
-                    {
-                        // セルの上側の境界線を既定の境界線に設定
-                        e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
-                    }
-                }
-            }
-            else
-            {
-                // セルの上側の境界線を既定の境界線に設定
-                e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
-
-                // 最終行は下側境界線を「境界線あり」に設定する
-                if (e.RowIndex == Rows.Count - 1)
-                {
-                    // セルの下側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
-                }
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
-        }
-
-        /// <summary>
-        /// DataGridViewTimetable_MouseDoubleClick
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DataGridViewTimetable_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
-
-            // ダブルクリックされたセルの位置を取得
-            HitTestInfo hti = ((DataGridViewTimetable)sender).HitTest(e.X, e.Y);
-
-            // 列車列か？
-            if ((hti.ColumnIndex >= 4) && (hti.RowIndex >= 0 && hti.RowIndex < 6))
-            {
-                // 列車情報を取得
-                TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][hti.ColumnIndex - 4];
-
-                // TODO:未実装
-                FormTrainProperty form = new FormTrainProperty(property);
-                form.ShowDialog();
-            }
-            // 列車列の時刻部分か？
-            else if ((hti.ColumnIndex >= 4) && (hti.RowIndex >= 6))
-            {
-                // 列車情報を取得
-                TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][hti.ColumnIndex - 4];
-
-                // 列車時刻を取得
-                StationTimeProperty stationTimeProperty = property.StationTimes[hti.RowIndex-6];
-
-                // TODO:未実装
-                FormStationTimeProperty form = new FormStationTimeProperty(stationTimeProperty);
-                form.ShowDialog();
-
-            }
-            // 駅列か？
-            else if ((hti.ColumnIndex < 4) && (hti.RowIndex >= 6))
-            {
-                // 駅名セルを取得
-                DataGridViewCell stationCell = this[2, hti.RowIndex];
-
-                // 駅情報を取得
-                StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
+                // 旧駅名保存
+                string oldStationName = property.Name;
 
                 // FormStationPropertyオブジェクト生成
                 FormStationProperty form = new FormStationProperty(property);
@@ -1586,20 +1718,42 @@ namespace TrainTimeTable.Control
                 // FormStationProperty表示結果判定
                 if (dialogResult == DialogResult.OK)
                 {
+                    // 同一名判定
+                    if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
+                    {
+                        // エラーメッセージ
+                        MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        return;
+                    }
+
+                    // 駅名(キーが変更されたか？)
+                    if (oldStationName != form.Property.Name)
+                    {
+                        eventArgs.OldStationName = oldStationName;
+                        eventArgs.NewStationName = form.Property.Name;
+
+                        // 駅名変換
+                        m_RouteFileProperty.ChangeStationName(oldStationName, form.Property.Name);
+                    }
+
                     // 結果保存
                     property.Copy(form.Property);
 
-                    // TODO:再描画
-
-                    // 更新通知
-                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Property = m_RouteFileProperty.Stations });
+                    // 変更されたか？
+                    if (!eventArgs.OldProperties.Compare(m_RouteFileProperty.Stations))
+                    {
+                        // 更新通知
+                        OnStationPropertiesUpdate(this, eventArgs);
+                    }
                 }
             }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+            else
+            {
+                // ロギング
+                Logger.WarnFormat("選択対象駅が存在していません：[{0}]", stationCell.Value.ToString());
+                Logger.Warn(m_RouteFileProperty.Stations.ToString());
+            }
         }
-        #endregion
         #endregion
     }
 }

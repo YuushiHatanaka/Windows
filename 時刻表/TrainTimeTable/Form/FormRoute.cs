@@ -582,7 +582,7 @@ namespace TrainTimeTable
             if (!IsMDIChildForm(typeof(FormStationProperties)))
             {
                 // フォームオブジェクト生成
-                FormStationProperties form = new FormStationProperties(m_CurrentRouteFileProperty.Stations);
+                FormStationProperties form = new FormStationProperties(m_CurrentRouteFileProperty);
 
                 // イベント設定
                 form.OnUpdate += FormStation_OnUpdate;
@@ -942,7 +942,7 @@ namespace TrainTimeTable
             Logger.DebugFormat("e     :[{0}]", e);
 
             // コピー
-            m_CurrentRouteFileProperty.Stations.Copy(e.Property);
+            m_CurrentRouteFileProperty.Stations.Copy(e.Properties);
 
             // 更新通知
             UpdateNotification();
@@ -1028,6 +1028,9 @@ namespace TrainTimeTable
 
             // TODO:未実装
 
+            // 更新通知
+            UpdateNotification();
+
             // ロギング
             Logger.Debug("<<<<= FormRoute::FormOutboundTimetable_OnUpdate(object, TimetableUpdateEventArgs)");
         }
@@ -1045,6 +1048,9 @@ namespace TrainTimeTable
             Logger.DebugFormat("e     :[{0}]", e);
 
             // TODO:未実装
+
+            // 更新通知
+            UpdateNotification();
 
             // ロギング
             Logger.Debug("<<<<= FormRoute::FormInboundTimetable_OnUpdate(object, TimetableUpdateEventArgs)");
@@ -1253,8 +1259,8 @@ namespace TrainTimeTable
                 progress += progressStep;
                 backgroundWorker.ReportProgress(progress, string.Format("{0}% 終了しました", progress));
 
-                // データベース保存
-                routeFileDatabase.Save(m_CurrentRouteFileProperty);
+                // データベース再構成(キーを含む更新)
+                routeFileDatabase.Rebuilding(m_CurrentRouteFileProperty);
             }
 
             // 経過メッセージ表示

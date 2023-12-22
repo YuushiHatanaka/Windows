@@ -79,6 +79,32 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 再構築
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="comment"></param>
+        public void Rebuilding(StringBuilder comment)
+        {
+            // ロギング
+            Logger.Debug("=>>>> CommentTable::Rebuilding(StringBuilder)");
+            Logger.DebugFormat("comment:[{0}]", comment);
+
+            // データを読込
+            StringBuilder orignalComment = Load();
+
+            // 比較
+            if (orignalComment.ToString() != comment.ToString())
+            {
+                // 保存
+                Save(comment);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= CommentTable::Rebuilding(StringBuilder)");
+        }
+        #endregion
+
         #region 存在判定
         /// <summary>
         /// 存在判定
