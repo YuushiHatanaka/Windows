@@ -225,7 +225,7 @@ namespace TrainTimeTable.Dialog
             Logger.Debug("=>>>> DialogFont::GetFont()");
 
             // Fontオブジェクト取得
-            Font result = new Font(m_ComboBoxFontName.Value, m_ComboBoxFontSize.Value, m_ComboBoxFontStyle.Value);
+            Font result = new Font(m_ComboBoxFontName.Value, m_ComboBoxFontSize.Value, m_ComboBoxFontStyle.GetFontStyle());
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);

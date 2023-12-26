@@ -130,6 +130,12 @@ namespace TrainTimeTable.Control
         }
         #endregion
 
+        #region イベント
+        /// <summary>
+        /// TrainTypeCutoutOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeCutoutOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -143,6 +149,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCutoutOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypeCopyOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeCopyOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -156,6 +167,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCopyOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypePastingOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypePastingOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -169,6 +185,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypeDeleteOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeDeleteOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -182,6 +203,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDeleteOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypeInsertOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeInsertOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -195,6 +221,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeInsertOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypeUpOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeUpOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -208,6 +239,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeUpOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypeDownOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypeDownOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -221,6 +257,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDownOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// TrainTypePropertyOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TrainTypePropertyOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -229,7 +270,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainTypeProperty result = GetSelectedCondition();
+            TrainTypeProperty result = GetSelectedTrainTypeProperty();
 
             // 選択状態設定
             if (result != null)
@@ -249,6 +290,12 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePropertyOnClick(object, EventArgs)");
         }
 
+        #region ContextMenuStripイベント
+        /// <summary>
+        /// ContextMenuStripOpened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ContextMenuStripOpened(object sender, System.EventArgs e)
         {
             // ロギング
@@ -257,7 +304,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainTypeProperty result = GetSelectedCondition();
+            TrainTypeProperty result = GetSelectedTrainTypeProperty();
 
             // 選択状態設定
             if (result == null)
@@ -276,26 +323,20 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::ContextMenuStripOpened(object, EventArgs)");
         }
+        #endregion
 
-        private TrainTypeProperty GetSelectedCondition()
-        {
-            // 選択状態設定
-            if (SelectedCells.Count == 0)
-            {
-                // 選択なし
-                return null;
-            }
-
-            // 選択オブジェクト
-            TrainTypeProperty result = Property[SelectedCells[0].RowIndex];
-
-            // 返却
-            return result;
-        }
-
+        #region DataGridViewTrainTypeイベント
+        /// <summary>
+        /// DataGridViewTrainType_CellPainting
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridViewTrainType_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            DataGridViewTrainType dataGridViewTrainType = (DataGridViewTrainType)sender;
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType_CellPainting(object, DataGridViewCellPaintingEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
 
             // 線スタイルのセルか？
             if (e.RowIndex >= 0 && e.ColumnIndex == 3)
@@ -328,50 +369,150 @@ namespace TrainTimeTable.Control
                 // イベントを処理したことを通知
                 e.Handled = true;
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_CellPainting(object, DataGridViewCellPaintingEventArgs)");
         }
 
-
+        /// <summary>
+        /// DataGridViewTrainType_CellDoubleClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridViewTrainType_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType_CellDoubleClick(object, DataGridViewCellEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
             // 行ヘッダー
             if (e.RowIndex == -1)
             {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_CellDoubleClick(object, DataGridViewCellEventArgs)");
+
+                // 何もしない
                 return;
             }
             // 列ヘッダー
             if (e.ColumnIndex == -1)
             {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_CellDoubleClick(object, DataGridViewCellEventArgs)");
+
+                // 何もしない
                 return;
             }
 
+            // FormTrainTypePropertyオブジェクト生成
             FormTrainTypeProperty form = new FormTrainTypeProperty(m_FontProperties, Property[e.RowIndex]);
             form.OnUpdate += DataGridViewTrainType_OnUpdate;
 
+            // FormTrainTypeProperty表示
             DialogResult dialogResult = form.ShowDialog();
+
+            // FormTrainTypeProperty表示結果判定
             if (dialogResult == DialogResult.OK)
             {
                 // イベント呼出
                 OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Property = this.Property });
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_CellDoubleClick(object, DataGridViewCellEventArgs)");
         }
 
+        /// <summary>
+        /// DataGridViewTrainType_OnUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridViewTrainType_OnUpdate(object sender, TrainTypePropertyUpdateEventArgs e)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType_OnUpdate(object, TrainTypePropertyUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 更新
             Update(e.Property);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_OnUpdate(object, TrainTypePropertyUpdateEventArgs)");
+        }
+        #endregion
+        #endregion
+
+        #region privateメソッド
+        /// <summary>
+        /// 選択StationProperty取得
+        /// </summary>
+        /// <returns></returns>
+        private TrainTypeProperty GetSelectedTrainTypeProperty()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+
+            // 選択状態設定
+            if (SelectedCells.Count == 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+
+                // 選択なし
+                return null;
+            }
+
+            // 選択オブジェクト
+            TrainTypeProperty result = Property[SelectedCells[0].RowIndex];
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+
+            // 返却
+            return result;
         }
 
+        #region 更新
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="property"></param>
         private void Update(TrainTypeProperty property)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::Update(StationProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // コピー
             Property[property.Seq - 1].Copy(property);
+
+            // 更新
             Update(Property);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::Update(StationProperty)");
         }
 
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="properties"></param>
         private void Update(TrainTypeProperties properties)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::Update(TrainTypeProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 全行クリア
             Rows.Clear();
 
+            // プロパティ分繰り返す
             foreach (var property in properties)
             {
+                // 追加オブジェクト生成
                 List<string> values = new List<string>
                 {
                     property.Seq.ToString(),
@@ -390,8 +531,13 @@ namespace TrainTimeTable.Control
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
+            // コピー
             Property.Copy(properties);
-        }
 
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::Update(TrainTypeProperties)");
+        }
+        #endregion
+        #endregion
     }
 }

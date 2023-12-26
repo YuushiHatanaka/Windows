@@ -27,60 +27,128 @@ namespace TrainTimeTable.Control
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
+        #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
         public ComboBoxStopStationClearlyIndicated()
             : base()
         {
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxStopStationClearlyIndicated::ComboBoxStopStationClearlyIndicated()");
+
+            // 設定
             DropDownStyle = ComboBoxStyle.DropDownList;
 
+            // 更新開始
             BeginUpdate();
 
+            // 初期化
             Initialization();
 
+            // 更新終了
             EndUpdate();
-        }
 
+            // ロギング
+            Logger.Debug("<<<<= ComboBoxStopStationClearlyIndicated::ComboBoxStopStationClearlyIndicated()");
+        }
+        #endregion
+
+        #region privateメソッド
+        /// <summary>
+        ///  初期化
+        /// </summary>
         private void Initialization()
         {
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxStopStationClearlyIndicated::Initialization()");
+
+            // リストを全てクリア
             Items.Clear();
 
+            // StopMarkDrawTypeを繰り返す
             for (StopMarkDrawType i = StopMarkDrawType.Nothing; i <= StopMarkDrawType.DrawOnStop; i++)
             {
+                // 登録
                 Items.Add(i.GetStringValue());
             }
 
+            // 登録数判定
             if (Items.Count > 0)
             {
+                // 選択インデックス初期化
                 SelectedIndex = 0;
             }
-        }
 
+            // ロギング
+            Logger.Debug("<<<<= ComboBoxStopStationClearlyIndicated::Initialization()");
+        }
+        #endregion
+
+        #region publicメソッド
+        /// <summary>
+        /// 選択要素取得
+        /// </summary>
+        /// <returns></returns>
         public StopMarkDrawType GetSelected()
         {
-            if (SelectedIndex < 0)
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxStopStationClearlyIndicated::GetSelected()");
+
+            // 結果初期化
+            StopMarkDrawType result = StopMarkDrawType.None;
+
+            // 選択インデックス判定
+            if (SelectedIndex >= 0)
             {
-                return StopMarkDrawType.None;
+                // 選択文字列で分岐する
+                switch (Items[SelectedIndex].ToString())
+                {
+                    case "明示しない":
+                        // 結果設定
+                        result = StopMarkDrawType.Nothing;
+                        break;
+                    case "停車駅を明示":
+                        // 結果設定
+                        result = StopMarkDrawType.DrawOnStop;
+                        break;
+                    default:
+                        break;
+                }
             }
-            switch (Items[SelectedIndex].ToString())
-            {
-                case "明示しない":
-                    return StopMarkDrawType.Nothing;
-                case "停車駅を明示":
-                    return StopMarkDrawType.DrawOnStop;
-                default:
-                    return StopMarkDrawType.None;
-            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= ComboBoxStopStationClearlyIndicated::GetSelected()");
+
+            // 返却
+            return result;
         }
 
+        /// <summary>
+        /// 選択設定
+        /// </summary>
+        /// <param name="type"></param>
         public void SetSelected(StopMarkDrawType type)
         {
-            int index = FindString(type.GetStringValue());
-            if (index >= 0)
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxStopStationClearlyIndicated::SetSelected(StopMarkDrawType)");
+            Logger.DebugFormat("type:[{0}]", type.GetStringValue());
+
+            // 文字列検索
+            int result = FindString(type.GetStringValue());
+
+            // 文字列検索結果判定
+            if (result >= 0)
             {
-                SelectedIndex = index;
+                // 選択インデックス設定
+                SelectedIndex = result;
             }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= ComboBoxStopStationClearlyIndicated::SetSelected(StopMarkDrawType)");
         }
+        #endregion
     }
 }

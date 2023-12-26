@@ -45,8 +45,15 @@ namespace TrainTimeTable.Control
         /// </summary>
         private RouteFileProperty m_RouteFileProperty { get; set; } = null;
 
+        #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         public DataGridViewStation()
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::DataGridViewStation()");
+
             ReadOnly = true;                      // 読取専用
             AllowUserToDeleteRows = false;        // 行削除禁止
             AllowUserToAddRows = false;           // 行挿入禁止
@@ -86,8 +93,40 @@ namespace TrainTimeTable.Control
             ContextMenuStrip = contextMenuStrip;
             ContextMenuStrip.Opened += ContextMenuStripOpened;
             ContextMenuStrip.Items["pasting"].Enabled = false;
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::DataGridViewStation()");
         }
 
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="property"></param>
+        public DataGridViewStation(RouteFileProperty property)
+            : this()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::DataGridViewStation(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            //　設定
+            m_RouteFileProperty = property;
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::DataGridViewStation(RouteFileProperty)");
+        }
+        #endregion
+
+        #region イベント
+        #region ContextMenuStripイベント
+        /// <summary>
+        /// StationCutoutOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationCutoutOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -101,6 +140,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewStation::StationCutoutOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// StationCopyOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationCopyOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -114,6 +158,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewStation::StationCopyOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// StationPastingOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationPastingOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -127,6 +176,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// StationDeleteOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationDeleteOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -140,6 +194,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewStation::StationDeleteOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// StationInsertOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationInsertOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -153,6 +212,11 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= DataGridViewStation::StationInsertOnClick(object, EventArgs)");
         }
 
+        /// <summary>
+        /// StationPropertyOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StationPropertyOnClick(object sender, System.EventArgs e)
         {
             // ロギング
@@ -161,7 +225,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            StationProperty result = GetSelectedCondition();
+            StationProperty result = GetSelectedStationProperty();
 
             // 選択状態設定
             if (result != null)
@@ -180,7 +244,14 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationPropertyOnClick(object, EventArgs)");
         }
+        #endregion
 
+        #region ContextMenuStripイベント
+        /// <summary>
+        /// ContextMenuStripOpened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ContextMenuStripOpened(object sender, System.EventArgs e)
         {
             // ロギング
@@ -189,7 +260,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            StationProperty result = GetSelectedCondition();
+            StationProperty result = GetSelectedStationProperty();
 
             // 選択状態設定
             if (result == null)
@@ -208,32 +279,21 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::ContextMenuStripOpened(object, EventArgs)");
         }
+        #endregion
 
-        private StationProperty GetSelectedCondition()
-        {
-            // 選択状態設定
-            if (SelectedCells.Count == 0)
-            {
-                // 選択なし
-                return null;
-            }
-
-            // 選択オブジェクト
-            StationProperty result = m_RouteFileProperty.Stations[SelectedCells[0].RowIndex];
-
-            // 返却
-            return result;
-        }
-
-        public DataGridViewStation(RouteFileProperty property)
-            : this()
-        {
-            m_RouteFileProperty = property;
-            Update(m_RouteFileProperty.Stations);
-        }
-
+        #region DataGridViewStationイベント
+        /// <summary>
+        /// DataGridViewStation_CellDoubleClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridViewStation_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::DataGridViewStation_CellDoubleClick(object, DataGridViewCellEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
             // 行ヘッダー
             if (e.RowIndex == -1)
             {
@@ -272,7 +332,7 @@ namespace TrainTimeTable.Control
                 if (dialogResult == DialogResult.OK)
                 {
                     // 同一名判定
-                    if (m_RouteFileProperty.Stations.Find(t=>t.Name == form.Property.Name) != null)
+                    if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
                     {
                         // エラーメッセージ
                         MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
@@ -308,22 +368,95 @@ namespace TrainTimeTable.Control
                 Logger.WarnFormat("選択対象駅が存在していません：[{0}]", stationCell.Value.ToString());
                 Logger.Warn(m_RouteFileProperty.Stations.ToString());
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::DataGridViewStation_CellDoubleClick(object, DataGridViewCellEventArgs)");
         }
 
+        /// <summary>
+        /// DataGridViewStation_OnUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridViewStation_OnUpdate(object sender, StationPropertyUpdateEventArgs e)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::DataGridViewStation_CellDoubleClick(object, StationPropertyUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 更新
             Update(e.Property);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::DataGridViewStation_CellDoubleClick(object, StationPropertyUpdateEventArgs)");
+        }
+        #endregion
+        #endregion
+
+        #region privateメソッド
+        /// <summary>
+        /// 選択StationProperty取得
+        /// </summary>
+        /// <returns></returns>
+        private StationProperty GetSelectedStationProperty()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::GetSelectedStationProperty()");
+
+            // 選択状態設定
+            if (SelectedCells.Count == 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::GetSelectedStationProperty()");
+
+                // 選択なし
+                return null;
+            }
+
+            // 選択オブジェクト
+            StationProperty result = m_RouteFileProperty.Stations[SelectedCells[0].RowIndex];
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewStation::GetSelectedStationProperty()");
+
+            // 返却
+            return result;
         }
 
+        #region 更新
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="property"></param>
         private void Update(StationProperty property)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::Update(StationProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
             m_RouteFileProperty.Stations[property.Seq - 1].Copy(property);
+
+            // 更新
             Update(m_RouteFileProperty.Stations);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::Update(StationProperty)");
         }
 
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="properties"></param>
         private void Update(StationProperties properties)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::Update(StationProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
 
+            // 全行クリア
             Rows.Clear();
 
             // 駅シーケンスリスト取得(昇順)
@@ -335,6 +468,7 @@ namespace TrainTimeTable.Control
                 // 駅情報取得
                 StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
+                // 追加オブジェクト生成
                 List<string> values = new List<string>
                 {
                     station.Name,
@@ -352,7 +486,13 @@ namespace TrainTimeTable.Control
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
+            // コピー
             m_RouteFileProperty.Stations.Copy(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::Update(StationProperties)");
         }
+        #endregion
+        #endregion
     }
 }

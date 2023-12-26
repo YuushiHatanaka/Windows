@@ -27,62 +27,133 @@ namespace TrainTimeTable.Control
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
+        #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
         public ComboBoxDiagramTrainInformation()
             : base()
         {
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxDiagramTrainInformation::ComboBoxDiagramTrainInformation()");
+
+            // 設定
             DropDownStyle = ComboBoxStyle.DropDownList;
 
+            // 更新開始
             BeginUpdate();
 
+            // 初期化
             Initialization();
 
+            // 更新終了
             EndUpdate();
-        }
 
+            // ロギング
+            Logger.Debug("<<<<= ComboBoxDiagramTrainInformation::ComboBoxDiagramTrainInformation()");
+        }
+        #endregion
+
+        #region privateメソッド
+        /// <summary>
+        ///  初期化
+        /// </summary>
         private void Initialization()
         {
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxDiagramTrainInformation::Initialization()");
+
+            // リストを全てクリア
             Items.Clear();
 
+            // DiagramTrainInformationを繰り返す
             for (DiagramTrainInformation i = DiagramTrainInformation.DisplayIfItIsTheFirstTrain; i <= DiagramTrainInformation.DoNotShow; i++)
             {
+                // 登録
                 Items.Add(i.GetStringValue());
             }
 
+            // 登録数判定
             if (Items.Count > 0)
             {
+                // 選択インデックス初期化
                 SelectedIndex = 0;
             }
-        }
 
+            // ロギング
+            Logger.Debug("<<<<= ComboBoxDiagramTrainInformation::Initialization()");
+        }
+        #endregion
+
+        #region publicメソッド
+        /// <summary>
+        /// 選択要素取得
+        /// </summary>
+        /// <returns></returns>
         public DiagramTrainInformation GetSelected()
         {
-            if (SelectedIndex < 0)
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxDiagramTrainInformation::GetSelected()");
+
+            // 結果初期化
+            DiagramTrainInformation result = DiagramTrainInformation.None;
+
+            // 選択インデックス判定
+            if (SelectedIndex >= 0)
             {
-                return DiagramTrainInformation.DoNotShow;
+                switch (Items[SelectedIndex].ToString())
+                {
+                    case "始発なら表示":
+                        // 結果設定
+                        result = DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
+                        break;
+                    case "常に表示":
+                        // 結果設定
+                        result = DiagramTrainInformation.AlwaysVisible;
+                        break;
+                    case "表示しない":
+                        // 結果設定
+                        result = DiagramTrainInformation.DoNotShow;
+                        break;
+                    default:
+                        // 結果設定
+                        result = DiagramTrainInformation.None;
+                        break;
+                }
             }
-            switch(Items[SelectedIndex].ToString())
-            {
-                case "始発なら表示":
-                    return DiagramTrainInformation.DisplayIfItIsTheFirstTrain;
-                case "常に表示":
-                    return DiagramTrainInformation.AlwaysVisible;
-                case "表示しない":
-                    return DiagramTrainInformation.DoNotShow;
-                default:
-                    return DiagramTrainInformation.None;
-            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= ComboBoxDiagramTrainInformation::GetSelected()");
+
+            // 返却
+            return result;
         }
 
+        /// <summary>
+        /// 選択設定
+        /// </summary>
+        /// <param name="info"></param>
         public void SetSelected(DiagramTrainInformation info)
         {
-            int index = FindString(info.GetStringValue());
-            if (index >= 0)
+            // ロギング
+            Logger.Debug("=>>>> ComboBoxDiagramTrainInformation::SetSelected(DiagramTrainInformation)");
+            Logger.DebugFormat("info:[{0}]", info.GetStringValue());
+
+            // 文字列検索
+            int result = FindString(info.GetStringValue());
+
+            // 文字列検索結果判定
+            if (result >= 0)
             {
-                SelectedIndex = index;
+                // 選択インデックス設定
+                SelectedIndex = result;
             }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= ComboBoxDiagramTrainInformation::DiagramTrainInformation(DashStyle)");
         }
+        #endregion
     }
 }

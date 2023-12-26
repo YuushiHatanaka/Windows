@@ -1630,13 +1630,16 @@ namespace TrainTimeTable.Control
             }
         }
 
-
         /// <summary>
         /// 列車情報編集
         /// </summary>
         /// <param name="info"></param>
         private void EditTrainInformation(HitTestInfo info)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::EditTrainInformation(HitTestInfo)");
+            Logger.DebugFormat("info:[{0}]", info);
+
             // 列車情報を取得
             TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
@@ -1655,6 +1658,9 @@ namespace TrainTimeTable.Control
                 // 更新通知
                 OnTrainPropertyUpdate(this, new TrainPropertyUpdateEventArgs() { Property = property });
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::EditTrainInformation(HitTestInfo)");
         }
 
         /// <summary>
@@ -1663,6 +1669,10 @@ namespace TrainTimeTable.Control
         /// <param name="info"></param>
         private void EditTrainTimeInformation(HitTestInfo info)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
+            Logger.DebugFormat("info:[{0}]", info);
+
             // 列車情報を取得
             TrainProperty trainProperty = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
@@ -1684,6 +1694,9 @@ namespace TrainTimeTable.Control
                 // 更新通知
                 OnStationTimePropertyUpdate(this, new StationTimePropertyUpdateEventArgs() { Property = property });
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
         }
 
         /// <summary>
@@ -1692,6 +1705,10 @@ namespace TrainTimeTable.Control
         /// <param name="info"></param>
         private void EditStationInformation(HitTestInfo info)
         {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTimetable::EditStationInformation(HitTestInfo)");
+            Logger.DebugFormat("info:[{0}]", info);
+
             // 駅名セルを取得
             DataGridViewCell stationCell = this[2, info.RowIndex];
 
@@ -1729,6 +1746,7 @@ namespace TrainTimeTable.Control
                     // 駅名(キーが変更されたか？)
                     if (oldStationName != form.Property.Name)
                     {
+                        // StationPropertiesUpdateEventArgsオブジェクト設定
                         eventArgs.OldStationName = oldStationName;
                         eventArgs.NewStationName = form.Property.Name;
 
@@ -1753,6 +1771,9 @@ namespace TrainTimeTable.Control
                 Logger.WarnFormat("選択対象駅が存在していません：[{0}]", stationCell.Value.ToString());
                 Logger.Warn(m_RouteFileProperty.Stations.ToString());
             }
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTimetable::EditStationInformation(HitTestInfo)");
         }
         #endregion
     }
