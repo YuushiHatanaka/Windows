@@ -14,6 +14,9 @@ using TrainTimeTable.Property;
 
 namespace TrainTimeTable
 {
+    /// <summary>
+    /// FormCommentクラス
+    /// </summary>
     public partial class FormComment : Form
     {
         #region ロガーオブジェクト

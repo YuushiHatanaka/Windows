@@ -97,6 +97,9 @@
     <Compile Include="Component\DictionaryStationTimeProperties.cs" />
     <Compile Include="Component\DictionaryTrain.cs" />
     <Compile Include="Component\DictionaryTrainSequence.cs" />
+    <Compile Include="Control\ComboBox\ComboBoxStation.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Control\ComboBox\ComboBoxFonts.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -116,6 +119,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Control\ComboBox\ComboBoxFontStyle.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\ComboBox\ComboBoxTrainType.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Control\DataGridView\DataGridViewPrinter.cs" />

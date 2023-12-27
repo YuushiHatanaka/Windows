@@ -105,6 +105,9 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
+            // 描画一時停止
+            SuspendLayout();
+
             // 変換
             PropertyToControl();
 
@@ -143,6 +146,9 @@ namespace TrainTimeTable
             tableLayoutPanelButton.Dock = DockStyle.Fill;
             buttonOK.Dock = DockStyle.Fill;
             buttonCancel.Dock = DockStyle.Fill;
+
+            // 描画再開
+            ResumeLayout();
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty_Load(object, EventArgs)");

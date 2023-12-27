@@ -207,8 +207,6 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:関連するデータを全て変更
-
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
@@ -216,6 +214,7 @@ namespace TrainTimeTable
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
+            eventArgs.UpdateObject = e.Property;
 
             // 更新通知
             OnUpdate(this, eventArgs);
@@ -236,8 +235,6 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:関連するデータを全て変更
-
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Properties.GetType();
@@ -245,6 +242,7 @@ namespace TrainTimeTable
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
+            eventArgs.UpdateObject = e.Properties;
 
             // 更新通知
             OnUpdate(this, eventArgs);
@@ -265,8 +263,6 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:関連するデータを全て変更
-
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
@@ -274,6 +270,7 @@ namespace TrainTimeTable
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
+            eventArgs.UpdateObject = e.Property;
 
             // 更新通知
             OnUpdate(this, eventArgs);

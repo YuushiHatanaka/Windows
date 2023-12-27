@@ -1026,8 +1026,6 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
-
             // 更新通知
             UpdateNotification();
 
@@ -1046,8 +1044,6 @@ namespace TrainTimeTable
             Logger.Debug("=>>>> FormRoute::FormInboundTimetable_OnUpdate(object, TimetableUpdateEventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
-
-            // TODO:未実装
 
             // 更新通知
             UpdateNotification();

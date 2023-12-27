@@ -26,9 +26,9 @@ namespace TrainTimeTable.Control
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
-        //private Dictionary<int, List<StationTimeProperty>> m_StationTimeProperties = new Dictionary<int, List<StationTimeProperty>>();
-
-        // 情報テーブル
+        /// <summary>
+        /// DictionaryStationTimePropertiesオブジェクト
+        /// </summary>
         private DictionaryStationTimeProperties m_StationTimeProperties = new DictionaryStationTimeProperties();
 
         /// <summary>
@@ -129,6 +129,38 @@ namespace TrainTimeTable.Control
         #endregion
 
         #region 更新
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="type"></param>
+        /// <param name="station"></param>
+        public void Update(int index, DirectionType type, StationProperty station, RouteFileProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStationTimetableDisplay::Update(int, DirectionType, StationProperty, RouteFileProperty)");
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("type    :[{0}]", type);
+            Logger.DebugFormat("station :[{0}]", station);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            m_RouteFileProperty = property;
+
+            // 初期化
+            m_StationTimeProperties.Clear();
+            Columns.Clear();
+            Rows.Clear();
+            Columns.Add("Hour", "");
+            Columns["Hour"].Frozen = true;
+
+            // 更新
+            Update(index, type, station);
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStationTimetableDisplay::Update(int, DirectionType, StationProperty, RouteFileProperty)");
+        }
+
         /// <summary>
         /// 更新
         /// </summary>

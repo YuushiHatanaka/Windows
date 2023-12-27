@@ -30,6 +30,26 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
+        /// RouteFilePropertyオブジェクト
+        /// </summary>
+        private RouteFileProperty m_RouteFileProperty = null;
+
+        /// <summary>
+        /// ダイヤグラムインデックス
+        /// </summary>
+        private int m_DiagramIndex = 0;
+
+        /// <summary>
+        /// 方向種別
+        /// </summary>
+        private DirectionType m_DirectionType = DirectionType.None;
+
+        /// <summary>
+        /// StationPropertyオブジェクト
+        /// </summary>
+        private StationProperty m_StationProperty = null;
+
+        /// <summary>
         /// DataGridViewStationTimetableDisplayオブジェクト
         /// </summary>
         private DataGridViewStationTimetableDisplay m_DataGridViewStationTimetableDisplay = null;
@@ -54,11 +74,16 @@ namespace TrainTimeTable
             // コンポーネント初期化
             InitializeComponent();
 
+            // 設定
+            m_DirectionType = type;
+            m_RouteFileProperty = property;
+            m_StationProperty = station;
+
             // ダイヤインデックス取得
-            int diagramIndex = property.Diagrams.GetIndex(text);
+            m_DiagramIndex = property.Diagrams.GetIndex(text);
 
             // タイトル取得
-            Text = GetTitle(type, station.Name, property.Diagrams[diagramIndex].Name);
+            Text = GetTitle(type, station.Name, property.Diagrams[m_DiagramIndex].Name);
 
             // DataGridViewStationTimetableDisplayオブジェクト生成
             m_DataGridViewStationTimetableDisplay = new DataGridViewStationTimetableDisplay(text, type, station, property);
@@ -126,7 +151,14 @@ namespace TrainTimeTable
             Logger.Debug("=>>>> FormStationTimetableDisplay::UpdateNotification(RouteFileProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
-            // TODO:未実装
+            // 設定
+            m_RouteFileProperty = property;
+
+            // タイトル取得
+            Text = GetTitle(m_DirectionType, m_StationProperty.Name, property.Diagrams[m_DiagramIndex].Name);
+
+            // 更新
+            m_DataGridViewStationTimetableDisplay.Update(m_DiagramIndex, m_DirectionType, m_StationProperty, m_RouteFileProperty);
 
             // ロギング
             Logger.Debug("<<<<= FormStationTimetableDisplay::UpdateNotification(RouteFileProperty)");

@@ -1644,7 +1644,7 @@ namespace TrainTimeTable.Control
             TrainProperty property = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
             // FormTrainPropertyオブジェクト生成
-            FormTrainProperty form = new FormTrainProperty(property);
+            FormTrainProperty form = new FormTrainProperty(m_RouteFileProperty, property);
 
             // FormTrainProperty表示
             DialogResult dialogResult = form.ShowDialog();
@@ -1652,11 +1652,15 @@ namespace TrainTimeTable.Control
             // FormTrainProperty表示結果判定
             if (dialogResult == DialogResult.OK)
             {
-                // 結果保存
-                property.Copy(form.Property);
+                // 結果比較
+                if (!property.Compare(form.Property))
+                {
+                    // 結果保存
+                    property.Copy(form.Property);
 
-                // 更新通知
-                OnTrainPropertyUpdate(this, new TrainPropertyUpdateEventArgs() { Property = property });
+                    // 更新通知
+                    OnTrainPropertyUpdate(this, new TrainPropertyUpdateEventArgs() { Property = property });
+                }
             }
 
             // ロギング
@@ -1673,14 +1677,20 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
+            // 駅名セルを取得
+            DataGridViewCell stationCell = this[2, info.RowIndex];
+
+            // 駅情報を取得
+            StationProperty stationProperty = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
+
             // 列車情報を取得
             TrainProperty trainProperty = m_RouteFileProperty.Diagrams[m_DiagramId].Trains[m_DirectionType][info.ColumnIndex - 4];
 
             // 列車時刻情報を取得
-            StationTimeProperty property = trainProperty.StationTimes[info.RowIndex - 6];
+            StationTimeProperty property =trainProperty.StationTimes.Find(s => s.StationName == stationProperty.Name);
 
             // FormStationTimePropertyオブジェクト生成
-            FormStationTimeProperty form = new FormStationTimeProperty(property);
+            FormStationTimeProperty form = new FormStationTimeProperty(m_RouteFileProperty, property);
 
             // FormStationTimeProperty表示
             DialogResult dialogResult = form.ShowDialog();
@@ -1688,12 +1698,16 @@ namespace TrainTimeTable.Control
             // FormStationTimeProperty表示結果判定
             if (dialogResult == DialogResult.OK)
             {
-                // 結果保存
-                property.Copy(form.Property);
+                // 結果比較
+                if (!property.Compare(form.Property))
+                {
+                    // 結果保存
+                    property.Copy(form.Property);
 
-                // 更新通知
-                OnStationTimePropertyUpdate(this, new StationTimePropertyUpdateEventArgs() { Property = property });
-            }
+                    // 更新通知
+                    OnStationTimePropertyUpdate(this, new StationTimePropertyUpdateEventArgs() { Property = property });
+                }
+             }
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
@@ -1735,17 +1749,17 @@ namespace TrainTimeTable.Control
                 // FormStationProperty表示結果判定
                 if (dialogResult == DialogResult.OK)
                 {
-                    // 同一名判定
-                    if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
-                    {
-                        // エラーメッセージ
-                        MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                        return;
-                    }
-
                     // 駅名(キーが変更されたか？)
                     if (oldStationName != form.Property.Name)
                     {
+                        // 同一名判定
+                        if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
+                        {
+                            // エラーメッセージ
+                            MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                            return;
+                        }
+
                         // StationPropertiesUpdateEventArgsオブジェクト設定
                         eventArgs.OldStationName = oldStationName;
                         eventArgs.NewStationName = form.Property.Name;

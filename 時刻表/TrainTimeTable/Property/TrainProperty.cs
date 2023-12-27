@@ -172,6 +172,8 @@ namespace TrainTimeTable.Property
                 TrainType = property.TrainType;
                 No = property.No;
                 Name = property.Name;
+                DepartingStation = property.DepartingStation;
+                DestinationStation = property.DestinationStation;
                 Number = property.Number;
                 StationTimes.Copy(property.StationTimes);
                 Remarks = property.Remarks;
@@ -270,6 +272,24 @@ namespace TrainTimeTable.Property
             if (!StationTimes.Compare(property.StationTimes))
             {
                 // ロギング
+                Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
+
+                // 不一致
+                return false;
+            }
+            if (DepartingStation != property.DepartingStation)
+            {
+                // ロギング
+                Logger.DebugFormat("DepartingStation:[不一致][{0}][{1}]", DepartingStation, property.DepartingStation);
+                Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
+
+                // 不一致
+                return false;
+            }
+            if (DestinationStation != property.DestinationStation)
+            {
+                // ロギング
+                Logger.DebugFormat("DestinationStation:[不一致][{0}][{1}]", DestinationStation, property.DestinationStation);
                 Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
 
                 // 不一致

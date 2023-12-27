@@ -72,7 +72,7 @@ namespace TrainTimeTable.Component
             foreach (var key in properties.Keys)
             {
                 // 登録
-                Add(key, properties[key]);
+                Add(key, new TrainProperties(properties[key]));
             }
 
             // ロギング
