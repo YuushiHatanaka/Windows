@@ -664,7 +664,7 @@ namespace TrainTimeTable
             if (!IsMDIChildForm(typeof(FormDiagramProperties)))
             {
                 // フォームオブジェクト生成
-                FormDiagramProperties form = new FormDiagramProperties(m_CurrentRouteFileProperty.Diagrams);
+                FormDiagramProperties form = new FormDiagramProperties(m_CurrentRouteFileProperty);
 
                 // イベント設定
                 form.OnUpdate += FormDiagramProperties_OnUpdate;

@@ -23,22 +23,30 @@ namespace TrainTimeTable.Control
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
+        /// <summary>
+        /// TimetablePropertyオブジェクト
+        /// </summary>
+        private RouteFileProperty m_RouteFileProperty = null;
+
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="properties"></param>
-        public ListBoxDiagram(DiagramProperties properties)
+        /// <param name="property"></param>
+        public ListBoxDiagram(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> ListBoxDiagram::ListBoxDiagram(DiagramProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> ListBoxDiagram::ListBoxDiagram(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            m_RouteFileProperty = property;
 
             // 更新
-            Update(properties);
+            Update(property.Diagrams);
 
             // ロギング
-            Logger.Debug("<<<<= ListBoxDiagram::ListBoxDiagram(DiagramProperties)");
+            Logger.Debug("<<<<= ListBoxDiagram::ListBoxDiagram(RouteFileProperty)");
         }
         #endregion
 
@@ -92,7 +100,7 @@ namespace TrainTimeTable.Control
             foreach (DiagramProperty property in Items)
             {
                 // 順序設定
-                property.Seq = seq++;
+                m_RouteFileProperty.DiagramSequences.Find(d => d.Name == property.Name).Seq = seq++;
             }
 
             // ロギング

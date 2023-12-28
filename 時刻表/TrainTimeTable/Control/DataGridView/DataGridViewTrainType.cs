@@ -487,7 +487,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("property:[{0}]", property);
 
             // コピー
-            Property[property.Seq - 1].Copy(property);
+            Property.Find(t => t.Name == property.Name).Copy(property);
 
             // 更新
             Update(Property);
@@ -510,16 +510,20 @@ namespace TrainTimeTable.Control
             Rows.Clear();
 
             // プロパティ分繰り返す
+            int seq = 1;
             foreach (var property in properties)
             {
                 // 追加オブジェクト生成
                 List<string> values = new List<string>
                 {
-                    property.Seq.ToString(),
+                    seq.ToString(),
                     property.Name,
                     property.Abbreviation,
                     ""
                 };
+
+                // シーケンス番号更新
+                seq++;
 
                 // 行追加
                 Rows.Add(values.ToArray());

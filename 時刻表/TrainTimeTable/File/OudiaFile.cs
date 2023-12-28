@@ -11,6 +11,7 @@ using System.Xml;
 using TrainTimeTable.Common;
 using TrainTimeTable.Property;
 using TrainTimeTable.File.Core;
+using System.Diagnostics;
 
 namespace TrainTimeTable.File
 {
@@ -35,9 +36,9 @@ namespace TrainTimeTable.File
 
         #region ダイアグラムインデックス
         /// <summary>
-        /// ダイアグラムID
+        /// ダイヤグラム名
         /// </summary>
-        protected int m_DiagramId = -1;
+        protected string m_DiagramName { get; set; } = string.Empty;
 
         /// <summary>
         /// ダイアグラムシーケンスID
@@ -231,8 +232,7 @@ namespace TrainTimeTable.File
                     stationSequenceProperty.Seq = m_RouteFileProperty.StationSequences.Count + 1;
                     // StationPropertyオブジェクト生成
                     StationProperty stationProperty = new StationProperty();
-                    stationProperty.Seq = m_RouteFileProperty.Stations.Count + 1;
-                    stationProperty.NextStations.Add(new NextStationProperty() { NextStationSeq = stationProperty.Seq + 1, Direction = DirectionType.Outbound });
+                    stationProperty.NextStations.Add(new NextStationProperty() { Direction = DirectionType.Outbound });
                     // 仮登録
                     m_RouteFileProperty.Stations.Add(stationProperty);
                     m_RouteFileProperty.StationSequences.Add(stationSequenceProperty);
@@ -365,7 +365,6 @@ namespace TrainTimeTable.File
                 case "Ressyasyubetsu.":
                     // TrainTypePropertyオブジェクト生成
                     TrainTypeProperty trainTypeProperty = new TrainTypeProperty();
-                    trainTypeProperty.Seq = m_RouteFileProperty.TrainTypes.Count + 1;
                     // TrainTypeSequencePropertyオブジェクト生成
                     TrainTypeSequenceProperty trainTypeSequenceProperty = new TrainTypeSequenceProperty();
                     trainTypeSequenceProperty.Seq = m_RouteFileProperty.TrainTypeSequences.Count + 1;
@@ -423,7 +422,6 @@ namespace TrainTimeTable.File
                 case "JikokuhyouFontIndex":
                     {
                         m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].TimetableFontName = string.Format("時刻表ビュー {0}", int.Parse(keyValue[1]) + 1);
-                        m_RouteFileProperty.TrainTypes[trainTypesArrayIndex].TimetableFontIndex = int.Parse(keyValue[1]);
                     }
                     break;
                 // ダイヤグラム線色
@@ -505,7 +503,7 @@ namespace TrainTimeTable.File
             {
                 case "Dia.":
                     // DiagramPropertyオブジェクト生成
-                    DiagramProperty diagramProperty = new DiagramProperty() { Name = "", Seq = m_RouteFileProperty.Diagrams.Count + 1 };
+                    DiagramProperty diagramProperty = new DiagramProperty() { Name = "" };
                     // DiagramSequencePropertyオブジェクト生成
                     DiagramSequenceProperty diagramSequenceProperty = new DiagramSequenceProperty() { Name = "", Seq = m_RouteFileProperty.DiagramSequences.Count + 1 };
                     // 仮登録
@@ -527,7 +525,7 @@ namespace TrainTimeTable.File
             }
 
             // 配列インデックス取得
-            m_DiagramId = m_RouteFileProperty.Diagrams.Count - 1;
+            int diagramIndex = m_RouteFileProperty.Diagrams.Count - 1;
             m_DiagramSequenceId = m_RouteFileProperty.DiagramSequences.Count - 1;
 
             // キー分岐
@@ -536,8 +534,9 @@ namespace TrainTimeTable.File
                 // ダイヤ名
                 case "DiaName":
                     {
-                        m_RouteFileProperty.Diagrams[m_DiagramId].Name = keyValue[1];
-                        m_RouteFileProperty.DiagramSequences[m_DiagramId].Name = keyValue[1];
+                        m_DiagramName = keyValue[1];
+                        m_RouteFileProperty.Diagrams[diagramIndex].Name = keyValue[1];
+                        m_RouteFileProperty.DiagramSequences[diagramIndex].Name = keyValue[1];
                     }
                     break;
                 default:
@@ -602,12 +601,11 @@ namespace TrainTimeTable.File
                 case "Ressya.":
                     // TrainPropertyオブジェクト生成
                     TrainProperty trainProperty = new TrainProperty(m_RouteFileProperty.Stations);
-                    trainProperty.DiagramId = diagramsArrayIndex;
+                    trainProperty.DiagramName = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Name;
                     trainProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
-                    trainProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
                     // TrainPropertyオブジェクト生成
                     TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-                    trainSequenceProperty.DiagramId = diagramsArrayIndex;
+                    trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Name;
                     trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].GetNewId();
                     trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Count + 1;
                     // 仮登録
@@ -657,7 +655,11 @@ namespace TrainTimeTable.File
                 // 列車種別
                 case "Syubetsu":
                     {
-                        m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].TrainType = int.Parse(keyValue[1]);
+                        // TrainTypePropertyオブジェクト取得
+                        TrainTypeProperty property = m_RouteFileProperty.TrainTypes[int.Parse(keyValue[1])];
+
+                        // 列車種別名設定
+                        m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType][trainsArrayIndex].TrainTypeName = property.Name;
                     }
                     break;
                 // 列車番号
@@ -764,7 +766,7 @@ namespace TrainTimeTable.File
             {
                 // StationTimePropertyオブジェクト生成
                 StationTimeProperty property = new StationTimeProperty();
-                property.DiagramId = m_DiagramId;
+                property.DiagramName = m_DiagramName;
                 property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
                 property.Seq = index + 1;
@@ -836,7 +838,7 @@ namespace TrainTimeTable.File
             {
                 // StationTimePropertyオブジェクト生成
                 StationTimeProperty property = new StationTimeProperty();
-                property.DiagramId = m_DiagramId;
+                property.DiagramName = m_DiagramName;
                 property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
                 property.Seq = index + 1;
@@ -972,7 +974,7 @@ namespace TrainTimeTable.File
                 if (property.TrainId == -1)
                 {
                     // 更新
-                    property.DiagramId = m_DiagramId;
+                    property.DiagramName = m_DiagramName;
                     property.TrainId = trainId;
                     property.Direction = m_CurrentDirectionType;
                     property.StationTreatment = StationTreatment.NoService;

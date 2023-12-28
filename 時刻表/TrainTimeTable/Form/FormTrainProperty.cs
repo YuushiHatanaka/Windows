@@ -227,7 +227,7 @@ namespace TrainTimeTable
 
             // 設定
             textBoxTrainNo.Text = Property.No;
-            m_ComboBoxTrainType.SetSelected(Property.TrainType);
+            m_ComboBoxTrainType.SetSelected(Property.TrainTypeName);
             textBoxTrainName.Text = Property.Name;
             textBoxTrainNumber.Text = Property.Number;
             m_ComboBoxDepartingStation.SetSelected(Property.DepartingStation);
@@ -249,7 +249,7 @@ namespace TrainTimeTable
 
             // 設定
             Property.No = textBoxTrainNo.Text;
-            Property.TrainType = m_ComboBoxTrainType.GetSelected();
+            Property.TrainTypeName = m_ComboBoxTrainType.GetSelected();
             Property.Name = textBoxTrainName.Text;
             Property.Number = textBoxTrainNumber.Text;
             Property.DepartingStation = m_ComboBoxDepartingStation.GetSelected();

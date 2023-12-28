@@ -117,6 +117,7 @@ namespace TrainTimeTable.Control
             var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
 
             // 駅を繰り返す
+            int seq = 1;
             foreach (var stationSequence in stationSequences)
             {
                 // 駅情報取得
@@ -126,7 +127,7 @@ namespace TrainTimeTable.Control
                 List<string> values = new List<string>();
 
                 // カラムリスト初期設定
-                values.Add(station.Seq.ToString());
+                values.Add(seq.ToString());
                 values.Add(station.Name);
 
                 // カラム設定
@@ -176,6 +177,9 @@ namespace TrainTimeTable.Control
                         values.Add("上り");
                     }
                 }
+
+                // シーケンス番号更新
+                seq++;
 
                 // 行追加
                 Rows.Add(values.ToArray());

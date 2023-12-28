@@ -437,7 +437,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("property:[{0}]", property);
 
             // 設定
-            m_RouteFileProperty.Stations[property.Seq - 1].Copy(property);
+            m_RouteFileProperty.Stations.Find(s => s.Name == property.Name).Copy(property);
 
             // 更新
             Update(m_RouteFileProperty.Stations);

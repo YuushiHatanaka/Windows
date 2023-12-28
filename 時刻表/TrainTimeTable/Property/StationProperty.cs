@@ -31,12 +31,6 @@ namespace TrainTimeTable.Property
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// シーケンス番号
-        /// </summary>
-        [Obsolete("StationPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int Seq { get; set; } = 0;
-
-        /// <summary>
         /// 起点駅
         /// </summary>
         public bool StartingStation { get; set; } = false;
@@ -136,7 +130,6 @@ namespace TrainTimeTable.Property
             {
                 // コピー
                 Name = property.Name;
-                Seq = property.Seq;
                 StartingStation = property.StartingStation;
                 TerminalStation = property.TerminalStation;
                 Marks.Clear();
@@ -172,15 +165,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Name:[不一致][{0}][{1}]", Name, property.Name);
-                Logger.Debug("<<<<= StationProperty::Compare(StationProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (Seq != property.Seq)
-            {
-                // ロギング
-                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
                 Logger.Debug("<<<<= StationProperty::Compare(StationProperty)");
 
                 // 不一致
@@ -303,15 +287,14 @@ namespace TrainTimeTable.Property
 
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜駅情報＞"));
-            result.AppendLine(indentstr + string.Format("　駅名              :[{0}]", Name));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号    :[{0}]", Seq));
-            result.AppendLine(indentstr + string.Format("　起点駅            :[{0}]", StartingStation));
-            result.AppendLine(indentstr + string.Format("　終点駅            :[{0}]", TerminalStation));
+            result.AppendLine(indentstr + string.Format("　駅名    :[{0}]", Name));
+            result.AppendLine(indentstr + string.Format("　起点駅  :[{0}]", StartingStation));
+            result.AppendLine(indentstr + string.Format("　終点駅  :[{0}]", TerminalStation));
             result.Append(Marks.ToString(indent + 1));
-            result.AppendLine(indentstr + string.Format("　時刻形式          :[{0}]", TimeFormat.GetStringValue()));
-            result.AppendLine(indentstr + string.Format("　駅規模            :[{0}]", StationScale.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　時刻形式:[{0}]", TimeFormat.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　駅規模  :[{0}]", StationScale.GetStringValue()));
             result.Append(StationDistanceFromReferenceStations.ToString(indent + 1));
-            result.AppendLine(indentstr + string.Format("　境界線            :[{0}]", Border));
+            result.AppendLine(indentstr + string.Format("　境界線  :[{0}]", Border));
             result.Append(NextStations.ToString(indent + 1));
             result.Append(DiagramTrainInformations.ToString(indent + 1));
 

@@ -16,12 +16,7 @@ namespace TrainTimeTable.EventArgs
         public Type UpdateType { get; set; } = default(Type);
 
         /// <summary>
-        /// ダイヤグラムID
-        /// </summary>
-        public int DiagramId { get; set; } = 0;
-
-        /// <summary>
-        /// ダイアログ名
+        /// ダイヤグラム名
         /// </summary>
         public string DiagramName { get; set; } = string.Empty;
 

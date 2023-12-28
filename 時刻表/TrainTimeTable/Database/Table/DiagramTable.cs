@@ -179,7 +179,7 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("Name,");  // 駅名
+            query.Append("Name,");  // ダイヤグラム名
             query.Append("Seq");    // シーケンス番号
             query.Append(") VALUES ");
             query.Append("(");

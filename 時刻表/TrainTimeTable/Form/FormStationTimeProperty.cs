@@ -69,7 +69,7 @@ namespace TrainTimeTable
             InitializeComponent();
 
             // 設定
-            TrainProperty trainProperty = property.Diagrams[stationTime.DiagramId].Trains[stationTime.Direction].Find(t => t.Id == stationTime.TrainId);
+            TrainProperty trainProperty = property.Diagrams.Find(d => d.Name == stationTime.DiagramName).Trains[stationTime.Direction].Find(t => t.Id == stationTime.TrainId);
             Text = string.Format("駅時刻：[{0} - {1} {2}]", trainProperty?.No, stationTime.StationName, stationTime.Direction.GetStringValue());
             m_RouteFileProperty = property;
             Property.Copy(stationTime);

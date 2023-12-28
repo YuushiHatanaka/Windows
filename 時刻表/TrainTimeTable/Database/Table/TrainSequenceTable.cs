@@ -45,14 +45,14 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
-            query.Append("DiagramId INTEGER NOT NULL DEFAULT -1,"); // ダイヤグラムID
+            query.Append("DiagramName TEXT NOT NULL,");             // ダイヤグラム名
             query.Append("Direction INTEGER NOT NULL DEFAULT 0,");  // 方向種別
             query.Append("Id INTEGER NOT NULL,");                   // ID
             query.Append("Seq INTEGER NOT NULL,");                  // シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
-            query.Append("PRIMARY KEY(DiagramId, Direction, Id));");
+            query.Append("PRIMARY KEY(DiagramName, Direction, Id));");
 
             // 作成
             Create(query.ToString());
@@ -68,11 +68,11 @@ namespace TrainTimeTable.Database.Table
         /// </summary>
         /// <param name="property"></param>
         /// <returns></returns>
-        public DictionaryTrainSequence Load(int index)
+        public new DictionaryTrainSequence Load(string name)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainSequenceTable::Load(int)");
-            Logger.DebugFormat("index:[{0}]", index);
+            Logger.Debug("=>>>> TrainSequenceTable::Load(string)");
+            Logger.DebugFormat("string:[{0}]", name);
 
             // DictionaryTrainSequenceオブジェクト生成
             DictionaryTrainSequence result = new DictionaryTrainSequence();
@@ -82,10 +82,10 @@ namespace TrainTimeTable.Database.Table
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
-            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramId = {1} ORDER BY Direction,Seq;", m_TableName, index));
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' ORDER BY Direction,Seq;", m_TableName, name));
 
             // クエリ実行
-            using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
+            using (SQLiteDataReader sqliteDataReader = base.Load(query.ToString()))
             {
                 // 1行のみデータを取得
                 while (sqliteDataReader.Read())
@@ -125,7 +125,7 @@ namespace TrainTimeTable.Database.Table
             TrainSequenceProperty property = new TrainSequenceProperty();
 
             // 設定
-            property.DiagramId = int.Parse(sqliteDataReader["DiagramId"].ToString());
+            property.DiagramName = sqliteDataReader["DiagramName"].ToString();
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
             property.Id = int.Parse(sqliteDataReader["Id"].ToString());
             property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
@@ -237,7 +237,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var dst in dstProperties)
                 {
                     // キーを比較
-                    if ((src.DiagramId == dst.DiagramId) && (src.Direction == dst.Direction) && (src.Id == dst.Id))
+                    if ((src.DiagramName == dst.DiagramName) && (src.Direction == dst.Direction) && (src.Id == dst.Id))
                     {
                         removeId = false;
                         break;
@@ -276,7 +276,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("DiagramId = " + property.DiagramId + " AND Direction = " + (int)property.Direction + " AND Id = " + property.Id.ToString() + " AND Seq = " + property.Seq + ";");
+            query.Append("DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND Id = " + property.Id.ToString() + " AND Seq = " + property.Seq + ";");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -304,13 +304,13 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("DiagramId,"); // ダイヤグラムID
-            query.Append("Direction,"); // 方向種別
-            query.Append("Id,");        // ID
-            query.Append("Seq");        // シーケンス番号
+            query.Append("DiagramName,");   // ダイヤグラム名
+            query.Append("Direction,");     // 方向種別
+            query.Append("Id,");            // ID
+            query.Append("Seq");            // シーケンス番号
             query.Append(") VALUES ");
             query.Append("(");
-            query.Append(property.DiagramId.ToString() + ",");
+            query.Append("'" + property.DiagramName.ToString() + "',");
             query.Append((int)property.Direction + ",");
             query.Append(property.Id.ToString() + ",");
             query.Append(property.Seq.ToString());
@@ -339,7 +339,7 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE DiagramId = " + property.DiagramId + " AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq +  ";");
+            query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq +  ";");
 
             // ロギング
             Logger.Debug("<<<<= TrainSequenceTable::Update(TrainSequenceProperty)");
@@ -367,7 +367,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var property in properties)
                 {
                     query.Append(string.Format("DELETE FROM {0} ", m_TableName));
-                    query.Append("WHERE DiagramId = " + property.DiagramId + " AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq + ";");
+                    query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq + ";");
                 }
 
                 // 削除実行

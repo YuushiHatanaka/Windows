@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using TrainTimeTable.Common;
 
 namespace TrainTimeTable.Property
 {
@@ -26,6 +27,11 @@ namespace TrainTimeTable.Property
         /// 路線名
         /// </summary>
         public string RouteName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// ファイルバージョン
+        /// </summary>
+        public string Version { get; set; } = AssemblyLibrary.GetVersion();
 
         /// <summary>
         /// インポートファイル種別
@@ -79,6 +85,7 @@ namespace TrainTimeTable.Property
             {
                 // コピー
                 RouteName = property.RouteName;
+                Version = property.Version;
                 ImportFileType = property.ImportFileType;
             }
 
@@ -104,6 +111,15 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("RouteName:[不一致][{0}][{1}]", RouteName, property.RouteName);
+                Logger.Debug("<<<<= FileInfomationProperty::Compare(FileInfomationProperty)");
+
+                // 不一致
+                return false;
+            }
+            if (Version != property.Version)
+            {
+                // ロギング
+                Logger.DebugFormat("Version:[不一致][{0}][{1}]", Version, property.Version);
                 Logger.Debug("<<<<= FileInfomationProperty::Compare(FileInfomationProperty)");
 
                 // 不一致
@@ -155,6 +171,7 @@ namespace TrainTimeTable.Property
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜ファイル情報＞"));
             result.AppendLine(indentstr + string.Format("　路線名                :[{0}] ", RouteName));
+            result.AppendLine(indentstr + string.Format("　ファイルバージョン    :[{0}] ", Version));
             result.AppendLine(indentstr + string.Format("　インポートファイル種別:[{0}] ", ImportFileType));
 
             // 返却

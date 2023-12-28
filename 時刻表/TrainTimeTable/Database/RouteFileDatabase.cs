@@ -400,19 +400,20 @@ namespace TrainTimeTable.Database
             result.TrainTypeSequences = m_TrainTypeSequenceTable.Load();
             result.Comment = m_CommentTable.Load();
             result.Diagrams = m_DiagramTable.Load();
-            foreach (var diagram in result.Diagrams)
+            result.DiagramSequences = m_DiagramSequenceTable.Load();
+            foreach (var diagramSequences in result.DiagramSequences.OrderBy(s => s.Seq))
             {
-                diagram.Trains = m_TrainTable.Load(diagram.Seq - 1);
-                diagram.TrainSequence = m_TrainSequenceTable.Load(diagram.Seq - 1);
+                DiagramProperty diagramProperty = result.Diagrams.Find(d=>d.Name == diagramSequences.Name);
+                diagramProperty.Trains = m_TrainTable.Load(diagramProperty.Name);
+                diagramProperty.TrainSequence = m_TrainSequenceTable.Load(diagramProperty.Name);
 
-                foreach (var train in diagram.Trains)
+                foreach (var train in diagramProperty.Trains)
                 {
                     m_TrainMarkTable.Load(train);
                     m_TrainMarkSequenceTable.Load(train);
                     m_StationTimeTable.Load(train);
                 }
             }
-            result.DiagramSequences = m_DiagramSequenceTable.Load();
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);

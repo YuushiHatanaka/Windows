@@ -46,7 +46,6 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
             query.Append("Name TEXT NOT NULL,");                                                    // 駅名
-            query.Append("Seq INTEGER NOT NULL,");                                                  // シーケンス番号
             query.Append("StartingStation TEXT NOT NULL DEFAULT 'False',");                         // 起点駅
             query.Append("TerminalStation TEXT NOT NULL DEFAULT 'False',");                         // 終点駅
             query.Append("TimeFormat INTEGER NOT NULL DEFAULT 0,");                                 // 時刻形式(TimeFormat)
@@ -87,7 +86,6 @@ namespace TrainTimeTable.Database.Table
 
             // 設定
             property.Name = sqliteDataReader["Name"].ToString();
-            property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
             property.StartingStation = bool.Parse(sqliteDataReader["StartingStation"].ToString());
             property.TerminalStation = bool.Parse(sqliteDataReader["TerminalStation"].ToString());
             property.TimeFormat = (TimeFormat)int.Parse(sqliteDataReader["TimeFormat"].ToString());
@@ -170,7 +168,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("Name = '" + property.Name + "' AND Seq = " + property.Seq.ToString() + ";");
+            query.Append("Name = '" + property.Name + "';");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -200,7 +198,6 @@ namespace TrainTimeTable.Database.Table
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
             query.Append("Name,");                                          // 駅名
-            query.Append("Seq,");                                           // シーケンス番号
             query.Append("StartingStation,");                               // 起点駅
             query.Append("TerminalStation,");                               // 終点駅
             query.Append("TimeFormat,");                                    // 時刻形式(TimeFormat)
@@ -213,7 +210,6 @@ namespace TrainTimeTable.Database.Table
             query.Append(") VALUES ");
             query.Append("(");
             query.Append("'" + property.Name + "',");
-            query.Append(property.Seq.ToString() + ",");
             query.Append("'" + property.StartingStation.ToString() + "',");
             query.Append("'" + property.TerminalStation.ToString() + "',");
             query.Append((int)property.TimeFormat + ",");
@@ -247,7 +243,6 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
-            query.Append("Seq = " + property.Seq.ToString() + ",");
             query.Append("StartingStation = '" + property.StartingStation.ToString() + "',");
             query.Append("TerminalStation = '" + property.TerminalStation.ToString() + "',");
             query.Append("TimeFormat = " + (int)property.TimeFormat + ",");
@@ -258,7 +253,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("DiagramTrainInformationOutbound = " + (int)property.DiagramTrainInformations[DirectionType.Outbound] + ",");
             query.Append("DiagramTrainInformationInbound = " + (int)property.DiagramTrainInformations[DirectionType.Inbound] + ",");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE Name = '" + property.Name + "' AND Seq = " + property.Seq.ToString() + ";");
+            query.Append("WHERE Name = '" + property.Name + "';");
 
             // 更新
             Update(query.ToString());

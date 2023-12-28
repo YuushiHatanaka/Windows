@@ -32,12 +32,6 @@ namespace TrainTimeTable.Property
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// シーケンス番号
-        /// </summary>
-        [Obsolete("TrainTypePropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int Seq { get; set; } = 0;
-
-        /// <summary>
         /// 略称
         /// </summary>
         public string Abbreviation { get; set; } = string.Empty;
@@ -51,12 +45,6 @@ namespace TrainTimeTable.Property
         /// 時刻表Font名
         /// </summary>
         public string TimetableFontName { get; set; } = "時刻表ビュー 1";
-
-        /// <summary>
-        /// 時刻表Fontインデックス
-        /// </summary>
-        [Obsolete("TrainTypePropertyクラスの時刻表Fontインデックスは今後使用不可となる予定です", false)]
-        public int TimetableFontIndex { get; set; } = 1;
 
         /// <summary>
         /// ダイヤグラム線色
@@ -125,11 +113,9 @@ namespace TrainTimeTable.Property
             {
                 // コピー
                 Name = property.Name;
-                Seq = property.Seq;
                 Abbreviation = property.Abbreviation;
                 StringsColor = property.StringsColor;
                 TimetableFontName = property.TimetableFontName;
-                TimetableFontIndex = property.TimetableFontIndex;
                 DiagramLineColor = property.DiagramLineColor;
                 DiagramLineStyle = property.DiagramLineStyle;
                 DiagramLineBold = property.DiagramLineBold;
@@ -163,15 +149,6 @@ namespace TrainTimeTable.Property
                 // 不一致
                 return false;
             }
-            if (Seq != property.Seq)
-            {
-                // ロギング
-                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
-                Logger.Debug("<<<<= TrainTypeProperty::Compare(TrainTypeProperty)");
-
-                // 不一致
-                return false;
-            }
             if (Abbreviation != property.Abbreviation)
             {
                 // ロギング
@@ -194,15 +171,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("TimetableFontName:[不一致][{0}][{1}]", TimetableFontName, property.TimetableFontName);
-                Logger.Debug("<<<<= TrainTypeProperty::Compare(TrainTypeProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (TimetableFontIndex != property.TimetableFontIndex)
-            {
-                // ロギング
-                Logger.DebugFormat("TimetableFontIndex:[不一致][{0}][{1}]", TimetableFontIndex, property.TimetableFontIndex);
                 Logger.Debug("<<<<= TrainTypeProperty::Compare(TrainTypeProperty)");
 
                 // 不一致
@@ -304,11 +272,9 @@ namespace TrainTimeTable.Property
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜列車種別＞"));
             result.AppendLine(indentstr + string.Format("　種別名                      :[{0}]", Name));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号              :[{0}]", Seq));
             result.AppendLine(indentstr + string.Format("　略称                        :[{0}]", Abbreviation));
             result.AppendLine(indentstr + string.Format("　文字色                      :[{0}]", StringsColor));
             result.AppendLine(indentstr + string.Format("　時刻表Font名                :[{0}]", TimetableFontName));
-            result.AppendLine(indentstr + string.Format("　時刻表Fontインデックス      :[{0}]", TimetableFontIndex));
             result.AppendLine(indentstr + string.Format("　ダイヤグラム線色            :[{0}]", DiagramLineColor));
             result.AppendLine(indentstr + string.Format("　ダイヤグラム線スタイル      :[{0}]", DiagramLineStyle));
             result.AppendLine(indentstr + string.Format("　ダイヤグラム線スタイル(太線):[{0}]", DiagramLineBold));

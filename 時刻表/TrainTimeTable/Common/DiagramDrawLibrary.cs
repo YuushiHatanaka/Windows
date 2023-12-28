@@ -782,7 +782,7 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes[train.TrainType];
+                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
 
                 // 列車描画用Penオブジェクト生成
                 using (Pen trainPen = trainTypeProperty.GetDiagramLinePen())
@@ -877,7 +877,7 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes[train.TrainType];
+                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
 
                 // 列車描画用Penオブジェクト生成
                 using (Pen trainPen = trainTypeProperty.GetDiagramLinePen())
@@ -1194,7 +1194,7 @@ namespace TrainTimeTable.Common
             Bitmap img = new Bitmap(w, h);
 
             // ColorからSolidBrushに変換
-            SolidBrush brush = new SolidBrush(m_RouteFileProperty.TrainTypes[property.TrainType].DiagramLineColor);
+            SolidBrush brush = new SolidBrush(m_RouteFileProperty.TrainTypes.Find(t => t.Name == property.TrainTypeName).DiagramLineColor);
 
             //imgに文字列を描画する
             Graphics bg = Graphics.FromImage(img);
@@ -1413,7 +1413,7 @@ namespace TrainTimeTable.Common
             else
             {
                 // ロギング
-                Logger.WarnFormat("着、発時刻両方が設定されていません:[current][{0}][{1}][{2}]", train.DiagramId, train.Direction.GetStringValue(), train.Id);
+                Logger.WarnFormat("着、発時刻両方が設定されていません:[current][{0}][{1}][{2}]", train.DiagramName, train.Direction.GetStringValue(), train.Id);
                 return;
             }
 
@@ -1439,7 +1439,7 @@ namespace TrainTimeTable.Common
             else
             {
                 // ロギング
-                Logger.WarnFormat("着、発時刻両方が設定されていません:[next][{0}][{1}][{2}]", train.DiagramId, train.Direction.GetStringValue(), train.Id);
+                Logger.WarnFormat("着、発時刻両方が設定されていません:[next][{0}][{1}][{2}]", train.DiagramName, train.Direction.GetStringValue(), train.Id);
                 return;
             }
 

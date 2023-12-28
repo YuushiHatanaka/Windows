@@ -43,6 +43,11 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
+        /// TimetablePropertyオブジェクト
+        /// </summary>
+        private RouteFileProperty m_RouteFileProperty = null;
+
+        /// <summary>
         /// DiagramPropertiesオブジェクト
         /// </summary>
         private DiagramProperties m_OldProperties = new DiagramProperties();
@@ -56,19 +61,20 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="properties"></param>
-        public FormDiagramProperties(DiagramProperties properties)
+        /// <param name="property"></param>
+        public FormDiagramProperties(RouteFileProperty property)
         {
             // ロギング
             Logger.Debug("=>>>> FormDiagramProperties::FormDiagramProperties(RouteFileProperty)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.DebugFormat("property:[{0}]", property);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
-            m_OldProperties.Copy(properties);
-            m_ListBoxDiagram = new ListBoxDiagram(properties);
+            m_RouteFileProperty = property;
+            m_OldProperties.Copy(property.Diagrams);
+            m_ListBoxDiagram = new ListBoxDiagram(property);
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::FormDiagramProperties(RouteFileProperty)");

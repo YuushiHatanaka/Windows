@@ -173,7 +173,6 @@ namespace TrainTimeTable.Property
                 nextStationProperty.Direction = DirectionType.Outbound;
                 if (!(i + 1 >= Count))
                 {
-                    nextStationProperty.NextStationSeq = i + 1;
                     nextStationProperty.NextStationName = this[i + 1].Name;
                 }
 
@@ -199,7 +198,6 @@ namespace TrainTimeTable.Property
                 nextStationProperty.Direction = DirectionType.Inbound;
                 if (!(i <= 0))
                 {
-                    nextStationProperty.NextStationSeq = i - 1;
                     nextStationProperty.NextStationName = this[i - 1].Name;
                 }
 

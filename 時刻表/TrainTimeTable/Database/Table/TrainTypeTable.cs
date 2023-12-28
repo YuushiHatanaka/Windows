@@ -47,11 +47,9 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
             query.Append("Name TEXT NOT NULL,");                                        // 種別名
-            query.Append("Seq INTEGER NOT NULL,");                                      // シーケンス番号
             query.Append("Abbreviation TEXT,");                                         // 略称
             query.Append("StringsColor TEXT NOT NULL DEFAULT '#000000',");              // 文字色(ColorTranslator.FromHtml)
-            query.Append("TimetableFontName TEXT NOT NULL DEFAULT '時刻表ビュー 1',");  // 時刻表Fontインデックス
-            query.Append("TimetableFontIndex INTEGER NOT NULL DEFAULT 1,");             // 時刻表Fontインデックス
+            query.Append("TimetableFontName TEXT NOT NULL DEFAULT '時刻表ビュー 1',");  // 時刻表Font名
             query.Append("DiagramLineColor TEXT NOT NULL DEFAULT '#000000',");          // ダイヤグラム線色(ColorTranslator.FromHtml)
             query.Append("DiagramLineStyle INTEGER NOT NULL DEFAULT 1,");               // ダイヤグラム線スタイル
             query.Append("DiagramLineBold TEXT NOT NULL DEFAULT 'False',");             // ダイヤグラム線スタイル(太線)
@@ -87,11 +85,9 @@ namespace TrainTimeTable.Database.Table
 
             // 設定
             property.Name = sqliteDataReader["Name"].ToString();
-            property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
             property.Abbreviation = sqliteDataReader["Abbreviation"].ToString();
             property.StringsColor = ColorTranslator.FromHtml(sqliteDataReader["StringsColor"].ToString());
             property.TimetableFontName = sqliteDataReader["TimetableFontName"].ToString();
-            property.TimetableFontIndex = int.Parse(sqliteDataReader["TimetableFontIndex"].ToString());
             property.DiagramLineColor = ColorTranslator.FromHtml(sqliteDataReader["DiagramLineColor"].ToString());
             property.DiagramLineStyle = (DashStyle)int.Parse(sqliteDataReader["DiagramLineStyle"].ToString());
             property.DiagramLineBold = bool.Parse(sqliteDataReader["DiagramLineBold"].ToString());
@@ -169,7 +165,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("Name = '" + property.Name + "' AND Seq = " + property.Seq.ToString() + ";");
+            query.Append("Name = '" + property.Name + "';");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -199,11 +195,9 @@ namespace TrainTimeTable.Database.Table
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
             query.Append("Name,");                          // 種別名
-            query.Append("Seq,");                           // シーケンス番号
             query.Append("Abbreviation,");                  // 略称
             query.Append("StringsColor,");                  // 文字色(ColorTranslator.FromHtml)
             query.Append("TimetableFontName,");             // 時刻表Font名
-            query.Append("TimetableFontIndex,");            // 時刻表Fontインデックス
             query.Append("DiagramLineColor,");              // ダイヤグラム線色(ColorTranslator.FromHtml)
             query.Append("DiagramLineStyle,");              // ダイヤグラム線スタイル
             query.Append("DiagramLineBold,");               // ダイヤグラム線スタイル(太線)
@@ -211,11 +205,9 @@ namespace TrainTimeTable.Database.Table
             query.Append(") VALUES ");
             query.Append("(");
             query.Append("'" + property.Name + "',");
-            query.Append(property.Seq.ToString() + ",");
             query.Append("'" + property.Abbreviation + "',");
             query.Append("'" + string.Format("#{0:X2}{1:X2}{2:X2}", property.StringsColor.R, property.StringsColor.G, property.StringsColor.B) + "',");
             query.Append("'" + property.TimetableFontName + "',");
-            query.Append(property.TimetableFontIndex + ",");
             query.Append("'" + string.Format("#{0:X2}{1:X2}{2:X2}", property.DiagramLineColor.R, property.DiagramLineColor.G, property.DiagramLineColor.B) + "',");
             query.Append((int)property.DiagramLineStyle + ",");
             query.Append("'" + property.DiagramLineBold.ToString() + "',");
@@ -244,17 +236,15 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
-            query.Append("Seq = " + property.Seq.ToString() + ",");
             query.Append("Abbreviation = '" + property.Abbreviation + "',");
             query.Append("StringsColor = '" + string.Format("#{0:X2}{1:X2}{2:X2}", property.StringsColor.R, property.StringsColor.G, property.StringsColor.B) + "',");
             query.Append("TimetableFontName = '" + property.TimetableFontName + "',");
-            query.Append("TimetableFontIndex = " + property.TimetableFontIndex + ",");
             query.Append("DiagramLineColor = '" + string.Format("#{0:X2}{1:X2}{2:X2}", property.DiagramLineColor.R, property.DiagramLineColor.G, property.DiagramLineColor.B) + "',");
             query.Append("DiagramLineStyle = " + (int)property.DiagramLineStyle + ",");
             query.Append("DiagramLineBold = '" + property.DiagramLineBold.ToString() + "',");
             query.Append("StopStationClearlyIndicated = " + (int)property.StopStationClearlyIndicated + ",");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE Name = '" + property.Name + "' AND Seq = " + property.Seq.ToString() + ";");
+            query.Append("WHERE Name = '" + property.Name + "';");
 
             // ロギング
             Logger.Debug("<<<<= TrainTypeTable::Update(TrainTypeProperty)");

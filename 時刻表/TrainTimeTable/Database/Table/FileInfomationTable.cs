@@ -45,6 +45,7 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
             query.Append("RouteName TEXT,");        // 路線名
+            query.Append("Version TEXT,");          // ファイルバージョン
             query.Append("ImportFileType TEXT,");   // インポートファイル種別
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
@@ -74,6 +75,7 @@ namespace TrainTimeTable.Database.Table
 
             // 設定
             result.RouteName = sqliteDataReader["RouteName"].ToString();
+            result.Version = sqliteDataReader["Version"].ToString();
             result.ImportFileType = sqliteDataReader["ImportFileType"].ToString();
 
             // ロギング
@@ -152,10 +154,12 @@ namespace TrainTimeTable.Database.Table
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
             query.Append("RouteName,");     // 路線名
+            query.Append("Version,");       // ファイルバージョン
             query.Append("ImportFileType"); // インポートファイル種別
             query.Append(") VALUES ");
             query.Append("(");
             query.Append("'" + property.RouteName + "',");
+            query.Append("'" + property.Version + "',");
             query.Append("'" + property.ImportFileType + "'");
             query.Append(");");
 
@@ -181,6 +185,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
+            query.Append("Version = '" + property.Version + "',");
             query.Append("ImportFileType = '" + property.ImportFileType + "',");
             query.Append("updated = '" + GetCurrentDateTime() + "'");
             query.Append("WHERE RouteName = '" + property.RouteName.ToString() + "';");

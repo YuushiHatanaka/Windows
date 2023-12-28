@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 namespace TrainTimeTable.File
 {
@@ -61,30 +62,30 @@ namespace TrainTimeTable.File
             // 列車種別デフォルト設定
             m_RouteFileProperty.TrainTypes = new TrainTypeProperties()
             {
-                { new TrainTypeProperty(){ Seq =  1, Name = "普通"    , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq =  2, Name = "快速"    , Abbreviation = "快速", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq =  3, Name = "特別快速", Abbreviation = "特快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq =  4, Name = "新快速"  , Abbreviation = "新快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq =  5, Name = "通勤快速", Abbreviation = "通快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq =  6, Name = "準急"    , Abbreviation = "準急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq =  7, Name = "急行"    , Abbreviation = "急行", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq =  8, Name = "快速急行", Abbreviation = "快急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq =  9, Name = "特急"    , Abbreviation = "特急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 10, Name = "快速特急", Abbreviation = "快特", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 11, Name = "通勤準急", Abbreviation = "通準", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 12, Name = "通勤急行", Abbreviation = "通急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 13, Name = "区間快速", Abbreviation = "区快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 14, Name = "区間急行", Abbreviation = "区急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 15, Name = "回送"    , Abbreviation = "回送", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 16, Name = "貨物"    , Abbreviation = "貨物", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Dash ,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 17, Name = "急行貨物", Abbreviation = "急貨", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Dash ,  DiagramLineBold = true  }},
-                { new TrainTypeProperty(){ Seq = 18, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 19, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 20, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 21, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 22, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 23, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
-                { new TrainTypeProperty(){ Seq = 24, Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "普通"    , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "快速"    , Abbreviation = "快速", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "特別快速", Abbreviation = "特快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "新快速"  , Abbreviation = "新快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "通勤快速", Abbreviation = "通快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "準急"    , Abbreviation = "準急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "急行"    , Abbreviation = "急行", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "快速急行", Abbreviation = "快急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "特急"    , Abbreviation = "特急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "快速特急", Abbreviation = "快特", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "通勤準急", Abbreviation = "通準", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "通勤急行", Abbreviation = "通急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "区間快速", Abbreviation = "区快", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "区間急行", Abbreviation = "区急", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = "回送"    , Abbreviation = "回送", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "貨物"    , Abbreviation = "貨物", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Dash ,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = "急行貨物", Abbreviation = "急貨", StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Dash ,  DiagramLineBold = true  }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
+                { new TrainTypeProperty(){ Name = ""        , Abbreviation = ""    , StringsColor = m_WinDIAColor[12], DiagramLineColor = m_WinDIAColor[12], DiagramLineStyle = DashStyle.Solid,  DiagramLineBold = false }},
             };
 
             // 列車種別シーケンスデフォルト設定
@@ -95,7 +96,7 @@ namespace TrainTimeTable.File
             }
 
             // DiagramPropertyオブジェクト生成
-            DiagramProperty diagramProperty = new DiagramProperty() { Name = "", Seq = 1 };
+            DiagramProperty diagramProperty = new DiagramProperty() { Name = "" };
 
             // DiagramSequencePropertyオブジェクト生成
             DiagramSequenceProperty diagramSequenceProperty = new DiagramSequenceProperty() { Name = "", Seq = 1 };
@@ -223,10 +224,9 @@ namespace TrainTimeTable.File
 
                     // StationPropertyオブジェクト生成
                     StationProperty stationProperty = new StationProperty();
-                    stationProperty.Seq = m_RouteFileProperty.Stations.Count + 1;
                     stationProperty.StationScale = StationScale.GeneralStation;
                     stationProperty.TimeFormat = TimeFormat.DepartureTime;
-                    stationProperty.NextStations.Add(new NextStationProperty() { NextStationSeq = stationProperty.Seq + 1, Direction = DirectionType.Outbound });
+                    stationProperty.NextStations.Add(new NextStationProperty() { Direction = DirectionType.Outbound });
 
                     // カラム取得
                     string[] columns = textFieldParser.ReadFields();
@@ -374,7 +374,6 @@ namespace TrainTimeTable.File
                         // TrainTypePropertyオブジェクト生成
                         TrainTypeProperty trainTypeProperty = new TrainTypeProperty();
                         trainTypeProperty.TimetableFontName = "時刻表ビュー 1";
-                        trainTypeProperty.TimetableFontIndex = 0;
 
                         // 数値変換
                         uint iValue = uint.Parse(column);
@@ -462,7 +461,7 @@ namespace TrainTimeTable.File
                         string[] columns = textFieldParser.ReadFields();
 
                         // 同一名称がいるか？
-                        List<TrainTypeProperty> trainTypePropertyFindAll = m_RouteFileProperty.TrainTypes.FindAll(x => x.Name == columns[0] && x.Seq != index + 1);
+                        List<TrainTypeProperty> trainTypePropertyFindAll = m_RouteFileProperty.TrainTypes.FindAll(x => x.Name == columns[0]);
                         if (trainTypePropertyFindAll.Count > 0)
                         {
                             // 同一種別がいたらクリアする
@@ -473,7 +472,6 @@ namespace TrainTimeTable.File
                         }
 
                         // 設定
-                        m_RouteFileProperty.TrainTypes[index].Seq = index + 1;
                         m_RouteFileProperty.TrainTypes[index].Name = columns[0];
                         m_RouteFileProperty.TrainTypes[index].Abbreviation = columns[1];
                         m_RouteFileProperty.TrainTypeSequences[index].Name = columns[0];
@@ -502,14 +500,13 @@ namespace TrainTimeTable.File
 
             // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramId = 0;
+            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
-            trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainProperty.Direction = DirectionType.Outbound;
 
             // TrainPropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-            trainSequenceProperty.DiagramId = 0;
+            trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].GetNewId();
             trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Outbound;
@@ -537,14 +534,13 @@ namespace TrainTimeTable.File
 
             // TrainPropertyオブジェクト生成
             TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramId = 0;
+            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
-            trainProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainProperty.Direction = DirectionType.Inbound;
 
             // TrainPropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
-            trainSequenceProperty.DiagramId = 0;
+            trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].GetNewId();
             trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Inbound;
@@ -604,10 +600,19 @@ namespace TrainTimeTable.File
                                     // ()付き番号は削除
                                     Regex reg = new Regex("\\(.*\\)");
                                     string trainType = reg.Replace(columns[i], "");
+
+                                    // インデックス決定
+                                    int index = 0;
                                     if (trainType != string.Empty)
                                     {
-                                        trainProperty.TrainType = int.Parse(trainType);
+                                        index = int.Parse(trainType);
                                     }
+
+                                    // TrainTypePropertyオブジェクト取得
+                                    TrainTypeProperty property = m_RouteFileProperty.TrainTypes[index];
+
+                                    // 列車種別名設定
+                                    trainProperty.TrainTypeName = property.Name;
                                 }
                                 break;
                             // 列車番号
@@ -648,7 +653,7 @@ namespace TrainTimeTable.File
 
                                     // StationTimePropertyオブジェクト生成
                                     StationTimeProperty stationTimeProperty = new StationTimeProperty();
-                                    stationTimeProperty.DiagramId = 0;
+                                    stationTimeProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
                                     stationTimeProperty.TrainId = trainId;
                                     stationTimeProperty.Direction = trainProperty.Direction;
                                     stationTimeProperty.Seq = trainProperty.StationTimes.Count + 1;

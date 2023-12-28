@@ -1,33 +1,25 @@
 ﻿using log4net;
-using Microsoft.VisualBasic;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.Common;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Drawing;
-using System.Drawing.Text;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls.WebParts;
+using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using TrainTimeTable.Common;
-using TrainTimeTable.Dialog;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace TrainTimeTable.Control
 {
     /// <summary>
-    /// DataGridViewTimetableラス
+    /// VirtualDataGridViewTimeTableクラス
     /// </summary>
-    public class DataGridViewTimetable : DataGridView
+    public class VirtualDataGridViewTimeTable : DataGridView
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -104,6 +96,16 @@ namespace TrainTimeTable.Control
         /// </summary>
         private DiaProFont m_DiaProFont = new DiaProFont();
 
+        /// <summary>
+        /// 駅描写情報
+        /// </summary>
+        private List<StationDrawRowInfomation> m_StationDrawRowInfomation = new List<StationDrawRowInfomation>();
+
+        /// <summary>
+        /// 描画対象列車情報
+        /// </summary>
+        TrainProperties m_DrawTrainProperties = null;
+
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
@@ -111,10 +113,10 @@ namespace TrainTimeTable.Control
         /// <param name="text"></param>
         /// <param name="type"></param>
         /// <param name="property"></param>
-        public DataGridViewTimetable(string text, DirectionType type, RouteFileProperty property)
+        public VirtualDataGridViewTimeTable(string text, DirectionType type, RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable(string, DirectionType, RouteFileProperty)");
             Logger.DebugFormat("text    :[{0}]", text);
             Logger.DebugFormat("type    :[{0}]", type);
             Logger.DebugFormat("property:[{0}]", property);
@@ -142,6 +144,9 @@ namespace TrainTimeTable.Control
                     "一般駅",
                 });
 
+            // TrainPropertiesオブジェクト取得
+            m_DrawTrainProperties = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
+
             // Font設定
             Font = m_FontDictionary["時刻表ビュー"];
 
@@ -149,7 +154,7 @@ namespace TrainTimeTable.Control
             Initialization();
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable(string, DirectionType, RouteFileProperty)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable(string, DirectionType, RouteFileProperty)");
         }
         #endregion
 
@@ -160,7 +165,7 @@ namespace TrainTimeTable.Control
         private void Initialization()
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::Initialization()");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::Initialization()");
 
             // 設定
             DoubleBuffered = true;                // ２次バッファーを使用
@@ -189,466 +194,249 @@ namespace TrainTimeTable.Control
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
             ColumnHeadersHeight = 28;
 
+            // 仮想モード設定
+            VirtualMode = true;
+            CellValueNeeded += new DataGridViewCellValueEventHandler(VirtualDataGridViewTimeTable_CellValueNeeded);
+            CellValuePushed += new DataGridViewCellValueEventHandler(VirtualDataGridViewTimeTable_CellValuePushed);
+            NewRowNeeded += new DataGridViewRowEventHandler(VirtualDataGridViewTimeTable_NewRowNeeded);
+            RowValidated += new DataGridViewCellEventHandler(VirtualDataGridViewTimeTable_RowValidated);
+            RowDirtyStateNeeded += new QuestionEventHandler(VirtualDataGridViewTimeTable_RowDirtyStateNeeded);
+            CancelRowEdit += new QuestionEventHandler(VirtualDataGridViewTimeTable_CancelRowEdit);
+            UserDeletingRow += new DataGridViewRowCancelEventHandler(VirtualDataGridViewTimeTable_UserDeletingRow);
+
             // イベント設定
-            ColumnAdded += DataGridViewTimetable_ColumnAdded;
-            CellPainting += DataGridViewTimetable_CellPainting;
-            CellFormatting += DataGridViewTimetable_CellFormatting;
-            MouseDoubleClick += DataGridViewTimetable_MouseDoubleClick;
+            ColumnAdded += new DataGridViewColumnEventHandler(VirtualDataGridViewTimeTable_ColumnAdded);
+            CellPainting += new DataGridViewCellPaintingEventHandler(VirtualDataGridViewTimeTable_CellPainting);
+            CellFormatting += new DataGridViewCellFormattingEventHandler(VirtualDataGridViewTimeTable_CellFormatting);
+            MouseDoubleClick += new MouseEventHandler(VirtualDataGridViewTimeTable_MouseDoubleClick);
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::Initialization()");
-        }
-        #endregion
-
-        #region 描画
-        /// <summary>
-        /// 描画
-        /// </summary>
-        public void Draw()
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::Draw()");
-
-            // 描画一時停止
-            SuspendLayout();
-
-            // 列、行削除
-            RowCount = 0;
-            ColumnCount = 0;
-
-            // 呼び出しAction一覧
-            List<Action<TrainProperties>> actions = new List<Action<TrainProperties>>()
-            {
-                DrawColumns,                // 列描画
-                DrawRowsTrainNumber,        // 列車番号描画
-                DrawRowsTrainType,          // 列車種別描画
-                DrawRowsTrainName,          // 列車名描画
-                DrawRowsTrainMark,          // 列車記号描画
-                DrawRowsDepartingStation,   // 始発駅描画
-                DrawRowsDestinationStation, // 終着駅描画
-                DrawRowsStationTime,        // 駅時刻描画
-                DrawRowsRemarksStation,     // 備考初描画
-            };
-
-            // TrainPropertiesオブジェクト取得
-            TrainProperties trains = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
-
-            // Actionを繰り返す
-            foreach (Action<TrainProperties> action in actions)
-            {
-                // Action実行
-                action(trains);
-            }
-
-            // 描画再開
-            ResumeLayout();
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::Draw()");
-        }
-
-        /// <summary>
-        /// 列描画
-        /// </summary>
-        /// <param name="trains"></param>
-        private void DrawColumns(TrainProperties trains)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawColumns(TrainProperties)");
-            Logger.DebugFormat("trains:[{0}]", trains);
-
-            // 固定カラム追加
-            Columns.Add("Distance", "距離");
-            Columns.Add("StationMark", "駅マーク");
-            Columns.Add("StationName", "駅名");
-            Columns.Add("ArrivalAndDeparture", "発着");
-
-            // 固定カラム幅設定
-            Columns[0].Width = 48;  // 距離
-            Columns[1].Width = 32;  // 駅マーク
-            Columns[2].Width = 24 * m_RouteFileProperty.Route.WidthOfStationNameField;  // 駅名
-            Columns[3].Width = 24;  // 発着
-
-            // 固定カラム背景色設定
-            Columns[0].DefaultCellStyle.BackColor = SystemColors.Control;
-            Columns[1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // 固定カラムフォント設定
-            Columns[0].DefaultCellStyle.Font = m_FontDictionary["駅間距離"];
-
-            // 文字位置設定
-            Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            Columns[3].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                // 列追加
-                Columns.Add(string.Format("Train{0}", train.Id), string.Format("{0}", train.No));
-                Columns[Columns.Count - 1].Width = 8 * m_RouteFileProperty.Route.TimetableTrainWidth;  // 列車
-                Columns[Columns.Count - 1].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName).StringsColor;
-            }
-
-            // 固定列(発着)設定
-            Columns["ArrivalAndDeparture"].Frozen = true;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawColumns(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 列車番号描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainNumber(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainNumber(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("列車番号");
-
-            // 列車番号一覧を取得
-            List<string> numberList = properties.Select(t => t.No).ToList();
-
-            // 列車番号一覧を追加
-            columnsList.AddRange(numberList);
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車番号"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainNumber(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 列車種別描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainType(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainType(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("列車種別");
-
-            // 列車プロパティを繰り返す
-            foreach (var train in properties)
-            {
-                // 追加
-                columnsList.Add(string.Format("{0}", m_DiaProFont[train.TrainTypeName]));
-            }
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車種別"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainType(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 列車名描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainName(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainName(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("列車名");
-
-            // 列車プロパティを繰り返す
-            foreach (var train in properties)
-            {
-                // 追加
-                StringBuilder trainName = new StringBuilder();
-                trainName.Append(train.Name);
-                if (train.Number != string.Empty)
-                {
-                    trainName.Append(string.Format("{0}号", train.Number));
-                }
-                columnsList.Add(StringLibrary.VerticalText(trainName.ToString()));
-            }
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車名"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainName(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 列車記号描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainMark(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsTrainMark(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("");
-
-            // 列車プロパティを繰り返す
-            foreach (var train in properties)
-            {
-                // 列車記号文字列
-                StringBuilder sb = new StringBuilder();
-
-                // 記号分繰り返す
-                foreach (var mark in train.Marks)
-                {
-                    // 追加
-                    sb.AppendLine(string.Format("{0}", m_DiaProFont[mark.MarkName]));
-                }
-
-                // 追加
-                columnsList.Add(sb.ToString().TrimEnd(new char[] { '\r', '\n' }));
-            }
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車記号"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsTrainMark(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 始発駅描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsDepartingStation(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsDepartingStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("始発駅");
-
-            // 始発駅一覧を取得
-            List<string> departingStationList = properties.Select(t => t.DepartingStation).ToList();
-
-            // 始発駅一覧を登録
-            columnsList.AddRange(departingStationList);
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["始発駅"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsDepartingStation(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 終着駅描画
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsDestinationStation(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsDestinationStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("終着駅");
-
-            // 終着駅一覧を取得
-            List<string> destinationStationList = properties.Select(t => t.DestinationStation).ToList();
-
-            // 終着駅一覧を登録
-            columnsList.AddRange(destinationStationList);
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // フォント設定
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["終着駅"];
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
-            Rows[Rows.Count - 1].Frozen = true;
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsDestinationStation(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 駅時刻描画
-        /// </summary>
-        /// <param name="properties"></param>
-        /// <exception cref="AggregateException"></exception>
-        private void DrawRowsStationTime(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // 方向種別で分岐
-            switch (m_DirectionType)
-            {
-                case DirectionType.Outbound:
-                    // 駅時刻描画(下り)
-                    DrawRowsOutboundStationTime(properties);
-                    break;
-                case DirectionType.Inbound:
-                    // 駅時刻描画(上り)
-                    DrawRowsInboundStationTime(properties);
-                    break;
-                default:
-                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", m_DirectionType));
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsStationTime(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 駅時刻描画(下り)
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsOutboundStationTime(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsOutboundStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // 駅シーケンスリスト取得(昇順)
-            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
-
-            // 駅を繰り返す
-            foreach (var stationSequence in stationSequences)
-            {
-                // 駅情報取得
-                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
-
-                // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, station, properties);
-
-                // 行追加
-                foreach (DepartureArrivalType type in columnsList.Keys)
-                {
-                    // 駅距離を設定
-                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Outbound, station);
-
-                    // 行追加
-                    Rows.Add(columnsList[type].ToArray());
-                }
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsOutboundStationTime(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 駅時刻描画(上り)
-        /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsInboundStationTime(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsInboundStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // 駅シーケンスリスト取得(降順)
-            var stationSequences = m_RouteFileProperty.StationSequences.OrderByDescending(t => t.Seq);
-
-            // 駅を繰り返す
-            foreach (var stationSequence in stationSequences)
-            {
-                // 駅情報取得
-                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
-
-                // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, station, properties);
-
-                // 行追加
-                foreach (DepartureArrivalType type in columnsList.Keys)
-                {
-                    // 駅距離を設定
-                    columnsList[type][0] = GetDistanceStringBetweenStations(DirectionType.Inbound, station);
-
-                    // 行追加
-                    Rows.Add(columnsList[type].ToArray());
-                }
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsInboundStationTime(TrainProperties)");
-        }
-
-        /// <summary>
-        /// 備考描画
-        /// </summary>
-        /// <param name="property"></param>
-        private void DrawRowsRemarksStation(TrainProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DrawRowsRemarksStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // List初期化
-            List<string> columnsList = ColumnsListInitialization("備考");
-
-            // 備考一覧を取得
-            List<string> remarksList = properties.Select(t => t.Remarks).ToList();
-
-            // 終着駅一覧を登録
-            columnsList.AddRange(remarksList);
-
-            // 行追加
-            Rows.Add(columnsList.ToArray());
-
-            // TODO:フォント設定(暫定)
-            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["備考"];
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DrawRowsRemarksStation(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::Initialization()");
         }
         #endregion
 
         #region イベント
-        #region DataGridViewTimetableイベント
+        #region VirtualDataGridViewTimeTableイベント
         /// <summary>
-        /// DataGridViewTimetable_ColumnAdded
+        /// VirtualDataGridViewTimeTable_CellValueNeeded
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DataGridViewTimetable_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        private void VirtualDataGridViewTimeTable_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellValueNeeded(object, DataGridViewCellValueEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 初期化
+            int stationMaxIndex = 6 + m_StationDrawRowInfomation.Count;
+
+            // 駅距離か？
+            if (e.ColumnIndex == 0 && (e.RowIndex >= 6 && e.RowIndex < stationMaxIndex))
+            {
+                // 駅距離取得
+                e.Value = GetStationDistanceCellValueNeeded(e.RowIndex - 6);
+            }
+            // 駅マークか？
+            else if (e.ColumnIndex == 1 && (e.RowIndex >= 6 && e.RowIndex < stationMaxIndex))
+            {
+                // 駅マーク取得
+                e.Value = GetStationMarkCellValueNeeded(e.RowIndex - 6);
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 0)
+            {
+                e.Value = "列車番号";
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 1)
+            {
+                e.Value = "列車種別";
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 2)
+            {
+                e.Value = "列車名";
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 3)
+            {
+                e.Value = "列車名";
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 4)
+            {
+                e.Value = "始発";
+            }
+            else if (e.ColumnIndex == 2 && e.RowIndex == 5)
+            {
+                e.Value = "終着";
+            }
+            else if (e.ColumnIndex == 2 && (e.RowIndex >= 6 && e.RowIndex < stationMaxIndex))
+            {
+                // 駅名取得
+                e.Value = GetStationNameCellValueNeeded(e.RowIndex - 6);
+            }
+            // 発着か？
+            else if (e.ColumnIndex == 3 && (e.RowIndex >= 6 && e.RowIndex < stationMaxIndex))
+            {
+                // 駅発着種別取得
+                e.Value = GetDepartureArrivalTypeCellValueNeeded(e.RowIndex - 6);
+            }
+            // 列車番号か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 0)
+            {
+                // 列車番号取得
+                e.Value = GetTrainNoCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 列車種別か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 1)
+            {
+                // 列車種別取得
+                e.Value = GetTrainTypeCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 列車名か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 2)
+            {
+                // 列車名取得
+                e.Value = GetTrainNameCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 列車記号か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 3)
+            {
+                // 列車記号取得
+                e.Value = GetTrainMarkCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 始発駅か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 4)
+            {
+                // 始発駅取得
+                e.Value = GetDepartingStationCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 終着駅か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == 5)
+            {
+                // 終着駅取得
+                e.Value = GetDestinationStationCellValueNeeded(e.ColumnIndex - 4);
+            }
+            // 列車時刻か？
+            else if (e.ColumnIndex >= 4 && ((e.RowIndex >= 6) && e.RowIndex < stationMaxIndex))
+            {
+                // 列車時刻取得
+                e.Value = GetStationTimeCellValueNeeded(e.ColumnIndex - 4, e.RowIndex - 6);
+            }
+            // 備考か？
+            else if (e.ColumnIndex >= 4 && e.RowIndex == stationMaxIndex)
+            {
+                // 備考取得
+                e.Value = GetRemarkCellValueNeeded(e.ColumnIndex - 4);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellValueNeeded(object, DataGridViewCellValueEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_CellValuePushed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_CellValuePushed(object sender, DataGridViewCellValueEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellValuePushed(object, DataGridViewCellValueEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellValuePushed(object, DataGridViewCellValueEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_NewRowNeeded
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_NewRowNeeded(object sender, DataGridViewRowEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_NewRowNeeded(object, DataGridViewRowEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_NewRowNeeded(object, DataGridViewRowEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_RowValidated
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_RowValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_RowValidated(object, DataGridViewCellEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_RowValidated(object, DataGridViewCellEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_RowDirtyStateNeeded
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_RowDirtyStateNeeded(object sender, QuestionEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_RowDirtyStateNeeded(object, QuestionEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_RowDirtyStateNeeded(object, QuestionEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_CancelRowEdit
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_CancelRowEdit(object sender, QuestionEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CancelRowEdit(object, QuestionEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CancelRowEdit(object, QuestionEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_UserDeletingRow
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_UserDeletingRow(object, DataGridViewRowCancelEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_UserDeletingRow(object, DataGridViewRowCancelEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_ColumnAdded
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_ColumnAdded(object, DataGridViewColumnEventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
@@ -656,47 +444,18 @@ namespace TrainTimeTable.Control
             e.Column.FillWeight = 1;
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_ColumnAdded(object, DataGridViewColumnEventArgs)");
         }
 
         /// <summary>
-        /// DataGridViewTimetable_CellFormatting
+        /// VirtualDataGridViewTimeTable_CellPainting
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-
-        private void DataGridViewTimetable_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        private void VirtualDataGridViewTimeTable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
-
-            // 4カラム目(駅名)以外は処理しない
-            if ((e.ColumnIndex == 2) && (e.RowIndex > 0))
-            {
-                // 前カラムと値が同じか判定
-                if (IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
-                {
-                    e.Value = "";
-                    e.FormattingApplied = true; // 以降の書式設定は不要
-                }
-            }
-
-            // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
-        }
-
-        /// <summary>
-        /// DataGridViewTimetable_CellPainting
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        private void DataGridViewTimetable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellPainting(object, DataGridViewCellPaintingEventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
@@ -748,23 +507,50 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_ColumnAdded(object, DataGridViewColumnEventArgs)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellPainting(object, DataGridViewCellPaintingEventArgs)");
         }
 
         /// <summary>
-        /// DataGridViewTimetable_MouseDoubleClick
+        /// VirtualDataGridViewTimeTable_CellFormatting
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DataGridViewTimetable_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void VirtualDataGridViewTimeTable_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 4カラム目(駅名)以外は処理しない
+            if ((e.ColumnIndex == 2) && (e.RowIndex > 0))
+            {
+                // 前カラムと値が同じか判定
+                if (IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
+                {
+                    e.Value = "";
+                    e.FormattingApplied = true; // 以降の書式設定は不要
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_CellFormatting(object, DataGridViewCellFormattingEventArgs)");
+        }
+
+        /// <summary>
+        /// VirtualDataGridViewTimeTable_MouseDoubleClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VirtualDataGridViewTimeTable_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_MouseDoubleClick(object, MouseEventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
             // ダブルクリックされたセルの位置を取得
-            HitTestInfo hitTestInfo = ((DataGridViewTimetable)sender).HitTest(e.X, e.Y);
+            HitTestInfo hitTestInfo = ((VirtualDataGridViewTimeTable)sender).HitTest(e.X, e.Y);
 
             // 列車列か？
             if ((hitTestInfo.ColumnIndex >= 4) && (hitTestInfo.RowIndex >= 0 && hitTestInfo.RowIndex < 6))
@@ -786,12 +572,394 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::DataGridViewTimetable_MouseDoubleClick(object, MouseEventArgs)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_MouseDoubleClick(object, MouseEventArgs)");
         }
         #endregion
         #endregion
 
         #region publicメソッド
+        #region 描画
+        /// <summary>
+        /// 描画
+        /// </summary>
+        public void Draw()
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::Draw()");
+
+            // 描画一時停止
+            SuspendLayout();
+
+            // 列、行削除
+            RowCount = 0;
+            ColumnCount = 0;
+
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trains = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
+
+            // 列描画
+            DrawColumns(trains);
+
+            // 列車番号描画
+            DrawRowsTrainNumber(trains);
+
+            // 列車種別描画
+            DrawRowsTrainType(trains);
+
+            // 列車名描画
+            DrawRowsTrainName(trains);
+
+            // 列車記号描画
+            DrawRowsTrainMark(trains);
+
+            // 始発駅描画
+            DrawRowsDepartingStation(trains);
+
+            // 終着駅描画
+            DrawRowsDestinationStation(trains);
+
+            // 駅時刻描画
+            DrawRowsStationTime(trains);
+
+            // 備考描画
+            DrawRowsRemarksStation(trains);
+
+            // 描画再開
+            ResumeLayout();
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::Draw()");
+        }
+
+        /// <summary>
+        /// 列描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawColumns(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawColumns(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 固定カラム追加
+            Columns.Add("Distance", "距離");
+            Columns.Add("StationMark", "駅マーク");
+            Columns.Add("StationName", "駅名");
+            Columns.Add("ArrivalAndDeparture", "発着");
+
+            // 固定カラム幅設定
+            Columns[0].Width = 48;  // 距離
+            Columns[1].Width = 32;  // 駅マーク
+            Columns[2].Width = 24 * m_RouteFileProperty.Route.WidthOfStationNameField;  // 駅名
+            Columns[3].Width = 24;  // 発着
+
+            // 固定カラム背景色設定
+            Columns[0].DefaultCellStyle.BackColor = SystemColors.Control;
+            Columns[1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // 固定カラムフォント設定
+            Columns[0].DefaultCellStyle.Font = m_FontDictionary["駅間距離"];
+
+            // 文字位置設定
+            Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            Columns[3].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            // 列車プロパティを繰り返す
+            foreach (var train in properties)
+            {
+                // 列追加
+                Columns.Add(string.Format("Train{0}", train.Id), string.Format("{0}", train.No));
+                Columns[Columns.Count - 1].Width = 8 * m_RouteFileProperty.Route.TimetableTrainWidth;  // 列車
+                Columns[Columns.Count - 1].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName).StringsColor;
+            }
+
+            // 固定列(発着)設定
+            Columns["ArrivalAndDeparture"].Frozen = true;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawColumns(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 列車番号描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsTrainNumber(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainNumber(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車番号"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainNumber(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 列車種別描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsTrainType(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainType(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車種別"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainType(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 列車名描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsTrainName(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainName(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車名"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainName(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 列車記号描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsTrainMark(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainMark(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["列車記号"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainMark(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 始発駅描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsDepartingStation(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDepartingStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["始発駅"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDepartingStation(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 終着駅描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsDestinationStation(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDestinationStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // フォント設定
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["終着駅"];
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
+            Rows[Rows.Count - 1].Frozen = true;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDestinationStation(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 駅時刻描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsStationTime(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 方向種別で分岐
+            switch (m_DirectionType)
+            {
+                case DirectionType.Outbound:
+                    // 駅時刻描画(下り)
+                    DrawRowsOutboundStationTime(properties);
+                    break;
+                case DirectionType.Inbound:
+                    // 駅時刻描画(上り)
+                    DrawRowsInboundStationTime(properties);
+                    break;
+                default:
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", m_DirectionType));
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsStationTime(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 駅時刻描画(下り)
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsOutboundStationTime(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 初期化
+            m_StationDrawRowInfomation.Clear();
+
+            // 駅シーケンスリスト取得(昇順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
+            {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
+                // 駅時刻行取得
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, station, properties);
+
+                // 駅時刻行分繰り返す
+                foreach (var departureArrivalType in columnsList.Keys)
+                {
+                    var info = new StationDrawRowInfomation()
+                    {
+                        Name = station.Name,
+                        DepartureArrivalType = departureArrivalType,
+                        Distance = GetDistanceStringBetweenStations(DirectionType.Outbound, station),
+                    };
+
+                    // 登録
+                    m_StationDrawRowInfomation.Add(info);
+                }
+
+                // 行追加
+                RowCount += columnsList.Count;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 駅時刻描画(上り)
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsInboundStationTime(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 初期化
+            m_StationDrawRowInfomation.Clear();
+
+            // 駅シーケンスリスト取得(降順)
+            var stationSequences = m_RouteFileProperty.StationSequences.OrderByDescending(t => t.Seq);
+
+            // 駅を繰り返す
+            foreach (var stationSequence in stationSequences)
+            {
+                // 駅情報取得
+                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+
+                // 駅時刻行取得
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, station, properties);
+
+                // 駅時刻行分繰り返す
+                foreach (var departureArrivalType in columnsList.Keys)
+                {
+                    var info = new StationDrawRowInfomation()
+                    {
+                        Name = station.Name,
+                        DepartureArrivalType = departureArrivalType,
+                        Distance = GetDistanceStringBetweenStations(DirectionType.Inbound, station),
+                    };
+
+                    // 登録
+                    m_StationDrawRowInfomation.Add(info);
+                }
+
+                // 行追加
+                RowCount += columnsList.Count;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+        }
+
+        /// <summary>
+        /// 備考描画
+        /// </summary>
+        /// <param name="properties"></param>
+        private void DrawRowsRemarksStation(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsRemarksStation(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 行追加
+            RowCount += 1;
+
+            // TODO:フォント設定(暫定)
+            Rows[Rows.Count - 1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["備考"];
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsRemarksStation(TrainProperties)");
+        }
+        #endregion
+
+        #region 更新
         /// <summary>
         /// 更新
         /// </summary>
@@ -799,31 +967,27 @@ namespace TrainTimeTable.Control
         public void Update(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::Update(RouteFileProperty)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::Update(RouteFileProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 旧データと同一か？
-            if (m_OldRouteFileProperty.Compare(property))
+            if (!m_OldRouteFileProperty.Compare(property))
             {
-                // ロギング
-                Logger.Debug("<<<<= DataGridViewTimetable::Update(RouteFileProperty)");
+                // 描画
+                Draw();
 
-                // 何もしない
-                return;
+                // 旧データ更新
+                m_OldRouteFileProperty.Copy(property);
             }
 
-            // 描画
-            Draw();
-
-            // 旧データ更新
-            m_OldRouteFileProperty.Copy(property);
-
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::Update(RouteFileProperty)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::Update(RouteFileProperty)");
         }
+        #endregion
         #endregion
 
         #region privateメソッド
+        #region カラムリスト初期化
         /// <summary>
         /// カラムリスト初期化
         /// </summary>
@@ -832,7 +996,7 @@ namespace TrainTimeTable.Control
         private List<string> ColumnsListInitialization(string name)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::ColumnsListInitialization(string)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ColumnsListInitialization(string)");
             Logger.DebugFormat("name:[{0}]", name);
 
             // 結果オブジェクト生成
@@ -846,7 +1010,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::ColumnsListInitialization(string)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ColumnsListInitialization(string)");
 
             // 返却
             return result;
@@ -861,7 +1025,7 @@ namespace TrainTimeTable.Control
         private List<string> ColumnsListInitialization(string name, string arrivalAndDeparture)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::ColumnsListInitialization(string, string)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ColumnsListInitialization(string, string)");
             Logger.DebugFormat("name               :[{0}]", name);
             Logger.DebugFormat("arrivalAndDeparture:[{0}]", arrivalAndDeparture);
 
@@ -876,7 +1040,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::ColumnsListInitialization(string, string)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ColumnsListInitialization(string, string)");
 
             // 返却
             return result;
@@ -889,7 +1053,7 @@ namespace TrainTimeTable.Control
         private Dictionary<DepartureArrivalType, List<string>> ColumnsListInitialization(DirectionType type, StationProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::ColumnsListInitialization(DirectionType, StationProperty)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ColumnsListInitialization(DirectionType, StationProperty)");
             Logger.DebugFormat("type    :[{0}]", type);
             Logger.DebugFormat("property:[{0}]", property);
 
@@ -975,11 +1139,359 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::ColumnsListInitialization(DirectionType, StationProperty)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ColumnsListInitialization(DirectionType, StationProperty)");
 
             // 返却
             return result;
         }
+        #endregion
+
+        /// <summary>
+        /// 指定したセルと1つ上のセルの値を比較
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private bool IsTheSameCellValue(int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int)");
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
+            DataGridViewCell cell1 = this[column, row];
+            DataGridViewCell cell2 = this[column, row - 1];
+
+            if (cell1.Value == null || cell2.Value == null)
+            {
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", false);
+                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
+
+                // 不一致(false)を返却
+                return false;
+            }
+
+            // ここでは文字列としてセルの値を比較
+            if (cell1.Value.ToString() == cell2.Value.ToString())
+            {
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", true);
+                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
+
+                // 一致(true)を返却
+                return true;
+            }
+            else
+            {
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", false);
+                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
+
+                // 不一致(false)を返却
+                return false;
+            }
+        }
+
+        #region 描画文字列取得
+        /// <summary>
+        /// 駅距離取得
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetStationDistanceCellValueNeeded(int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationDistanceCellValueNeeded(int)");
+            Logger.DebugFormat("row:[{0}]", row);
+
+            // 結果設定
+            string result = m_StationDrawRowInfomation[row].Distance;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationDistanceCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 駅マーク取得
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetStationMarkCellValueNeeded(int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationMarkCellValueNeeded(int)");
+            Logger.DebugFormat("row:[{0}]", row);
+
+            // TODO:未実装
+            string result = string.Empty;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationMarkCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 駅名取得
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetStationNameCellValueNeeded(int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationNameCellValueNeeded(int)");
+            Logger.DebugFormat("row:[{0}]", row);
+
+            // 結果設定
+            string result = m_StationDrawRowInfomation[row].Name;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationNameCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 駅発着種別取得
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetDepartureArrivalTypeCellValueNeeded(int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetTrainNoCellValueNeeded(int)");
+            Logger.DebugFormat("row:[{0}]", row);
+
+            // 結果設定
+            string result = m_StationDrawRowInfomation[row].DepartureArrivalType.GetStringValue();
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetTrainNoCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 列車番号取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetTrainNoCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetTrainNoCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果設定
+            string result = m_DrawTrainProperties[column].No;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetTrainNoCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 列車種別取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetTrainTypeCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetTrainTypeCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果設定
+            string result = string.Format("{0}", m_DiaProFont[m_DrawTrainProperties[column].TrainTypeName]);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetTrainTypeCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 列車名取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetTrainNameCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetTrainNameCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果初期化
+            StringBuilder result = new StringBuilder();
+
+            // 列車名追加
+            result.Append(m_DrawTrainProperties[column].Name);
+
+            // 列車号数追加
+            if (m_DrawTrainProperties[column].Number != string.Empty)
+            {
+                result.Append(string.Format("{0}号", m_DrawTrainProperties[column].Number));
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetTrainNameCellValueNeeded(int)");
+
+            // 返却
+            return StringLibrary.VerticalText(result.ToString());
+        }
+
+        /// <summary>
+        /// 列車記号取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetTrainMarkCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetTrainMarkCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果初期化
+            StringBuilder result = new StringBuilder();
+
+
+            // 記号分繰り返す
+            foreach (var mark in m_DrawTrainProperties[column].Marks)
+            {
+                // 追加
+                result.AppendLine(string.Format("{0}", m_DiaProFont[mark.MarkName]));
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetTrainMarkCellValueNeeded(int)");
+
+            // 返却
+            return result.ToString().TrimEnd(new char[] { '\r', '\n' });
+        }
+
+        /// <summary>
+        /// 始発駅取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetDepartingStationCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetDepartingStationCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果設定
+            string result = m_DrawTrainProperties[column].DepartingStation;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetDepartingStationCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 終着駅取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        private string GetDestinationStationCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetDestinationStationCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果設定
+            string result = m_DrawTrainProperties[column].DestinationStation;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetDestinationStationCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 列車時刻取得
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private string GetStationTimeCellValueNeeded(int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTimeCellValueNeeded(int, int)");
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
+            // 結果初期化
+            string result = string.Empty;
+
+            // StationDrawRowInfomationオブジェクト取得
+            StationDrawRowInfomation stationDrawRowInfomation = m_StationDrawRowInfomation[row];
+
+            // StationPropertyオブジェクト取得
+            StationProperty stationProperty = m_RouteFileProperty.Stations.Find(s => s.Name == stationDrawRowInfomation.Name);
+
+            // TrainPropertyオブジェクト取得
+            TrainProperty trainProperty = m_DrawTrainProperties[column];
+
+            // 駅時刻取得
+            var stationTimes = GetStationTime(m_DirectionType, trainProperty, stationProperty);
+
+            // 結果設定
+            result = stationTimes[stationDrawRowInfomation.DepartureArrivalType];
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTimeCellValueNeeded(int, int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 備考取得
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private string GetRemarkCellValueNeeded(int column)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetRemarkCellValueNeeded(int)");
+            Logger.DebugFormat("column:[{0}]", column);
+
+            // 結果設定
+            string result = m_DrawTrainProperties[column].Remarks;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetRemarkCellValueNeeded(int)");
+
+            // 返却
+            return result;
+        }
+        #endregion
 
         /// <summary>
         /// 駅時刻行取得
@@ -991,7 +1503,7 @@ namespace TrainTimeTable.Control
         private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station, TrainProperties trains)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
             Logger.DebugFormat("type   :[{0}]", type);
             Logger.DebugFormat("station:[{0}]", station);
             Logger.DebugFormat("trains :[{0}]", trains);
@@ -1015,52 +1527,35 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
 
             // 返却
             return result;
         }
 
         /// <summary>
-        /// 駅時刻行取得
+        /// 駅間距離文字列取得
         /// </summary>
-        /// <param name="property"></param>
-        /// <param name="directionType"></param>
-        /// <param name="index"></param>
-        /// <param name="trains"></param>
+        /// <param name="outbound"></param>
+        /// <param name="stations"></param>
+        /// <param name="station"></param>
         /// <returns></returns>
-        private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station, int index, TrainProperties trains)
+        private string GetDistanceStringBetweenStations(DirectionType type, StationProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, int, TrainProperties)");
-            Logger.DebugFormat("type   :[{0}]", type);
-            Logger.DebugFormat("station:[{0}]", station);
-            Logger.DebugFormat("index  :[{0}]", index);
-            Logger.DebugFormat("trains :[{0}]", trains);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
+            Logger.DebugFormat("type      :[{0}]", type);
+            Logger.DebugFormat("properties:[{0}]", property);
 
-            // 結果オブジェクト生成
-            Dictionary<DepartureArrivalType, List<string>> result = ColumnsListInitialization(type, station);
-
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
-            {
-                // 列車時刻を取得
-                Dictionary<DepartureArrivalType, string> trainTimes = GetStationTime(type, train, station, index);
-
-                // 行追加
-                foreach (var trainTime in trainTimes)
-                {
-                    // 登録
-                    result[trainTime.Key].Add(trainTime.Value);
-                }
-            }
+            // 結果オブジェクト設定
+            float result = property.StationDistanceFromReferenceStations[type];
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTimeRows(DirectionType, StationProperty, int, TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
 
-            // 返却
-            return result;
+            // 返却(文字列変換)
+            return string.Format("{0:#,0.0}", result);
         }
 
         /// <summary>
@@ -1073,7 +1568,7 @@ namespace TrainTimeTable.Control
         private Dictionary<DepartureArrivalType, string> GetStationTime(DirectionType type, TrainProperty train, StationProperty station)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
             Logger.DebugFormat("type   :[{0}]", type);
             Logger.DebugFormat("train  :[{0}]", train);
             Logger.DebugFormat("station:[{0}]", station);
@@ -1145,97 +1640,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
-
-            // 返却
-            return result;
-        }
-
-        /// <summary>
-        /// 駅時刻取得
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="train"></param>
-        /// <param name="station"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private Dictionary<DepartureArrivalType, string> GetStationTime(DirectionType type, TrainProperty train, StationProperty station, int index)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
-            Logger.DebugFormat("type   :[{0}]", type);
-            Logger.DebugFormat("train  :[{0}]", train);
-            Logger.DebugFormat("station:[{0}]", station);
-            Logger.DebugFormat("index  :[{0}]", index);
-
-            // 結果オブジェクト生成
-            Dictionary<DepartureArrivalType, string> result = null;
-
-            // StationTimePropertyオブジェクト取得
-            StationTimeProperty stationTime = train.StationTimes[index];
-
-            // 駅扱いで分岐
-            switch (stationTime.StationTreatment)
-            {
-                // 「停車」の場合
-                case StationTreatment.Stop:
-                    // 「停車時刻」を設定
-                    result = GetStationStopTime(type, train, station, stationTime);
-                    break;
-                // 「通過」の場合
-                case StationTreatment.Passing:
-                    // 「通過」を設定
-                    result = GetStationTime(type, train, station, m_DiaProFont["通過①"]);
-                    break;
-                // 「経由なし」の場合
-                case StationTreatment.NoRoute:
-                    // 「他線区経由」を設定
-                    result = GetStationTime(type, train, station, m_DiaProFont["他線区経由"]);
-                    break;
-                // 「運行なし」の場合
-                case StationTreatment.NoService:
-                    // 駅規模判定
-                    switch (station.TimeFormat)
-                    {
-                        case TimeFormat.DepartureAndArrival:
-                        case TimeFormat.OutboundArrivalAndDeparture:
-                        case TimeFormat.InboundDepartureAndArrival:
-                            // 「時刻無し」を設定
-                            result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
-                            break;
-                        default:
-                            // 駅規模判定
-                            if (station.StationScale != StationScale.GeneralStation)
-                            {
-                                // 始発駅、終着駅か？
-                                if (station.StartingStation || station.TerminalStation)
-                                {
-                                    // 「時刻無し」を設定
-                                    result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
-                                }
-                                else
-                                {
-                                    // 「基準線」を設定
-                                    result = GetStationTime(type, train, station, m_DiaProFont["照準線①"]);
-                                }
-                            }
-                            else
-                            {
-                                // 「時刻無し」を設定
-                                result = GetStationTime(type, train, station, m_DiaProFont["時刻無し②"]);
-                            }
-                            break;
-                    }
-                    break;
-                // 「上記以外」の場合
-                default:
-                    // 例外
-                    throw new AggregateException(string.Format("駅扱いの異常を検出しました:[{0}]", stationTime.StationTreatment));
-            }
-
-            // ロギング
-            Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, int)");
 
             // 返却
             return result;
@@ -1253,7 +1658,7 @@ namespace TrainTimeTable.Control
         private Dictionary<DepartureArrivalType, string> GetStationStopTime(DirectionType type, TrainProperty train, StationProperty station, StationTimeProperty time)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, StationTimeProperty)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, StationTimeProperty)");
             Logger.DebugFormat("type   :[{0}]", type);
             Logger.DebugFormat("train  :[{0}]", train);
             Logger.DebugFormat("station:[{0}]", station);
@@ -1348,7 +1753,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, StationTimeProperty)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, StationTimeProperty)");
 
             // 返却
             return result;
@@ -1362,7 +1767,7 @@ namespace TrainTimeTable.Control
         private string GetStationTimeValue(StationProperty station, string value)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTimeValue(StationProperty, string)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTimeValue(StationProperty, string)");
             Logger.DebugFormat("station:[{0}]", station);
             Logger.DebugFormat("value  :[{0}]", value);
 
@@ -1408,7 +1813,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTimeValue(StationProperty, string)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTimeValue(StationProperty, string)");
 
             // 返却
             return result;
@@ -1426,7 +1831,7 @@ namespace TrainTimeTable.Control
         private Dictionary<DepartureArrivalType, string> GetStationTime(DirectionType type, TrainProperty train, StationProperty station, string value)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, string)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, string)");
             Logger.DebugFormat("type   :[{0}]", type);
             Logger.DebugFormat("train  :[{0}]", train);
             Logger.DebugFormat("station:[{0}]", station);
@@ -1515,111 +1920,10 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetStationTime(DirectionType, TrainProperty, StationProperty, string)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTime(DirectionType, TrainProperty, StationProperty, string)");
 
             // 返却
             return result;
-        }
-
-        /// <summary>
-        /// 駅間距離文字列取得
-        /// </summary>
-        /// <param name="outbound"></param>
-        /// <param name="stations"></param>
-        /// <param name="station"></param>
-        /// <returns></returns>
-        private string GetDistanceStringBetweenStations(DirectionType type, StationProperty property)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
-            Logger.DebugFormat("type      :[{0}]", type);
-            Logger.DebugFormat("properties:[{0}]", property);
-
-            // 結果オブジェクト設定
-            float result = property.StationDistanceFromReferenceStations[type];
-
-            // ロギング
-            Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
-
-            // 返却(文字列変換)
-            return string.Format("{0:#,0.0}", result);
-        }
-
-        /// <summary>
-        /// 駅間距離文字列取得
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="index"></param>
-        /// <param name="properties"></param>
-        /// <returns></returns>
-        private string GetDistanceStringBetweenStations(DirectionType type, int index, StationProperties properties)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
-            Logger.DebugFormat("type      :[{0}]", type);
-            Logger.DebugFormat("index     :[{0}]", index);
-            Logger.DebugFormat("properties:[{0}]", properties);
-
-            // 駅オブジェクト取得
-            StationProperty stationProperty = properties[index];
-
-            // 結果オブジェクト設定
-            float result = stationProperty.StationDistanceFromReferenceStations[type];
-
-            // ロギング
-            Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTimetable::GetDistanceStringBetweenStations(DirectionType, int, StationProperties)");
-
-            // 返却(文字列変換)
-            return string.Format("{0:#,0.0}", result);
-        }
-
-        /// <summary>
-        /// 指定したセルと1つ上のセルの値を比較
-        /// </summary>
-        /// <param name="column"></param>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        private bool IsTheSameCellValue(int column, int row)
-        {
-            // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::IsTheSameCellValue(int, int)");
-            Logger.DebugFormat("column:[{0}]", column);
-            Logger.DebugFormat("row   :[{0}]", row);
-
-            DataGridViewCell cell1 = this[column, row];
-            DataGridViewCell cell2 = this[column, row - 1];
-
-            if (cell1.Value == null || cell2.Value == null)
-            {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", false);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
-
-                // 不一致(false)を返却
-                return false;
-            }
-
-            // ここでは文字列としてセルの値を比較
-            if (cell1.Value.ToString() == cell2.Value.ToString())
-            {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", true);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
-
-                // 一致(true)を返却
-                return true;
-            }
-            else
-            {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", false);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
-
-                // 不一致(false)を返却
-                return false;
-            }
         }
 
         /// <summary>
@@ -1629,7 +1933,7 @@ namespace TrainTimeTable.Control
         private void EditTrainInformation(HitTestInfo info)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::EditTrainInformation(HitTestInfo)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
             // 列車情報を取得
@@ -1656,7 +1960,7 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::EditTrainInformation(HitTestInfo)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainInformation(HitTestInfo)");
         }
 
         /// <summary>
@@ -1666,7 +1970,7 @@ namespace TrainTimeTable.Control
         private void EditTrainTimeInformation(HitTestInfo info)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainTimeInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
             // 駅名セルを取得
@@ -1679,7 +1983,7 @@ namespace TrainTimeTable.Control
             TrainProperty trainProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][info.ColumnIndex - 4];
 
             // 列車時刻情報を取得
-            StationTimeProperty property =trainProperty.StationTimes.Find(s => s.StationName == stationProperty.Name);
+            StationTimeProperty property = trainProperty.StationTimes.Find(s => s.StationName == stationProperty.Name);
 
             // FormStationTimePropertyオブジェクト生成
             FormStationTimeProperty form = new FormStationTimeProperty(m_RouteFileProperty, property);
@@ -1699,10 +2003,10 @@ namespace TrainTimeTable.Control
                     // 更新通知
                     OnStationTimePropertyUpdate(this, new StationTimePropertyUpdateEventArgs() { Property = property });
                 }
-             }
+            }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::EditTrainTimeInformation(HitTestInfo)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainTimeInformation(HitTestInfo)");
         }
 
         /// <summary>
@@ -1712,7 +2016,7 @@ namespace TrainTimeTable.Control
         private void EditStationInformation(HitTestInfo info)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTimetable::EditStationInformation(HitTestInfo)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditStationInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
             // 駅名セルを取得
@@ -1779,7 +2083,7 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTimetable::EditStationInformation(HitTestInfo)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditStationInformation(HitTestInfo)");
         }
         #endregion
     }

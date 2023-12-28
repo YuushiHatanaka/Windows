@@ -38,12 +38,6 @@ namespace TrainTimeTable.Property
         /// </summary>
         public string NextStationName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// 次駅シーケンス番号
-        /// </summary>
-        [Obsolete("NextStationPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int NextStationSeq { get; set; } = 0;
-
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
@@ -92,7 +86,6 @@ namespace TrainTimeTable.Property
                 // コピー
                 Name = property.Name;
                 Direction = property.Direction;
-                NextStationSeq = property.NextStationSeq;
                 NextStationName = property.NextStationName;
             }
 
@@ -127,15 +120,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Direction:[不一致][{0}][{1}]", Direction, property.Direction);
-                Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (NextStationSeq != property.NextStationSeq)
-            {
-                // ロギング
-                Logger.DebugFormat("NextStationSeq:[不一致][{0}][{1}]", NextStationSeq, property.NextStationSeq);
                 Logger.Debug("<<<<= NextStationProperty::Compare(NextStationProperty)");
 
                 // 不一致
@@ -186,10 +170,9 @@ namespace TrainTimeTable.Property
 
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜次駅情報＞"));
-            result.AppendLine(indentstr + string.Format("　駅名              :[{0}]", Name));
-            result.AppendLine(indentstr + string.Format("　方向種別          :[{0}]", Direction.GetStringValue()));
-            result.AppendLine(indentstr + string.Format("　次駅シーケンス番号:[{0}]", NextStationSeq));
-            result.AppendLine(indentstr + string.Format("　次駅名            :[{0}]", NextStationName));
+            result.AppendLine(indentstr + string.Format("　駅名    :[{0}] ", Name));
+            result.AppendLine(indentstr + string.Format("　方向種別:[{0}] ", Direction.GetStringValue()));
+            result.AppendLine(indentstr + string.Format("　次駅名  :[{0}] ", NextStationName));
 
             // 返却
             return result.ToString();

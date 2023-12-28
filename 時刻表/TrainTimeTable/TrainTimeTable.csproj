@@ -84,6 +84,7 @@
     <Compile Include="Common\FontLibrary.cs" />
     <Compile Include="Common\ImportFileType.cs" />
     <Compile Include="Common\MathLibrary.cs" />
+    <Compile Include="Common\StationDrawRowInfomation.cs" />
     <Compile Include="Common\StationScale.cs" />
     <Compile Include="Common\StationTreatment.cs" />
     <Compile Include="Common\StopMarkDrawType.cs" />
@@ -182,6 +183,9 @@
     <Compile Include="Control\TreeNode\TreeNodeStationTimetable.cs" />
     <Compile Include="Control\TreeNode\TreeNodeTrainType.cs" />
     <Compile Include="Control\TreeView\TreeViewRoute.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Control\DataGridView\VirtualDataGridViewTimeTable.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Database\RouteFileDatabase.cs" />

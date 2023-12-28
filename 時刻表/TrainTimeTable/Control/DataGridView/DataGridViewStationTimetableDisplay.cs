@@ -182,7 +182,7 @@ namespace TrainTimeTable.Control
                 if (trainProperty.StationTimes.Count == 0)
                 {
                     // ロギング
-                    Logger.WarnFormat("{0}駅({1})の以下の列車は時刻表登録がありません", station.Name, station.Seq);
+                    Logger.WarnFormat("{0}駅の以下の列車は時刻表登録がありません", station.Name);
                     Logger.Warn(trainProperty.ToString());
 
                     // 登録がないのでスキップ
@@ -203,7 +203,7 @@ namespace TrainTimeTable.Control
                 if (stationTimeProperty.DepartureTime == string.Empty && !stationTimeProperty.EstimatedDepartureTime)
                 {
                     // ロギング
-                    Logger.WarnFormat("{0}駅({1})の以下の列車は発時刻登録がありません", station.Name, station.Seq);
+                    Logger.WarnFormat("{0}駅の以下の列車は発時刻登録がありません", station.Name);
                     Logger.Warn(trainProperty.ToString());
                     Logger.Warn(stationTimeProperty.ToString());
 
@@ -298,7 +298,7 @@ namespace TrainTimeTable.Control
                         TrainProperty trainProperty = trainProperties.Find(t => t.Id == property.TrainId);
 
                         // 列車種別
-                        string trainType = m_DiaProFont[trainTypeProperties[trainProperty.TrainType].Name];
+                        string trainType = m_DiaProFont[trainTypeProperties.Find(t => t.Name == trainProperty.TrainTypeName).Name];
                         if (trainType != string.Empty) { sb.AppendLine(trainType); }
 
                         // 列車名取得
@@ -315,7 +315,7 @@ namespace TrainTimeTable.Control
 
                         // 登録
                         columns.Add(sb.ToString());
-                        colors.Add(trainTypeProperties[trainProperty.TrainType].StringsColor);
+                        colors.Add(trainTypeProperties.Find(t => t.Name == trainProperty.TrainTypeName).StringsColor);
                     }
                 }
 

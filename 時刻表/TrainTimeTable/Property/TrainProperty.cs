@@ -23,9 +23,9 @@ namespace TrainTimeTable.Property
         #endregion
 
         /// <summary>
-        /// ダイヤグラムID
+        /// ダイヤグラム名
         /// </summary>
-        public int DiagramId { get; set; } = -1;
+        public string DiagramName { get; set; } = string.Empty;
 
         /// <summary>
         /// 方向種別
@@ -38,15 +38,9 @@ namespace TrainTimeTable.Property
         public int Id { get; set; } = 0;
 
         /// <summary>
-        /// シーケンス番号
+        /// 列車種別名
         /// </summary>
-        [Obsolete("TrainPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int Seq { get; set; } = 0;
-
-        /// <summary>
-        /// 列車種別番号
-        /// </summary>
-        public int TrainType { get; set; } = 0;
+        public string TrainTypeName { get; set; } = string.Empty;
 
         /// <summary>
         /// 列車番号
@@ -165,11 +159,10 @@ namespace TrainTimeTable.Property
             if (!ReferenceEquals(this ,property))
             {
                 // コピー
-                DiagramId = property.DiagramId;
+                DiagramName = property.DiagramName;
                 Direction = property.Direction;
                 Id = property.Id;
-                Seq = property.Seq;
-                TrainType = property.TrainType;
+                TrainTypeName = property.TrainTypeName;
                 No = property.No;
                 Name = property.Name;
                 DepartingStation = property.DepartingStation;
@@ -197,10 +190,10 @@ namespace TrainTimeTable.Property
             Logger.DebugFormat("property:[{0}]", property);
 
             // 比較
-            if (DiagramId != property.DiagramId)
+            if (DiagramName != property.DiagramName)
             {
                 // ロギング
-                Logger.DebugFormat("DiagramId:[不一致][{0}][{1}]", DiagramId, property.DiagramId);
+                Logger.DebugFormat("DiagramName:[不一致][{0}][{1}]", DiagramName, property.DiagramName);
                 Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
 
                 // 不一致
@@ -224,19 +217,10 @@ namespace TrainTimeTable.Property
                 // 不一致
                 return false;
             }
-            if (Seq != property.Seq)
+            if (TrainTypeName != property.TrainTypeName)
             {
                 // ロギング
-                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
-                Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (TrainType != property.TrainType)
-            {
-                // ロギング
-                Logger.DebugFormat("TrainType:[不一致][{0}][{1}]", TrainType, property.TrainType);
+                Logger.DebugFormat("TrainTypeName:[不一致][{0}][{1}]", TrainTypeName, property.TrainTypeName);
                 Logger.Debug("<<<<= TrainProperty::Compare(TrainProperty)");
 
                 // 不一致
@@ -435,11 +419,10 @@ namespace TrainTimeTable.Property
 
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜列車情報＞"));
-            result.AppendLine(indentstr + string.Format("　ダイヤグラムID:[{0}] ", DiagramId));
+            result.AppendLine(indentstr + string.Format("　ダイヤグラム名:[{0}] ", DiagramName));
             result.AppendLine(indentstr + string.Format("　方向種別      :[{0}] ", Direction.GetStringValue()));
             result.AppendLine(indentstr + string.Format("　ID            :[{0}] ", Id));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号:[{0}] ", Seq));
-            result.AppendLine(indentstr + string.Format("　列車種別番号  :[{0}] ", TrainType));
+            result.AppendLine(indentstr + string.Format("　列車種別名    :[{0}] ", TrainTypeName));
             result.AppendLine(indentstr + string.Format("　列車番号      :[{0}] ", No));
             result.AppendLine(indentstr + string.Format("　列車名        :[{0}] ", Name));
             result.AppendLine(indentstr + string.Format("　列車号数      :[{0}] ", Number));

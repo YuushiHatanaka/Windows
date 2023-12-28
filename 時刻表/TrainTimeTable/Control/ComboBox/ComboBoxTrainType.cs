@@ -95,19 +95,19 @@ namespace TrainTimeTable.Control
         /// 選択要素取得
         /// </summary>
         /// <returns></returns>
-        public int GetSelected()
+        public string GetSelected()
         {
             // ロギング
             Logger.Debug("=>>>> ComboBoxTrainType::GetSelected()");
 
             // 結果初期化
-            int result = 0;
+            string result = string.Empty;
 
             // 選択インデックス判定
             if (SelectedIndex >= 0)
             {
                 // 結果設定
-                result = m_TrainTypeProperties.Find(t => t.Name == Items[SelectedIndex].ToString()).Seq - 1;
+                result = Items[SelectedIndex].ToString();
             }
 
             // ロギング
@@ -121,15 +121,15 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 選択設定
         /// </summary>
-        /// <param name="typeNo"></param>
-        public void SetSelected(int typeNo)
+        /// <param name="name"></param>
+        public void SetSelected(string name)
         {
             // ロギング
-            Logger.Debug("=>>>> ComboBoxTrainType::SetSelected(int)");
-            Logger.DebugFormat("typeNo:[{0}]", typeNo);
+            Logger.Debug("=>>>> ComboBoxTrainType::SetSelected(string)");
+            Logger.DebugFormat("name:[{0}]", name);
 
             // 文字列検索
-            int result = m_TrainTypeProperties.FindIndex(t => t.Seq == typeNo + 1);
+            int result = FindString(name);
 
             // 文字列検索結果判定
             if (result >= 0)

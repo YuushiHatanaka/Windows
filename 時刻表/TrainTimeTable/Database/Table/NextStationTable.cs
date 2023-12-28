@@ -47,7 +47,6 @@ namespace TrainTimeTable.Database.Table
             query.Append("Name TEXT NOT NULL,");                    // 駅名
             query.Append("Direction INTEGER NOT NULL DEFAULT 0,");  // 方向種別
             query.Append("NextStationName TEXT NOT NULL,");         // 次駅名
-            query.Append("NextStationSeq INTEGER NOT NULL,");       // 次駅シーケンス番号
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
@@ -158,7 +157,6 @@ namespace TrainTimeTable.Database.Table
             // 設定
             property.Name = sqliteDataReader["Name"].ToString();
             property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
-            property.NextStationSeq = int.Parse(sqliteDataReader["NextStationSeq"].ToString());
             property.NextStationName = sqliteDataReader["NextStationName"].ToString();
 
             // 登録
@@ -248,7 +246,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var dst in dstProperties)
                 {
                     // キーを比較
-                    if ((src.Name == dst.Name) && (src.Direction == dst.Direction) && (src.NextStationSeq == dst.NextStationSeq))
+                    if ((src.Name == dst.Name) && (src.Direction == dst.Direction) && (src.NextStationName == dst.NextStationName))
                     {
                         removeId = false;
                         break;
@@ -287,7 +285,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationSeq = " + property.NextStationSeq + ";");
+            query.Append("Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationName = '" + property.NextStationName + "';");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -318,13 +316,11 @@ namespace TrainTimeTable.Database.Table
             query.Append("(");
             query.Append("Name,");              // 駅名
             query.Append("Direction,");         // 方向種別
-            query.Append("NextStationSeq,");    // 次駅シーケンス番号
             query.Append("NextStationName");    // 次駅名
             query.Append(") VALUES ");
             query.Append("(");
             query.Append("'" + property.Name + "',");
             query.Append((int)property.Direction + ",");
-            query.Append(property.NextStationSeq.ToString()+",");
             query.Append("'" + property.NextStationName + "'");
             query.Append(");");
 
@@ -351,7 +347,7 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationSeq = " + property.NextStationSeq + ";");
+            query.Append("WHERE Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationName = '" + property.NextStationName + "';");
 
             // 更新
             Update(query.ToString());
@@ -382,7 +378,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var property in properties)
                 {
                     query.Append(string.Format("DELETE FROM {0} ", m_TableName));
-                    query.Append("WHERE Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationSeq = " + property.NextStationSeq + ";");
+                    query.Append("WHERE Name = '" + property.Name.ToString() + "' AND Direction = " + (int)property.Direction + " AND NextStationName = '" + property.NextStationName + "';");
                 }
 
                 // 削除実行

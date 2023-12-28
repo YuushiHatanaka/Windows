@@ -53,11 +53,6 @@ namespace TrainTimeTable
         private FormRoute m_Owner = null;
 
         /// <summary>
-        /// ダイヤグラムID
-        /// </summary>
-        private int m_DiagramId = 0;
-
-        /// <summary>
         /// ダイアログ名
         /// </summary>
         private string m_DiagramName = string.Empty;
@@ -73,9 +68,9 @@ namespace TrainTimeTable
         private RouteFileProperty m_RouteFileProperty = null;
 
         /// <summary>
-        /// DataGridViewTimetableオブジェクト
+        /// VirtualDataGridViewTimeTableオブジェクト
         /// </summary>
-        private DataGridViewTimetable m_DataGridViewTimetable = null;
+        private VirtualDataGridViewTimeTable m_VirtualDataGridViewTimeTable = null;
 
         /// <summary>
         /// 印刷処理中ページ番号
@@ -111,12 +106,12 @@ namespace TrainTimeTable
             m_RouteFileProperty = property;
             Text = regName;
 
-            // DataGridViewTimetableオブジェクト生成
-            m_DataGridViewTimetable = new DataGridViewTimetable(m_DiagramName, m_DirectionType, m_RouteFileProperty);
-            m_DataGridViewTimetable.Click += DataGridViewTimetable_Click;
-            m_DataGridViewTimetable.OnTrainPropertyUpdate += DataGridViewTimetable_OnTrainPropertyUpdate;
-            m_DataGridViewTimetable.OnStationPropertiesUpdate += DataGridViewTimetable_OnStationPropertiesUpdate;
-            m_DataGridViewTimetable.OnStationTimePropertyUpdate += DataGridViewTimetable_OnStationTimePropertyUpdate;
+            // VirtualDataGridViewTimeTableオブジェクト生成
+            m_VirtualDataGridViewTimeTable = new VirtualDataGridViewTimeTable(m_DiagramName, m_DirectionType, m_RouteFileProperty);
+            m_VirtualDataGridViewTimeTable.Click += DataGridViewTimetable_Click;
+            m_VirtualDataGridViewTimeTable.OnTrainPropertyUpdate += DataGridViewTimetable_OnTrainPropertyUpdate;
+            m_VirtualDataGridViewTimeTable.OnStationPropertiesUpdate += DataGridViewTimetable_OnStationPropertiesUpdate;
+            m_VirtualDataGridViewTimeTable.OnStationTimePropertyUpdate += DataGridViewTimetable_OnStationTimePropertyUpdate;
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::FormTimetable(FormRoute, string, string, DirectionType, RouteFileProperty)");
@@ -141,9 +136,9 @@ namespace TrainTimeTable
             SuspendLayout();
 
             // コントコール設定
-            m_DataGridViewTimetable.Dock = DockStyle.Fill;
-            m_DataGridViewTimetable.Draw();
-            panelMain.Controls.Add(m_DataGridViewTimetable);
+            m_VirtualDataGridViewTimeTable.Dock = DockStyle.Fill;
+            m_VirtualDataGridViewTimeTable.Draw();
+            panelMain.Controls.Add(m_VirtualDataGridViewTimeTable);
             panelMain.Dock = DockStyle.Fill;
 
             // 描画再開
@@ -210,7 +205,6 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
-            eventArgs.DiagramId = m_DiagramId;
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
@@ -238,7 +232,6 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Properties.GetType();
-            eventArgs.DiagramId = m_DiagramId;
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
@@ -266,7 +259,6 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
-            eventArgs.DiagramId = m_DiagramId;
             eventArgs.DiagramName = m_DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
@@ -429,8 +421,8 @@ namespace TrainTimeTable
             // 設定
             m_RouteFileProperty = property;
 
-            // DataGridViewTimetable
-            m_DataGridViewTimetable.Update(m_RouteFileProperty);
+            // VirtualDataGridViewTimeTable更新
+            m_VirtualDataGridViewTimeTable.Update(m_RouteFileProperty);
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::Update(RouteFileProperty)");
