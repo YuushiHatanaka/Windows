@@ -1,17 +1,53 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TrainTimeTable.Common
 {
+    /// <summary>
+    /// StationDrawRowInfomationクラス
+    /// </summary>
     public class StationDrawRowInfomation
     {
+        #region ロガーオブジェクト
+        /// <summary>
+        /// ロガーオブジェクト
+        /// </summary>
+        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        #endregion
+
+        /// <summary>
+        /// 駅名
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 発着種別
+        /// </summary>
         public DepartureArrivalType DepartureArrivalType { get; set; } = DepartureArrivalType.None;
 
+        /// <summary>
+        /// 距離文字列
+        /// </summary>
         public string Distance {get; set; } = string.Empty;
+
+        #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public StationDrawRowInfomation()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationDrawRowInfomation::StationDrawRowInfomation()");
+
+            // ロギング
+            Logger.Debug("<<<<= StationDrawRowInfomation::StationDrawRowInfomation()");
+        }
+        #endregion
 
         #region 文字列化
         /// <summary>
