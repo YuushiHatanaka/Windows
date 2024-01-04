@@ -46,7 +46,7 @@ namespace TrainTimeTable
         /// <summary>
         /// StationPropertyオブジェクト生成
         /// </summary>
-        public StationProperty Property { get; set; } = new StationProperty();
+        public StationProperty Property { get; set; } = null;
 
         /// <summary>
         /// ComboBoxDiagramTrainInformation辞書オブジェクト
@@ -61,15 +61,35 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        public FormStationProperty()
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationProperty::FormStationProperty()");
+
+            // コンポーネント初期化
+            InitializeComponent();
+
+            // 設定
+            Property = new StationProperty()
+            {
+                TimeFormat = TimeFormat.DepartureTime,
+                StationScale = StationScale.GeneralStation,
+            };
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationProperty::FormStationProperty()");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         /// <param name="property"></param>
         public FormStationProperty(StationProperty property)
+            : this()
         {
             // ロギング
             Logger.Debug("=>>>> FormStationProperty::FormStationProperty(StationProperty)");
             Logger.DebugFormat("property:[{0}]", property);
-
-            // コンポーネント初期化
-            InitializeComponent();
 
             // 設定
             Property.Copy(property);

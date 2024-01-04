@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TrainTimeTable.Property
 {
+    [Serializable]
     public class DiagramDrawProperties : List<DiagramDrawProperty>
     {
         public DiagramDrawProperties() { }

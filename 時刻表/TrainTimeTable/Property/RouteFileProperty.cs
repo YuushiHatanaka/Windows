@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using TrainTimeTable.Common;
 using TrainTimeTable.Property;
@@ -259,6 +260,47 @@ namespace TrainTimeTable.Property
 
             // 一致
             return true;
+        }
+        #endregion
+
+        #region 駅追加
+        /// <summary>
+        /// 駅追加
+        /// </summary>
+        /// <param name="property"></param>
+        public void AddStation(StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::AddStation(StationProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで駅名追加
+            StationSequences.AddSequenceNumber(property);
+            Stations.Add(property);
+            Diagrams.AddStation(property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::AddStation(StationProperty)");
+        }
+        #endregion
+
+        #region 駅挿入
+        /// <summary>
+        /// 駅挿入
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void InsertStation(int index, StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::InsertStation(int, StationProperty)");
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで駅挿入
+            StationSequences.InsertSequenceNumber(index, property);
+            Stations.Insert(index, property);
+            Diagrams.InsertStation(index, property);
         }
         #endregion
 

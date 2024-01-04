@@ -16,5 +16,7 @@ namespace TrainTimeTable.EventArgs
         public StationProperties OldProperties { get; set; } = new StationProperties();
 
         public StationProperties Properties { get; set; } = null;
+
+        public StationSequenceProperties Sequences { get; set; } = null;
     }
 }

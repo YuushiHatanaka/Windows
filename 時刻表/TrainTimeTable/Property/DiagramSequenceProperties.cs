@@ -11,6 +11,7 @@ namespace TrainTimeTable.Property
     /// <summary>
     /// DiagramSequencePropertiesクラス
     /// </summary>
+    [Serializable]
     public class DiagramSequenceProperties : List<DiagramSequenceProperty>
     {
         #region ロガーオブジェクト

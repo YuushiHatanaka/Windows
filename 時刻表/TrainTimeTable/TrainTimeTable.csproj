@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ClipboardLibrary.cs" />
     <Compile Include="Common\DashStyleInfo.cs" />
     <Compile Include="Common\DepartureArrivalType.cs" />
     <Compile Include="Common\AssemblyLibrary.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Common\FontLibrary.cs" />
     <Compile Include="Common\ImportFileType.cs" />
     <Compile Include="Common\MathLibrary.cs" />
+    <Compile Include="Common\SerializationHelper.cs" />
     <Compile Include="Common\StationDrawRowInfomation.cs" />
     <Compile Include="Common\StationScale.cs" />
     <Compile Include="Common\StationTreatment.cs" />

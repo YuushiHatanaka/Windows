@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -104,7 +105,7 @@ namespace TrainTimeTable.Property
             Logger.DebugFormat("property:[{0}]", properties);
 
             // 同一オブジェクト以外に実施する
-            if (!ReferenceEquals(this , properties))
+            if (!ReferenceEquals(this, properties))
             {
                 // クリア
                 Clear();
@@ -184,7 +185,7 @@ namespace TrainTimeTable.Property
             Logger.Debug("=>>>> DiagramProperties::DepartureArrivalStationSetting()");
 
             // リストを繰り返す
-            foreach(var property in this)
+            foreach (var property in this)
             {
                 // 発着駅設定(方向)
                 property.Trains.DepartureArrivalStationSetting();
@@ -192,6 +193,90 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= DiagramProperties::DepartureArrivalStationSetting()");
+        }
+        #endregion
+
+        #region 駅追加
+        /// <summary>
+        /// 駅追加
+        /// </summary>
+        /// <param name="addProperty"></param>
+        public void AddStation(StationProperty addProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::AddStation(StationProperty)");
+            Logger.DebugFormat("addProperty:[{0}]", addProperty);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach (var direction in property.Trains.Values)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in direction)
+                    {
+                        // StationTimePropertオブジェクト生成
+                        StationTimeProperty stationTimeProperty = new StationTimeProperty()
+                        {
+                            DiagramName = property.Name,
+                            Direction = train.Direction,
+                            StationTreatment = StationTreatment.NoService,
+                            TrainId = train.Id,
+                            StationName = addProperty.Name,
+                        };
+
+                        // 登録
+                        train.StationTimes.Add(stationTimeProperty);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::AddStation(StationProperty)");
+        }
+        #endregion
+
+        #region 駅挿入
+        /// <summary>
+        /// 駅挿入
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="insertProperty"></param>
+        public void InsertStation(int index, StationProperty insertProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::InsertStation(int, StationProperty)");
+            Logger.DebugFormat("index         :[{0}]", index);
+            Logger.DebugFormat("insertProperty:[{0}]", insertProperty);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach (var direction in property.Trains.Values)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in direction)
+                    {
+                        // StationTimePropertオブジェクト生成
+                        StationTimeProperty stationTimeProperty = new StationTimeProperty()
+                        {
+                            DiagramName = property.Name,
+                            Direction = train.Direction,
+                            StationTreatment = StationTreatment.NoService,
+                            TrainId = train.Id,
+                            StationName = insertProperty.Name,
+                        };
+
+                        // 登録
+                        train.StationTimes.Insert(index, stationTimeProperty);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::InsertStation(int, StationProperty)");
         }
         #endregion
 

@@ -3,14 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using TrainTimeTable.Common;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
+using System.Runtime.Serialization;
 
 namespace TrainTimeTable.Control
 {
@@ -134,7 +139,35 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            StationProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationCutoutOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // クリップボードにコピー
+            Clipboard.SetDataObject(new StationProperty(result), true);
+
+            // シーケンス番号削除
+            m_RouteFileProperty.StationSequences.DeleteSequenceNumber(result);
+
+            // 削除
+            m_RouteFileProperty.Stations.Remove(result);
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations });
+
+            // TODO:シーケンス更新(イベント呼出)
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationCutoutOnClick(object, EventArgs)");
@@ -152,7 +185,21 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            StationProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationCopyOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // クリップボードにコピー
+            Clipboard.SetDataObject(new StationProperty(result), true);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationCopyOnClick(object, EventArgs)");
@@ -170,7 +217,44 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(StationProperty))))
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
+
+                // 対象外
+                return;
+            }
+
+            // コピー項目取得
+            StationProperty result = dataObject.GetData(typeof(StationProperty)) as StationProperty;
+
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // 選択状態設定
+            if (selectedIndex < 0)
+            {
+                // 駅追加
+                m_RouteFileProperty.AddStation(result);
+            }
+            else
+            {
+                // 駅挿入
+                m_RouteFileProperty.InsertStation(selectedIndex, result);
+            }
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
+
+            // TODO:シーケンス更新(イベント呼出)
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
@@ -188,7 +272,30 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            StationProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationDeleteOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // シーケンス番号削除
+            m_RouteFileProperty.StationSequences.DeleteSequenceNumber(result);
+
+            // 削除
+            m_RouteFileProperty.Stations.Remove(result);
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationDeleteOnClick(object, EventArgs)");
@@ -206,7 +313,50 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // 選択インデックス判定
+            int index;
+            if (selectedIndex == -1)
+            {
+                index = m_RouteFileProperty.Stations.Count + 1;
+            }
+            else
+            {
+                index = selectedIndex;
+            }
+
+            // FormStationPropertyオブジェクト生成
+            FormStationProperty form = new FormStationProperty();
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationInsertOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
+
+            // 選択状態設定
+            if (selectedIndex < 0)
+            {
+                // 駅追加
+                m_RouteFileProperty.AddStation(form.Property);
+            }
+            else
+            {
+                // 駅挿入
+                m_RouteFileProperty.InsertStation(selectedIndex, form.Property);
+            }
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationInsertOnClick(object, EventArgs)");
@@ -225,7 +375,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            StationProperty result = GetSelectedStationProperty();
+            StationProperty result = GetSelectedCondition();
 
             // 選択状態設定
             if (result != null)
@@ -260,7 +410,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            StationProperty result = GetSelectedStationProperty();
+            StationProperty result = GetSelectedCondition();
 
             // 選択状態設定
             if (result == null)
@@ -274,6 +424,19 @@ namespace TrainTimeTable.Control
                 ContextMenuStrip.Items["cutout"].Enabled = true;
                 ContextMenuStrip.Items["copy"].Enabled = true;
                 ContextMenuStrip.Items["delete"].Enabled = true;
+            }
+
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(StationProperty))))
+            {
+                ContextMenuStrip.Items["pasting"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["pasting"].Enabled = true;
             }
 
             // ロギング
@@ -396,19 +559,49 @@ namespace TrainTimeTable.Control
 
         #region privateメソッド
         /// <summary>
-        /// 選択StationProperty取得
+        /// 選択インデックス取得
         /// </summary>
         /// <returns></returns>
-        private StationProperty GetSelectedStationProperty()
+        private int GetSelectedIndex()
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewStation::GetSelectedStationProperty()");
+            Logger.Debug("=>>>> DataGridViewStation::GetSelectedCondition()");
 
             // 選択状態設定
             if (SelectedCells.Count == 0)
             {
                 // ロギング
-                Logger.Debug("<<<<= DataGridViewStation::GetSelectedStationProperty()");
+                Logger.Debug("<<<<= DataGridViewStation::GetSelectedCondition()");
+
+                // 選択なし
+                return -1;
+            }
+
+            // 選択インデックス設定
+            int result = SelectedCells[0].RowIndex;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewStation::GetSelectedCondition()");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 選択情報取得
+        /// </summary>
+        /// <returns></returns>
+        private StationProperty GetSelectedCondition()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::GetSelectedCondition()");
+
+            // 選択状態設定
+            if (SelectedCells.Count == 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::GetSelectedCondition()");
 
                 // 選択なし
                 return null;
@@ -419,7 +612,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewStation::GetSelectedStationProperty()");
+            Logger.Debug("<<<<= DataGridViewStation::GetSelectedCondition()");
 
             // 返却
             return result;

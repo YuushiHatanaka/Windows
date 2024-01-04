@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace TrainTimeTable.Property
 {
@@ -151,6 +152,97 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationSequenceProperties::ChangeStationName(string, string)");
+        }
+        #endregion
+
+        #region シーケンス番号関連
+        /// <summary>
+        /// シーケンス番号削除
+        /// </summary>
+        /// <param name="property"></param>
+        public void DeleteSequenceNumber(StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::DeleteSequenceNumber(StationProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty targetStationSequenceProperty = Find(s => s.Name == property.Name);
+
+            // リストから削除
+            Remove(targetStationSequenceProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperties::DeleteSequenceNumber(StationProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号追加
+        /// </summary>
+        /// <param name="property"></param>
+        public void AddSequenceNumber(StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::AddSequenceNumber(StationProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 最大シーケンス番号取得
+            int insertSeq = this.Max(s => s.Seq) + 1;
+
+            // シーケンス番号挿入
+            InsertSequenceNumber(insertSeq, property);
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperties::AddSequenceNumber(StationProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号挿入
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="property"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void InsertSequenceNumber(int seq, StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::InsertSequenceNumber(int, StationProperty)");
+            Logger.DebugFormat("seq     :[{0}]", seq);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // StationSequencePropertyオブジェクト生成
+            StationSequenceProperty targetStationSequenceProperty = new StationSequenceProperty(seq, property);
+
+            // 挿入
+            Insert(seq, targetStationSequenceProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperties::InsertSequenceNumber(int, StationProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号再構築
+        /// </summary>
+        private void SequenceNumberReconstruction()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::SequenceNumberReconstruction()");
+
+            // シーケンス番号再付与
+            int seq = 1;
+            foreach(var property in this)
+            {
+                // 設定
+                property.Seq = seq++;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperties::SequenceNumberReconstruction()");
         }
         #endregion
 

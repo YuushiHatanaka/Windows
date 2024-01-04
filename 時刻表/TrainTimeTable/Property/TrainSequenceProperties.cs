@@ -11,6 +11,7 @@ namespace TrainTimeTable.Property
     /// <summary>
     /// TrainSequencePropertiesクラス
     /// </summary>
+    [Serializable]
     public class TrainSequenceProperties : List<TrainSequenceProperty>
     {
         #region ロガーオブジェクト
@@ -152,7 +153,6 @@ namespace TrainTimeTable.Property
         /// 新ID取得
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
 
         public int GetNewId()
         {

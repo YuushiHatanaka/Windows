@@ -62,6 +62,26 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= StationSequenceProperty::StationSequenceProperty(StationSequenceProperty)");
         }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="property"></param>
+        public StationSequenceProperty(int seq, StationProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperty::StationSequenceProperty(StationProperty)");
+            Logger.DebugFormat("seq     :[{0}]", seq);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            Name = property.Name;
+            Seq = seq;
+
+            // ロギング
+            Logger.Debug("<<<<= StationSequenceProperty::StationSequenceProperty(StationProperty)");
+        }
         #endregion
 
         #region コピー
