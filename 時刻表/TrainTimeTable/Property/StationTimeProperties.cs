@@ -180,20 +180,42 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 次駅取得
         /// </summary>
-        /// <param name="startTimes"></param>
+        /// <param name="sequences"></param>
+        /// <param name="property"></param>
         /// <returns></returns>
-        public StationTimeProperty GetNext(StationTimeProperty property)
+        public StationTimeProperty GetAfter(StationSequenceProperties sequences, StationTimeProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationTimeProperty)");
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> StationTimeProperties::GetAfter(StationSequenceProperties, StationTimeProperty)");
+            Logger.DebugFormat("sequences:[{0}]", sequences);
+            Logger.DebugFormat("property :[{0}]", property);
 
-            // 条件に一致する直近のものを取得
-            StationTimeProperty result = Find(t => t.Seq > property.Seq && (t.ArrivalTime != string.Empty || t.DepartureTime != string.Empty));
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences.Find(s => s.Name == property.StationName);
+
+            // 対象駅一覧を取得
+            List<StationSequenceProperty> targetList = sequences.FindAll(s => s.Seq > stationSequenceProperty.Seq);
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 一覧を繰り返す
+            foreach (var target in targetList.OrderBy(s => s.Seq))
+            {
+                // 条件検索
+                result = Find(t => t.StationName == target.Name && (t.ArrivalTime != string.Empty || t.DepartureTime != string.Empty));
+
+                // 条件判定
+                if(result != null)
+                {
+                    // 条件一致
+                    break;
+                }
+            }
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationTimeProperty)");
+            Logger.Debug("<<<<= StationTimeProperties::GetAfter(StationSequenceProperties, StationTimeProperty)");
 
             // 返却
             return result;
@@ -202,21 +224,44 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 次駅取得
         /// </summary>
-        /// <param name="startTimes"></param>
+        /// <param name="sequences"></param>
+        /// <param name="property"></param>
+        /// <param name="treatment"></param>
         /// <returns></returns>
-        public StationTimeProperty GetNext(StationTimeProperty property, StationTreatment treatment)
+        public StationTimeProperty GetAfter(StationSequenceProperties sequences, StationTimeProperty property, StationTreatment treatment)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationTimeProperty, StationTreatment)");
+            Logger.Debug("=>>>> StationTimeProperties::GetAfter(StationSequenceProperties, StationTimeProperty, StationTreatment)");
+            Logger.DebugFormat("sequences:[{0}]", sequences);
             Logger.DebugFormat("property :[{0}]", property);
             Logger.DebugFormat("treatment:[{0}]", treatment.GetStringValue());
 
-            // 条件に一致する直近のものを取得
-            StationTimeProperty result = Find(t => t.Seq > property.Seq && t.StationTreatment == treatment);
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences.Find(s => s.Name == property.StationName);
+
+            // 対象駅一覧を取得
+            List<StationSequenceProperty> targetList = sequences.FindAll(s => s.Seq > stationSequenceProperty.Seq);
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 一覧を繰り返す
+            foreach (var target in targetList.OrderBy(s => s.Seq))
+            {
+                // 条件検索
+                result = Find(t => t.StationName == target.Name && t.StationTreatment == treatment);
+
+                // 条件判定
+                if (result != null)
+                {
+                    // 条件一致
+                    break;
+                }
+            }
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationTimeProperty, StationTreatment)");
+            Logger.Debug("<<<<= StationTimeProperties::GetAfter(StationTimeProperty, StationTreatment)");
 
             // 返却
             return result;
@@ -227,20 +272,42 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 前駅取得
         /// </summary>
-        /// <param name="startTimes"></param>
+        /// <param name="sequences"></param>
+        /// <param name="property"></param>
         /// <returns></returns>
-        public StationTimeProperty GetBefore(StationTimeProperty property)
+        public StationTimeProperty GetBefore(StationSequenceProperties sequences, StationTimeProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationTimeProperty)");
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationSequenceProperties, StationTimeProperty)");
+            Logger.DebugFormat("sequences:[{0}]", sequences);
+            Logger.DebugFormat("property :[{0}]", property);
 
-            // 条件に一致する直近のものを取得
-            StationTimeProperty result = FindLast(t => t.Seq < property.Seq && (t.ArrivalTime != string.Empty || t.DepartureTime != string.Empty));
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences.Find(s => s.Name == property.StationName);
+
+            // 対象駅一覧を取得
+            List<StationSequenceProperty> targetList = sequences.FindAll(s => s.Seq < stationSequenceProperty.Seq);
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 一覧を繰り返す
+            foreach (var target in targetList.OrderByDescending(s => s.Seq))
+            {
+                // 条件検索
+                result = Find(t => t.StationName == target.Name && (t.ArrivalTime != string.Empty || t.DepartureTime != string.Empty));
+
+                // 条件判定
+                if (result != null)
+                {
+                    // 条件一致
+                    break;
+                }
+            }
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationTimeProperty)");
+            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationSequenceProperties, StationTimeProperty)");
 
             // 返却
             return result;
@@ -249,21 +316,44 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 前駅取得
         /// </summary>
-        /// <param name="startTimes"></param>
+        /// <param name="sequences"></param>
+        /// <param name="property"></param>
+        /// <param name="treatment"></param>
         /// <returns></returns>
-        public StationTimeProperty GetBefore(StationTimeProperty property, StationTreatment treatment)
+        public StationTimeProperty GetBefore(StationSequenceProperties sequences, StationTimeProperty property, StationTreatment treatment)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationTimeProperty, StationTreatment)");
+            Logger.Debug("=>>>> StationTimeProperties::GetNext(StationSequenceProperties, StationTimeProperty, StationTreatment)");
+            Logger.DebugFormat("sequences:[{0}]", sequences);
             Logger.DebugFormat("property :[{0}]", property);
             Logger.DebugFormat("treatment:[{0}]", treatment.GetStringValue());
 
-            // 条件に一致する直近のものを取得
-            StationTimeProperty result = FindLast(t => t.Seq < property.Seq && t.StationTreatment == treatment);
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences.Find(s => s.Name == property.StationName);
+
+            // 対象駅一覧を取得
+            List<StationSequenceProperty> targetList = sequences.FindAll(s => s.Seq < stationSequenceProperty.Seq);
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 一覧を繰り返す
+            foreach (var target in targetList.OrderByDescending(s => s.Seq))
+            {
+                // 条件検索
+                result = Find(t => t.StationName == target.Name && t.StationTreatment == treatment);
+
+                // 条件判定
+                if (result != null)
+                {
+                    // 条件一致
+                    break;
+                }
+            }
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationTimeProperty, StationTreatment)");
+            Logger.Debug("<<<<= StationTimeProperties::GetNext(StationSequenceProperties, StationTimeProperty, StationTreatment)");
 
             // 返却
             return result;
