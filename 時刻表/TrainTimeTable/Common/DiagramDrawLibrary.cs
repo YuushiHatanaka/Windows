@@ -815,7 +815,7 @@ namespace TrainTimeTable.Common
                 }
 
                 // ロギング
-                Logger.InfoFormat("【下り】[{0}]:[{1}({2})]⇒[{3}({4})](次停車駅:{5})",
+                Logger.DebugFormat("【下り】[{0}]:[{1}({2})]⇒[{3}({4})](次停車駅:{5})",
                     train.No,
                     startTime.StationName,
                     startStationSequence.Seq,
@@ -827,7 +827,7 @@ namespace TrainTimeTable.Common
                 foreach (var stationSequence in m_RouteFileProperty.StationSequences.FindAll(s => s.Seq >= startStationSequence.Seq && s.Seq <= endStationSequence.Seq).OrderBy(s => s.Seq))
                 {
                     // ロギング
-                    Logger.InfoFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
+                    Logger.DebugFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
 
                     // StationPropertyオブジェクト取得
                     StationProperty currentStationProperty = m_RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
@@ -844,12 +844,12 @@ namespace TrainTimeTable.Common
                     StationTimeProperty adjacentStation = train.StationTimes.Find(t => t.StationName == adjacentStationSequence?.Name);
 
                     // ロギング
-                    Logger.InfoFormat("　├対象駅  :[{0}({1}/{2})][{3}]", currentStationProperty?.Name, currentStationTimeProperty?.ArrivalTime, currentStationTimeProperty?.DepartureTime, currentStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├前停車駅:[{0}({1}/{2})][{3}]", beforeStationTimeProperty?.StationName, beforeStationTimeProperty?.ArrivalTime, beforeStationTimeProperty?.DepartureTime, beforeStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├次停車駅:[{0}({1}/{2})][{3}]", afterStationTimeProperty?.StationName, afterStationTimeProperty?.ArrivalTime, afterStationTimeProperty?.DepartureTime, afterStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├前隣接駅:[{0}]", beforeStationProperty?.Name);
-                    Logger.InfoFormat("　├次隣接駅:[{0}]", afterStationProperty?.Name);
-                    Logger.InfoFormat("　└隣接駅  :[{0}({1}/{2})][{3}]", adjacentStation?.StationName, adjacentStation?.ArrivalTime, adjacentStation?.DepartureTime, adjacentStation?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├対象駅  :[{0}({1}/{2})][{3}]", currentStationProperty?.Name, currentStationTimeProperty?.ArrivalTime, currentStationTimeProperty?.DepartureTime, currentStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├前停車駅:[{0}({1}/{2})][{3}]", beforeStationTimeProperty?.StationName, beforeStationTimeProperty?.ArrivalTime, beforeStationTimeProperty?.DepartureTime, beforeStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├次停車駅:[{0}({1}/{2})][{3}]", afterStationTimeProperty?.StationName, afterStationTimeProperty?.ArrivalTime, afterStationTimeProperty?.DepartureTime, afterStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├前隣接駅:[{0}]", beforeStationProperty?.Name);
+                    Logger.DebugFormat("　├次隣接駅:[{0}]", afterStationProperty?.Name);
+                    Logger.DebugFormat("　└隣接駅  :[{0}({1}/{2})][{3}]", adjacentStation?.StationName, adjacentStation?.ArrivalTime, adjacentStation?.DepartureTime, adjacentStation?.StationTreatment.GetStringValue());
 
                     // 次停車駅がなかったら
                     if (afterStationTimeProperty == null)
@@ -933,7 +933,7 @@ namespace TrainTimeTable.Common
                 }
 
                 // ロギング
-                Logger.InfoFormat("【上り】[{0}]:[{1}({2})]⇒[{3}({4})](次停車駅:{5})",
+                Logger.DebugFormat("【上り】[{0}]:[{1}({2})]⇒[{3}({4})](次停車駅:{5})",
                     train.No,
                     startTime.StationName,
                     startStationSequence.Seq,
@@ -945,7 +945,7 @@ namespace TrainTimeTable.Common
                 foreach (var stationSequence in m_RouteFileProperty.StationSequences.FindAll(s => s.Seq >= endStationSequence.Seq && s.Seq <= startStationSequence.Seq).OrderByDescending(s => s.Seq))
                 {
                     // ロギング
-                    Logger.InfoFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
+                    Logger.DebugFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
 
                     // StationPropertyオブジェクト取得
                     StationProperty currentStationProperty = m_RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
@@ -962,12 +962,12 @@ namespace TrainTimeTable.Common
                     StationTimeProperty adjacentStation = train.StationTimes.Find(t => t.StationName == adjacentStationSequence?.Name);
 
                     // ロギング
-                    Logger.InfoFormat("　├対象駅  :[{0}({1}/{2})][{3}]", currentStationProperty?.Name, currentStationTimeProperty?.ArrivalTime, currentStationTimeProperty?.DepartureTime, currentStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├前停車駅:[{0}({1}/{2})][{3}]", beforeStationTimeProperty?.StationName, beforeStationTimeProperty?.ArrivalTime, beforeStationTimeProperty?.DepartureTime, beforeStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├次停車駅:[{0}({1}/{2})][{3}]", afterStationTimeProperty?.StationName, afterStationTimeProperty?.ArrivalTime, afterStationTimeProperty?.DepartureTime, afterStationTimeProperty?.StationTreatment.GetStringValue());
-                    Logger.InfoFormat("　├前隣接駅:[{0}]", beforeStationProperty?.Name);
-                    Logger.InfoFormat("　├次隣接駅:[{0}]", afterStationProperty?.Name);
-                    Logger.InfoFormat("　└隣接駅  :[{0}({1}/{2})][{3}]", adjacentStation?.StationName, adjacentStation?.ArrivalTime, adjacentStation?.DepartureTime, adjacentStation?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├対象駅  :[{0}({1}/{2})][{3}]", currentStationProperty?.Name, currentStationTimeProperty?.ArrivalTime, currentStationTimeProperty?.DepartureTime, currentStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├前停車駅:[{0}({1}/{2})][{3}]", beforeStationTimeProperty?.StationName, beforeStationTimeProperty?.ArrivalTime, beforeStationTimeProperty?.DepartureTime, beforeStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├次停車駅:[{0}({1}/{2})][{3}]", afterStationTimeProperty?.StationName, afterStationTimeProperty?.ArrivalTime, afterStationTimeProperty?.DepartureTime, afterStationTimeProperty?.StationTreatment.GetStringValue());
+                    Logger.DebugFormat("　├前隣接駅:[{0}]", beforeStationProperty?.Name);
+                    Logger.DebugFormat("　├次隣接駅:[{0}]", afterStationProperty?.Name);
+                    Logger.DebugFormat("　└隣接駅  :[{0}({1}/{2})][{3}]", adjacentStation?.StationName, adjacentStation?.ArrivalTime, adjacentStation?.DepartureTime, adjacentStation?.StationTreatment.GetStringValue());
 
                     // 次停車駅がなかったら
                     if (beforeStationTimeProperty == null)
