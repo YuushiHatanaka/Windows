@@ -769,7 +769,6 @@ namespace TrainTimeTable.File
                 property.DiagramName = m_DiagramName;
                 property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
-                property.Seq = index + 1;
                 property.StationName = stationProperties[index].Name;
                 property.StationTreatment = StationTreatment.NoService;
 
@@ -841,7 +840,6 @@ namespace TrainTimeTable.File
                 property.DiagramName = m_DiagramName;
                 property.TrainId = trainId;
                 property.Direction = m_CurrentDirectionType;
-                property.Seq = index + 1;
                 property.StationName = stationProperties[index].Name;
                 property.StationTreatment = StationTreatment.NoService;
 

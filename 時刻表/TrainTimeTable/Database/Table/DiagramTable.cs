@@ -44,7 +44,6 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("CREATE TABLE IF NOT EXISTS {0} (", m_TableName));
             query.Append("Name TEXT NOT NULL,");
-            query.Append("Seq INTEGER NOT NULL,");
             query.Append("created TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("updated TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),");
             query.Append("deleted TIMESTAMP,");
@@ -72,11 +71,10 @@ namespace TrainTimeTable.Database.Table
             Logger.DebugFormat("result          :[{0}]", result);
 
             // DiagramPropertyオブジェクト生成
-            DiagramProperty property = new DiagramProperty();
-
-            // 設定
-            property.Name = sqliteDataReader["Name"].ToString();
-            property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
+            DiagramProperty property = new DiagramProperty()
+            {
+                Name = sqliteDataReader["Name"].ToString(),
+            };
 
             // 登録
             result.Add(property);
@@ -179,12 +177,10 @@ namespace TrainTimeTable.Database.Table
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("INSERT INTO {0} ", m_TableName));
             query.Append("(");
-            query.Append("Name,");  // ダイヤグラム名
-            query.Append("Seq");    // シーケンス番号
+            query.Append("Name");   // ダイヤグラム名
             query.Append(") VALUES ");
             query.Append("(");
-            query.Append("'" + property.Name + "',");
-            query.Append(property.Seq.ToString());
+            query.Append("'" + property.Name + "'");
             query.Append(");");
 
             // 挿入
@@ -209,7 +205,6 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
-            query.Append("Seq = " + property.Seq.ToString() + ",");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE Name = '" + property.Name + "';");
 

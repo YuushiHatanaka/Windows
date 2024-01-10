@@ -19,7 +19,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         /// <summary>
@@ -131,9 +131,10 @@ namespace TrainTimeTable.Property
             for (int i = 0; i < properties.Count; i++)
             {
                 // StationTimePropertyオブジェクト生成
-                StationTimeProperty property = new StationTimeProperty();
-                property.StationName = properties[i].Name;
-                property.Seq = i + 1;
+                StationTimeProperty property = new StationTimeProperty()
+                {
+                    StationName = properties[i].Name,
+                };
 
                 // 登録
                 StationTimes.Add(property);

@@ -49,7 +49,6 @@ namespace TrainTimeTable.Database.Table
             query.Append("Direction INTEGER NOT NULL DEFAULT 0,");          // 方向種別
             query.Append("TrainId INTEGER NOT NULL DEFAULT -1,");           // 列車ID
             query.Append("StationName TEXT,");                              // 駅名
-            query.Append("Seq INTEGER NOT NULL,");                          // 駅シーケンス番号
             query.Append("StationTreatment INTEGER NOT NULL DEFAULT 0,");   // 駅扱い
             query.Append("DepartureTime TEXT,");                            // 発時刻
             query.Append("EstimatedDepartureTime TEXT DEFAULT 'FALSE',");   // 推定時刻(発時刻)
@@ -86,7 +85,7 @@ namespace TrainTimeTable.Database.Table
             {
                 // SQLクエリ生成
                 StringBuilder query = new StringBuilder();
-                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND TrainId = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramName, train.Id, (int)train.Direction));
+                query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND Direction = {2} AND TrainId = {3} ORDER BY Direction;", m_TableName, train.DiagramName, (int)train.Direction, train.Id));
 
                 // クエリ実行
                 using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
@@ -127,7 +126,7 @@ namespace TrainTimeTable.Database.Table
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
-            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND TrainId = {2} AND Direction = {3} ORDER BY Direction,Seq;", m_TableName, train.DiagramName, train.Id, (int)train.Direction));
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND Direction = {2} AND TrainId = {3} ORDER BY Direction;", m_TableName, train.DiagramName, (int)train.Direction, train.Id));
 
             // 結果オブジェクト生成
             StationTimeProperties result = new StationTimeProperties();
@@ -166,19 +165,19 @@ namespace TrainTimeTable.Database.Table
             Logger.DebugFormat("result          :[{0}]", result);
 
             // StationTimePropertyオブジェクト生成
-            StationTimeProperty property = new StationTimeProperty();
-
-            // 設定
-            property.DiagramName = sqliteDataReader["DiagramName"].ToString();
-            property.Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString());
-            property.TrainId = int.Parse(sqliteDataReader["TrainId"].ToString());
-            property.Seq = int.Parse(sqliteDataReader["Seq"].ToString());
-            property.StationName = sqliteDataReader["StationName"].ToString();
-            property.StationTreatment = (StationTreatment)int.Parse(sqliteDataReader["StationTreatment"].ToString());
-            property.DepartureTime = sqliteDataReader["DepartureTime"].ToString();
-            property.EstimatedDepartureTime = bool.Parse(sqliteDataReader["EstimatedDepartureTime"].ToString());
-            property.ArrivalTime = sqliteDataReader["ArrivalTime"].ToString();
-            property.EstimatedArrivalTime = bool.Parse(sqliteDataReader["EstimatedArrivalTime"].ToString());
+            StationTimeProperty property = new StationTimeProperty()
+            {
+                // 設定
+                DiagramName = sqliteDataReader["DiagramName"].ToString(),
+                Direction = (DirectionType)int.Parse(sqliteDataReader["Direction"].ToString()),
+                TrainId = int.Parse(sqliteDataReader["TrainId"].ToString()),
+                StationName = sqliteDataReader["StationName"].ToString(),
+                StationTreatment = (StationTreatment)int.Parse(sqliteDataReader["StationTreatment"].ToString()),
+                DepartureTime = sqliteDataReader["DepartureTime"].ToString(),
+                EstimatedDepartureTime = bool.Parse(sqliteDataReader["EstimatedDepartureTime"].ToString()),
+                ArrivalTime = sqliteDataReader["ArrivalTime"].ToString(),
+                EstimatedArrivalTime = bool.Parse(sqliteDataReader["EstimatedArrivalTime"].ToString()),
+            };
 
             // 登録
             result.Add(property);
@@ -353,7 +352,7 @@ namespace TrainTimeTable.Database.Table
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT COUNT(*) FROM {0} WHERE ", m_TableName));
-            query.Append("DiagramName = '" + property.DiagramName + "' AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+            query.Append("DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND TrainId = " + property.TrainId + " AND StationName = '" + property.StationName + "';");
 
             // 存在判定
             bool result = Exist(query.ToString());
@@ -385,7 +384,6 @@ namespace TrainTimeTable.Database.Table
             query.Append("DiagramName,");               // ダイヤグラム名
             query.Append("Direction,");                 // 方向種別
             query.Append("TrainId,");                   // 列車ID
-            query.Append("Seq,");                       // 駅シーケンス番号
             query.Append("StationName,");               // 駅名
             query.Append("StationTreatment,");          // 駅扱い
             query.Append("DepartureTime,");             // 発時刻
@@ -397,7 +395,6 @@ namespace TrainTimeTable.Database.Table
             query.Append("'" + property.DiagramName + "',");
             query.Append((int)property.Direction + ",");
             query.Append(property.TrainId.ToString() + ",");
-            query.Append(property.Seq.ToString() + ",");
             query.Append("'" + property.StationName.ToString() + "',");
             query.Append((int)property.StationTreatment + ",");
             query.Append("'" + property.DepartureTime.ToString() + "',");
@@ -435,7 +432,7 @@ namespace TrainTimeTable.Database.Table
             query.Append("ArrivalTime = '" + property.ArrivalTime.ToString() + "',");
             query.Append("EstimatedArrivalTime = '" + property.EstimatedArrivalTime.ToString() + "',");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
-            query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+            query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND TrainId = " + property.TrainId + " AND StationName = '" + property.StationName + "';");
 
             // 更新
             Update(query.ToString());
@@ -466,7 +463,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var property in properties)
                 {
                     query.Append(string.Format("DELETE FROM {0} ", m_TableName));
-                    query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+                    query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND TrainId = " + property.TrainId + " AND StationName = '" + property.StationName + "';");
                 }
 
                 // 削除実行

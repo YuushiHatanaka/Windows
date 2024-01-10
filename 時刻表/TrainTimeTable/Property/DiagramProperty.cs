@@ -22,19 +22,13 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         /// <summary>
         /// ダイヤ名
         /// </summary>
         public string Name { get; set; } = string.Empty;
-
-        /// <summary>
-        /// シーケンス番号
-        /// </summary>
-        [Obsolete("DiagramPropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int Seq { get; set; } = 0;
 
         /// <summary>
         /// 列車辞書
@@ -101,7 +95,6 @@ namespace TrainTimeTable.Property
             {
                 // コピー
                 Name = property.Name;
-                Seq = property.Seq;
                 Trains.Copy(property.Trains);
                 TrainSequence.Copy(property.TrainSequence);
             }
@@ -128,15 +121,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("Name:[不一致][{0}][{1}]", Name, property.Name);
-                Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (Seq != property.Seq)
-            {
-                // ロギング
-                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
                 Logger.Debug("<<<<= DiagramProperty::Compare(DiagramProperty)");
 
                 // 不一致
@@ -203,8 +187,7 @@ namespace TrainTimeTable.Property
 
             // 文字列追加
             result.AppendLine(indentstr + string.Format("＜ダイヤグラム情報＞"));
-            result.AppendLine(indentstr + string.Format("　ダイヤ名      :[{0}] ", Name));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号:[{0}] ", Seq));
+            result.AppendLine(indentstr + string.Format("　ダイヤ名:[{0}] ", Name));
             result.Append(Trains.ToString(indent + 1));
             result.Append(TrainSequence.ToString(indent + 1));
 

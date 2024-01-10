@@ -56,6 +56,23 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= DiagramDrawProperty::DiagramDrawProperty()");
         }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="property"></param>
+        public DiagramDrawProperty(DiagramDrawProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramDrawProperty::DiagramDrawProperty(DiagramDrawProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // コピー
+            Copy(property);
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramDrawProperty::DiagramDrawProperty(DiagramDrawProperty)");
+        }
         #endregion
 
         #region コピー

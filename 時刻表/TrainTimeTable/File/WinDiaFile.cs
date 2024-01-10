@@ -656,7 +656,6 @@ namespace TrainTimeTable.File
                                     stationTimeProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
                                     stationTimeProperty.TrainId = trainId;
                                     stationTimeProperty.Direction = trainProperty.Direction;
-                                    stationTimeProperty.Seq = trainProperty.StationTimes.Count + 1;
                                     stationTimeProperty.StationName = stationProperties[trainProperty.StationTimes.Count].Name;
                                     stationTimeProperty.StationTreatment = StationTreatment.NoService;
 

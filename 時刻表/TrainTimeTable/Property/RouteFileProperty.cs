@@ -23,7 +23,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         /// <summary>
@@ -619,6 +619,122 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
             Logger.Debug("<<<<= RouteFileProperty::GetAfterStationTime(TrainProperty, StationTimeProperty, StationTreatment)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
+        #region StationTimeProperty取得
+        /// <summary>
+        /// 始発駅StationTimeProperty取得
+        /// </summary>
+        /// <param name="train"></param>
+        /// <param name="treatment"></param>
+        /// <returns></returns>
+        public StationTimeProperty GetStartingStationTime(TrainProperty train, StationTreatment treatment)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::GetStartingStationTime(TrainProperty, StationTreatment)");
+            Logger.DebugFormat("train    :[{0}]", train);
+            Logger.DebugFormat("treatment:[{0}]", treatment.GetStringValue());
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 駅扱い該当駅一覧取得
+            List<StationTimeProperty> targetStationTimeProperties = train.StationTimes.FindAll(s => s.StationTreatment == treatment);
+
+            // 駅シーケンスリスト
+            List<StationSequenceProperty> stationSequenceProperties = null;
+
+            // 方向種別で分岐
+            switch (train.Direction)
+            {
+                case DirectionType.Outbound:
+                    // 駅シーケンスリスト取得
+                    stationSequenceProperties = StationSequences.OrderBy(s => s.Seq).ToList();
+                    break;
+                case DirectionType.Inbound:
+                    // 駅シーケンスリスト取得
+                    stationSequenceProperties = StationSequences.OrderByDescending(s => s.Seq).ToList();
+                    break;
+                default:
+                    // 例外
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", train.Direction.GetStringValue()));
+            }
+
+            // シーケンスを繰り返す
+            foreach (var stationSequence in stationSequenceProperties)
+            {
+                // 駅名存在判定
+                result = targetStationTimeProperties.Find(s => s.StationName == stationSequence.Name);
+                if (result != null)
+                {
+                    break;
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= RouteFileProperty::GetStartingStationTime(TrainProperty, StationTreatment)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 終着駅StationTimeProperty取得
+        /// </summary>
+        /// <param name="train"></param>
+        /// <param name="treatment"></param>
+        /// <returns></returns>
+        public StationTimeProperty GetTerminalStationTime(TrainProperty train, StationTreatment treatment)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::GetTerminalStationTime(TrainProperty, StationTreatment)");
+            Logger.DebugFormat("train    :[{0}]", train);
+            Logger.DebugFormat("treatment:[{0}]", treatment.GetStringValue());
+
+            // 結果を初期化
+            StationTimeProperty result = null;
+
+            // 駅扱い該当駅一覧取得
+            List<StationTimeProperty> targetStationTimeProperties = train.StationTimes.FindAll(s => s.StationTreatment == treatment);
+
+            // 駅シーケンスリスト
+            List<StationSequenceProperty> stationSequenceProperties = null;
+
+            // 方向種別で分岐
+            switch (train.Direction)
+            {
+                case DirectionType.Outbound:
+                    // 駅シーケンスリスト取得
+                    stationSequenceProperties = StationSequences.OrderByDescending(s => s.Seq).ToList();
+                    break;
+                case DirectionType.Inbound:
+                    // 駅シーケンスリスト取得
+                    stationSequenceProperties = StationSequences.OrderBy(s => s.Seq).ToList();
+                    break;
+                default:
+                    // 例外
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", train.Direction.GetStringValue()));
+            }
+
+            // シーケンスを繰り返す
+            foreach (var stationSequence in stationSequenceProperties)
+            {
+                // 駅名存在判定
+                result = targetStationTimeProperties.Find(s => s.StationName == stationSequence.Name);
+                if (result != null)
+                {
+                    break;
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= RouteFileProperty::GetTerminalStationTime(TrainProperty, StationTreatment)");
 
             // 返却
             return result;

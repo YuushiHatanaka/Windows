@@ -55,17 +55,17 @@ namespace TrainTimeTable.Common
         /// <summary>
         /// RouteFilePropertyオブジェクト
         /// </summary>
-        private RouteFileProperty m_RouteFileProperty { get; set; } = null;
+        private RouteFileProperty RouteFileProperty { get; set; } = null;
 
         /// <summary>
         /// 起点時間
         /// </summary>
-        private int m_StartHours { get; set; } = 0;
+        private int StartHours { get; set; } = 0;
 
         /// <summary>
         /// 終点時間
         /// </summary>
-        private int m_EndHours { get; set; } = 23;
+        private int EndHours { get; set; } = 23;
 
         /// <summary>
         /// 分ステップ数
@@ -110,12 +110,12 @@ namespace TrainTimeTable.Common
         /// <summary>
         /// Graphicsオブジェクト
         /// </summary>
-        private Graphics m_Graphics { get; set; } = null;
+        private Graphics Graphics { get; set; } = null;
 
         /// <summary>
         /// DiagramDrawPropertiesオブジェクト
         /// </summary>
-        private DiagramDrawProperties m_DiagramDrawProperties { get; set; } = new DiagramDrawProperties();
+        private DiagramDrawProperties DiagramDrawProperties { get; set; } = new DiagramDrawProperties();
 
         #region コンストラクタ
         /// <summary>
@@ -144,7 +144,7 @@ namespace TrainTimeTable.Common
             Bitmap = new Bitmap(Width, Height);
 
             // Graphicsオブジェクト生成
-            m_Graphics = Graphics.FromImage(Bitmap);
+            Graphics = Graphics.FromImage(Bitmap);
 
             // ロギング
             Logger.Debug("<<<<= DiagramDrawLibrary::DiagramDrawLibrary(int, float, int, float)");
@@ -202,8 +202,8 @@ namespace TrainTimeTable.Common
                 if (disposing)
                 {
                     // Dispose managed resources here.
-                    m_Graphics?.Dispose();
-                    m_Graphics = null;
+                    Graphics?.Dispose();
+                    Graphics = null;
                 }
 
                 // TODO: Free unmanaged resources here.
@@ -229,13 +229,17 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("property:[{0}]", property);
 
             // 設定
-            m_RouteFileProperty = property;
+            RouteFileProperty = property;
 
             // 起点時間設定
-            m_StartHours = m_RouteFileProperty.DiagramScreen.DiagramDtartingTime.Hour;
+            StartHours = RouteFileProperty.DiagramScreen.DiagramDtartingTime.Hour;
 
             // 終点時間設定
-            m_EndHours = m_StartHours + 23;
+            EndHours = StartHours + 23;
+
+            // ロギング
+            Logger.DebugFormat("StartHours:[{0}]", StartHours);
+            Logger.DebugFormat("EndHours  :[{0}]", EndHours);
 
             // 初期化(駅描画情報)
             InitializationDrawStation();
@@ -253,27 +257,29 @@ namespace TrainTimeTable.Common
             Logger.Debug("=>>>> DiagramDrawLibrary::InitializationDrawStation()");
 
             // リストクリア
-            m_DiagramDrawProperties.Clear();
+            DiagramDrawProperties.Clear();
 
             // 駅シーケンスリスト取得(昇順)
-            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+            var stationSequences = RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
 
             // 駅を繰り返す
             int stationIndex = 0;
             foreach (var stationSequence in stationSequences)
             {
                 // 駅情報取得
-                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+                StationProperty station = RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
                 // DiagramDrawPropertyオブジェクト生成
-                DiagramDrawProperty diagramDrawProperty = new DiagramDrawProperty();
-                diagramDrawProperty.Station = new StationProperty(station);
-                diagramDrawProperty.DrawHeight = GetStationPosition(stationIndex++);
-                diagramDrawProperty.PenSize = GetStationPenSize(station.StationScale, 2, 1);
-                diagramDrawProperty.Font = GetStationFont(m_RouteFileProperty.Fonts, station.StationScale);
+                DiagramDrawProperty diagramDrawProperty = new DiagramDrawProperty()
+                {
+                    Station = new StationProperty(station),
+                    DrawHeight = GetStationPosition(stationIndex++),
+                    PenSize = GetStationPenSize(station.StationScale, 2, 1),
+                    Font = GetStationFont(RouteFileProperty.Fonts, station.StationScale),
+                };
 
                 // 登録
-                m_DiagramDrawProperties.Add(diagramDrawProperty);
+                DiagramDrawProperties.Add(diagramDrawProperty);
             }
 
             // ロギング
@@ -308,7 +314,7 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("brush:[{0}]", brush);
 
             // 全体を塗りつぶす
-            m_Graphics.FillRectangle(brush, m_Graphics.VisibleClipBounds);
+            Graphics.FillRectangle(brush, Graphics.VisibleClipBounds);
 
             // ロギング
             Logger.Debug("<<<<= DiagramDrawLibrary::DrawFillInTheWhole(Brush)");
@@ -352,7 +358,7 @@ namespace TrainTimeTable.Common
             using (Pen pen = new Pen(color, size))
             {
                 // セル内に線を描画
-                m_Graphics.DrawRectangle(pen, 0, 0, width, height);
+                Graphics.DrawRectangle(pen, 0, 0, width, height);
             }
 
             // ロギング
@@ -430,12 +436,12 @@ namespace TrainTimeTable.Common
                         using (Pen minutesPen = GetMinutesPen(color, solidSize, minutes, unitStyle))
                         {
                             // 分単位線描画
-                            m_Graphics.DrawLine(minutesPen, minutesPosition, 0, minutesPosition, Height);
+                            Graphics.DrawLine(minutesPen, minutesPosition, 0, minutesPosition, Height);
                         }
                     }
 
                     // 時単位線描画
-                    m_Graphics.DrawLine(hoursPen, hoursPosition, 0, hoursPosition, Height);
+                    Graphics.DrawLine(hoursPen, hoursPosition, 0, hoursPosition, Height);
                 }
             }
 
@@ -464,7 +470,7 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("unitStyle:[{0}]", unitStyle);
 
             // 起点時間
-            int startHours = m_RouteFileProperty.DiagramScreen.DiagramDtartingTime.Hour;
+            int startHours = RouteFileProperty.DiagramScreen.DiagramDtartingTime.Hour;
 
             // セル内のグリッド線を描画するためのペンを作成
             using (Pen hoursPen = new Pen(color, boldSize))
@@ -483,10 +489,10 @@ namespace TrainTimeTable.Common
                     }
 
                     // 時間文字列描画
-                    m_Graphics.DrawString(drawTime.ToString(), font, brash, hoursPosition, 0);
+                    Graphics.DrawString(drawTime.ToString(), font, brash, hoursPosition, 0);
 
                     // 時単位線描画
-                    m_Graphics.DrawLine(hoursPen, hoursPosition, 0, hoursPosition, Height);
+                    Graphics.DrawLine(hoursPen, hoursPosition, 0, hoursPosition, Height);
                 }
             }
 
@@ -589,22 +595,22 @@ namespace TrainTimeTable.Common
             Logger.Debug("=>>>> DiagramDrawLibrary::DrawStationsGrids()");
 
             // 駅シーケンスリスト取得(昇順)
-            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+            var stationSequences = RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
 
             // 駅を繰り返す
             foreach (var stationSequence in stationSequences)
             {
                 // 駅情報取得
-                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+                StationProperty station = RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
                 // DiagramDrawPropertyオブジェクト取得
-                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties.Find(t => t.Station.Compare(station));
+                DiagramDrawProperty diagramDrawProperty = DiagramDrawProperties.Find(t => t.Station.Compare(station));
 
                 // 駅Penオブジェクト取得
                 using (Pen stationPen = new Pen(Color.DarkGray, diagramDrawProperty.PenSize))
                 {
                     // 駅単位線描画
-                    m_Graphics.DrawLine(stationPen, 0, diagramDrawProperty.DrawHeight, Width, diagramDrawProperty.DrawHeight);
+                    Graphics.DrawLine(stationPen, 0, diagramDrawProperty.DrawHeight, Width, diagramDrawProperty.DrawHeight);
                 }
             }
 
@@ -623,25 +629,25 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("brash:[{0}]", brash);
 
             // 駅シーケンスリスト取得(昇順)
-            var stationSequences = m_RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
+            var stationSequences = RouteFileProperty.StationSequences.OrderBy(t => t.Seq);
 
             // 駅を繰り返す
             foreach (var stationSequence in stationSequences)
             {
                 // 駅情報取得
-                StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
+                StationProperty station = RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
                 // DiagramDrawPropertyオブジェクト取得
-                DiagramDrawProperty diagramDrawProperty = m_DiagramDrawProperties.Find(t => t.Station.Compare(station));
+                DiagramDrawProperty diagramDrawProperty = DiagramDrawProperties.Find(t => t.Station.Compare(station));
 
                 // 駅Penオブジェクト取得
                 using (Pen stationPen = new Pen(Color.DarkGray, diagramDrawProperty.PenSize))
                 {
                     // 駅文字列描画
-                    m_Graphics.DrawString(station.Name, diagramDrawProperty.Font, brash, 0, diagramDrawProperty.DrawHeight - diagramDrawProperty.Font.GetHeight());
+                    Graphics.DrawString(station.Name, diagramDrawProperty.Font, brash, 0, diagramDrawProperty.DrawHeight - diagramDrawProperty.Font.GetHeight());
 
                     // 駅単位線描画
-                    m_Graphics.DrawLine(stationPen, 0, diagramDrawProperty.DrawHeight, Width, diagramDrawProperty.DrawHeight);
+                    Graphics.DrawLine(stationPen, 0, diagramDrawProperty.DrawHeight, Width, diagramDrawProperty.DrawHeight);
                 }
             }
 
@@ -751,12 +757,11 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("daiagramName:[{0}]", daiagramName);
 
             // DiagramPropertyオブジェクト取得
-            DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(diagram => diagram.Name == daiagramName);
+            DiagramProperty diagramProperty = RouteFileProperty.Diagrams.Find(diagram => diagram.Name == daiagramName);
 
             // 結果判定
             if (diagramProperty == null)
             {
-                // 例外
                 throw new KeyNotFoundException(string.Format("ダイアグラムは登録されていません:[0]", daiagramName));
             }
 
@@ -784,11 +789,11 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
+                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
 
                 // 始発駅、終着駅StationTimePropertyを取得
-                StationTimeProperty startTime = train.StationTimes.Find(t => t.StationTreatment == StationTreatment.Stop);
-                StationTimeProperty endTime = train.StationTimes.FindLast(t => t.StationTreatment == StationTreatment.Stop);
+                StationTimeProperty startTime = RouteFileProperty.GetStartingStationTime(train, StationTreatment.Stop);
+                StationTimeProperty endTime = RouteFileProperty.GetTerminalStationTime(train, StationTreatment.Stop);
 
                 // 見つからなかった場合
                 if (startTime == null || endTime == null)
@@ -801,11 +806,11 @@ namespace TrainTimeTable.Common
                 }
 
                 // StationSequencePropertyオブジェクト取得
-                StationSequenceProperty startStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Name == startTime.StationName);
-                StationSequenceProperty endStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Name == endTime.StationName);
+                StationSequenceProperty startStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == startTime.StationName);
+                StationSequenceProperty endStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == endTime.StationName);
 
                 // 始発駅から次の停車駅を求める
-                StationTimeProperty startNextTime = m_RouteFileProperty.GetBeforeStationTime(train, startTime, StationTreatment.Stop);
+                StationTimeProperty startNextTime = RouteFileProperty.GetBeforeStationTime(train, startTime, StationTreatment.Stop);
 
                 // 次の停車駅が見つからなかった場合
                 if (startNextTime == null)
@@ -824,23 +829,23 @@ namespace TrainTimeTable.Common
                     startNextTime.StationName);
 
                 // 駅時刻を繰り返す
-                foreach (var stationSequence in m_RouteFileProperty.StationSequences.FindAll(s => s.Seq >= startStationSequence.Seq && s.Seq <= endStationSequence.Seq).OrderBy(s => s.Seq))
+                foreach (var stationSequence in RouteFileProperty.StationSequences.FindAll(s => s.Seq >= startStationSequence.Seq && s.Seq <= endStationSequence.Seq).OrderBy(s => s.Seq))
                 {
                     // ロギング
                     Logger.DebugFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
 
                     // StationPropertyオブジェクト取得
-                    StationProperty currentStationProperty = m_RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
-                    StationProperty beforeStationProperty = m_RouteFileProperty.GetBeforeStation(DirectionType.Outbound, currentStationProperty.Name);
-                    StationProperty afterStationProperty = m_RouteFileProperty.GetAfterStation(DirectionType.Outbound, currentStationProperty.Name);
+                    StationProperty currentStationProperty = RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
+                    StationProperty beforeStationProperty = RouteFileProperty.GetBeforeStation(DirectionType.Outbound, currentStationProperty.Name);
+                    StationProperty afterStationProperty = RouteFileProperty.GetAfterStation(DirectionType.Outbound, currentStationProperty.Name);
 
                     // 対象駅、前停車駅、次停車駅のStationTimePropertyを取得
                     StationTimeProperty currentStationTimeProperty = train.StationTimes.Find(s => s.StationName == stationSequence.Name);
-                    StationTimeProperty beforeStationTimeProperty = m_RouteFileProperty.GetBeforeStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
-                    StationTimeProperty afterStationTimeProperty = m_RouteFileProperty.GetAfterStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
+                    StationTimeProperty beforeStationTimeProperty = RouteFileProperty.GetBeforeStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
+                    StationTimeProperty afterStationTimeProperty = RouteFileProperty.GetAfterStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
 
                     // 隣接駅のStationTimePropertyを取得
-                    StationSequenceProperty adjacentStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Seq == stationSequence.Seq + 1);
+                    StationSequenceProperty adjacentStationSequence = RouteFileProperty.StationSequences.Find(s => s.Seq == stationSequence.Seq + 1);
                     StationTimeProperty adjacentStation = train.StationTimes.Find(t => t.StationName == adjacentStationSequence?.Name);
 
                     // ロギング
@@ -902,11 +907,11 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
+                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
 
                 // 始発駅、終着駅StationTimePropertyを取得
-                StationTimeProperty startTime = train.StationTimes.FindLast(t => t.StationTreatment == StationTreatment.Stop);
-                StationTimeProperty endTime = train.StationTimes.Find(t => t.StationTreatment == StationTreatment.Stop);
+                StationTimeProperty startTime = RouteFileProperty.GetStartingStationTime(train, StationTreatment.Stop);
+                StationTimeProperty endTime = RouteFileProperty.GetTerminalStationTime(train, StationTreatment.Stop);
 
                 // 見つからなかった場合
                 if (startTime == null || endTime == null)
@@ -919,11 +924,11 @@ namespace TrainTimeTable.Common
                 }
 
                 // StationSequencePropertyオブジェクト取得
-                StationSequenceProperty startStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Name == startTime.StationName);
-                StationSequenceProperty endStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Name == endTime.StationName);
+                StationSequenceProperty startStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == startTime.StationName);
+                StationSequenceProperty endStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == endTime.StationName);
 
                 // 始発駅から次の停車駅を求める
-                StationTimeProperty startNextTime = m_RouteFileProperty.GetBeforeStationTime(train, startTime, StationTreatment.Stop);
+                StationTimeProperty startNextTime = RouteFileProperty.GetBeforeStationTime(train, startTime, StationTreatment.Stop);
 
                 // 次の停車駅が見つからなかった場合
                 if (startNextTime == null)
@@ -942,23 +947,23 @@ namespace TrainTimeTable.Common
                     startNextTime.StationName);
 
                 // 駅時刻を繰り返す
-                foreach (var stationSequence in m_RouteFileProperty.StationSequences.FindAll(s => s.Seq >= endStationSequence.Seq && s.Seq <= startStationSequence.Seq).OrderByDescending(s => s.Seq))
+                foreach (var stationSequence in RouteFileProperty.StationSequences.FindAll(s => s.Seq >= endStationSequence.Seq && s.Seq <= startStationSequence.Seq).OrderByDescending(s => s.Seq))
                 {
                     // ロギング
                     Logger.DebugFormat("　処理中駅:[{0}({1})]", stationSequence.Name, stationSequence.Seq);
 
                     // StationPropertyオブジェクト取得
-                    StationProperty currentStationProperty = m_RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
-                    StationProperty beforeStationProperty = m_RouteFileProperty.GetBeforeStation(DirectionType.Inbound, currentStationProperty.Name);
-                    StationProperty afterStationProperty = m_RouteFileProperty.GetAfterStation(DirectionType.Inbound, currentStationProperty.Name);
+                    StationProperty currentStationProperty = RouteFileProperty.Stations.Find(s => s.Name == stationSequence.Name);
+                    StationProperty beforeStationProperty = RouteFileProperty.GetBeforeStation(DirectionType.Inbound, currentStationProperty.Name);
+                    StationProperty afterStationProperty = RouteFileProperty.GetAfterStation(DirectionType.Inbound, currentStationProperty.Name);
 
                     // 対象駅、前停車駅、次停車駅のStationTimePropertyを取得
                     StationTimeProperty currentStationTimeProperty = train.StationTimes.Find(s => s.StationName == stationSequence.Name);
-                    StationTimeProperty beforeStationTimeProperty = m_RouteFileProperty.GetBeforeStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
-                    StationTimeProperty afterStationTimeProperty = m_RouteFileProperty.GetAfterStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
+                    StationTimeProperty beforeStationTimeProperty = RouteFileProperty.GetBeforeStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
+                    StationTimeProperty afterStationTimeProperty = RouteFileProperty.GetAfterStationTime(train, currentStationTimeProperty, StationTreatment.Stop);
 
                     // 隣接駅のStationTimePropertyを取得
-                    StationSequenceProperty adjacentStationSequence = m_RouteFileProperty.StationSequences.Find(s => s.Seq == stationSequence.Seq - 1);
+                    StationSequenceProperty adjacentStationSequence = RouteFileProperty.StationSequences.Find(s => s.Seq == stationSequence.Seq - 1);
                     StationTimeProperty adjacentStation = train.StationTimes.Find(t => t.StationName == adjacentStationSequence?.Name);
 
                     // ロギング
@@ -1102,6 +1107,9 @@ namespace TrainTimeTable.Common
             Logger.Debug("=>>>> DiagramDrawLibrary::GetDrawingPosition(StationTimeProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == property.StationName);
+
             // 結果オブジェクト生成
             Point result = new Point();
 
@@ -1109,13 +1117,13 @@ namespace TrainTimeTable.Common
             if (property.ArrivalTime != string.Empty)
             {
                 // 着時刻を開始位置に設定
-                result = new Point(GetTimePosition(property.GetArrivalTimeValue()), GetStationPosition(property.Seq - 1));
+                result = new Point(GetTimePosition(property.GetArrivalTimeValue()), GetStationPosition(stationSequence.Seq - 1));
             }
             // 発時刻が設定されているか？
             else if (property.DepartureTime != string.Empty)
             {
                 // 発時刻を開始位置に設定
-                result = new Point(GetTimePosition(property.GetDepartureTimeValue()), GetStationPosition(property.Seq - 1));
+                result = new Point(GetTimePosition(property.GetDepartureTimeValue()), GetStationPosition(stationSequence.Seq - 1));
             }
 
             // ロギング
@@ -1191,9 +1199,9 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("hour:[{0}]", hour);
 
             // 描画時間調整
-            if (m_StartHours > 0)
+            if (StartHours > 0)
             {
-                hour = hour - m_StartHours;
+                hour -= StartHours;
             }
 
             // ロギング
@@ -1243,7 +1251,7 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("hour:[{0}]", hour);
 
             // 描画時間調整
-            if (m_StartHours > 0 && hour < m_StartHours)
+            if (StartHours > 0 && hour < StartHours)
             {
                 hour += 24;
             }
@@ -1317,7 +1325,7 @@ namespace TrainTimeTable.Common
             Graphics bg0 = Graphics.FromImage(img0);
 
             // 使用するFontオブジェクトを作成
-            Font fnt = m_RouteFileProperty.Fonts.GetFont("列車番号");
+            Font fnt = RouteFileProperty.Fonts.GetFont("列車番号");
 
             // 文字列を描画したときの大きさを計算する
             int w = (int)bg0.MeasureString(displayStrings, fnt).Width;
@@ -1327,7 +1335,7 @@ namespace TrainTimeTable.Common
             Bitmap img = new Bitmap(w, h);
 
             // ColorからSolidBrushに変換
-            SolidBrush brush = new SolidBrush(m_RouteFileProperty.TrainTypes.Find(t => t.Name == property.TrainTypeName).DiagramLineColor);
+            SolidBrush brush = new SolidBrush(RouteFileProperty.TrainTypes.Find(t => t.Name == property.TrainTypeName).DiagramLineColor);
 
             //imgに文字列を描画する
             Graphics bg = Graphics.FromImage(img);
@@ -1351,7 +1359,7 @@ namespace TrainTimeTable.Common
             };
 
             // 画像を描画
-            m_Graphics.DrawImage(img, destinationPoints);
+            Graphics.DrawImage(img, destinationPoints);
 
             // リソースを解放する
             bg0.Dispose();
@@ -1397,7 +1405,7 @@ namespace TrainTimeTable.Common
                 using (SolidBrush brush = new SolidBrush(trainPen.Color))
                 {
                     // 時刻描画
-                    m_Graphics.DrawString(showDateTime, stationTimeFont, brush, (PointF)new Point(GetTimePosition(drawDateTime), height));
+                    Graphics.DrawString(showDateTime, stationTimeFont, brush, (PointF)new Point(GetTimePosition(drawDateTime), height));
                 }
             }
 
@@ -1475,6 +1483,9 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("current :[{0}]", current);
             Logger.DebugFormat("next    :[{0}]", next);
 
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty currentStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == current.StationName);
+
             // 次駅判定
             if (next == null)
             {
@@ -1482,13 +1493,13 @@ namespace TrainTimeTable.Common
                 if (current.ArrivalTime != string.Empty)
                 {
                     // 列車時刻描画
-                    DrawTrainTime(train, trainPen, current.ArrivalTime, current.GetArrivalTimeValue(), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                    DrawTrainTime(train, trainPen, current.ArrivalTime, current.GetArrivalTimeValue(), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
                 }
                 // 発時刻が設定されているか？
                 else if (current.DepartureTime != string.Empty)
                 {
                     // 列車時刻描画
-                    DrawTrainTime(train, trainPen, current.DepartureTime, current.GetDepartureTimeValue(), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                    DrawTrainTime(train, trainPen, current.DepartureTime, current.GetDepartureTimeValue(), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
                 }
 
                 // ロギング
@@ -1499,10 +1510,10 @@ namespace TrainTimeTable.Common
             }
 
             // 初期化
-            DateTime currentDateTime = default(DateTime);
-            DateTime nextDateTime = default(DateTime);
-            Point currentPoint = default(Point);
-            Point nextPoint = default(Point);
+            DateTime currentDateTime = new DateTime();
+            DateTime nextDateTime = new DateTime();
+            Point currentPoint = new Point();
+            Point nextPoint = new Point();
 
             // 着、発時刻両方が設定されている場合
             if ((current.ArrivalTime != string.Empty) && (current.DepartureTime != string.Empty))
@@ -1517,7 +1528,7 @@ namespace TrainTimeTable.Common
                 DrawLineNextPoint(train, trainPen, current, currentDateTime, current, nextDateTime);
 
                 // 列車時刻描画
-                DrawTrainTime(train, trainPen, current.ArrivalTime, current.GetArrivalTimeValue(), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                DrawTrainTime(train, trainPen, current.ArrivalTime, current.GetArrivalTimeValue(), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
 
                 // カレント位置更新
                 currentPoint.X = nextPoint.X;
@@ -1531,7 +1542,7 @@ namespace TrainTimeTable.Common
                 currentDateTime = current.GetArrivalTimeValue();
 
                 // 描画開始位置取得
-                currentPoint = new Point(GetTimePosition(currentDateTime), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                currentPoint = new Point(GetTimePosition(currentDateTime), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
             }
             // 発時刻のみ設定されている場合
             else if ((current.ArrivalTime == string.Empty) && (current.DepartureTime != string.Empty))
@@ -1540,7 +1551,7 @@ namespace TrainTimeTable.Common
                 currentDateTime = current.GetDepartureTimeValue();
 
                 // 描画開始位置取得
-                currentPoint = new Point(GetTimePosition(currentDateTime), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                currentPoint = new Point(GetTimePosition(currentDateTime), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
             }
             // 着、発時刻両方が設定されていない場合
             else
@@ -1577,7 +1588,7 @@ namespace TrainTimeTable.Common
             }
 
             // 列車時刻描画
-            DrawTrainTime(train, trainPen, currentDateTime.ToString("HHmm"), currentDateTime, m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+            DrawTrainTime(train, trainPen, currentDateTime.ToString("HHmm"), currentDateTime, DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
 
             // 次位置まで線を描画
             DrawLineNextPoint(train, trainPen, current, currentDateTime, next, nextDateTime);
@@ -1674,6 +1685,10 @@ namespace TrainTimeTable.Common
             Logger.DebugFormat("next           :[{0}]", next);
             Logger.DebugFormat("nextDateTime   :[{0}]", nextDateTime);
 
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty currentStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == current.StationName);
+            StationSequenceProperty nextStationSequence = RouteFileProperty.StationSequences.Find(s => s.Name == next.StationName);
+
             // 設定
             int currentDateHour = GetDrawHour(currentDateTime.Hour);
             int nextDateHour = GetDrawHour(nextDateTime.Hour);
@@ -1682,21 +1697,21 @@ namespace TrainTimeTable.Common
             if (currentDateHour > nextDateHour)
             {
                 // 描画開始位置取得
-                Point currentPoint = new Point(GetTimePosition(currentDateTime), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                Point currentPoint = new Point(GetTimePosition(currentDateTime), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
 
                 // 次駅（跨り先)の時間を設定
-                nextDateHour = nextDateTime.Hour + 24 - m_StartHours;
+                nextDateHour = nextDateTime.Hour + 24 - StartHours;
 
                 // 次位置設定
-                Point drawPoint = new Point(CalculationTimePosition(nextDateHour, nextDateTime.Minute), m_DiagramDrawProperties[next.Seq - 1].DrawHeight);
+                Point drawPoint = new Point(CalculationTimePosition(nextDateHour, nextDateTime.Minute), DiagramDrawProperties[nextStationSequence.Seq - 1].DrawHeight);
 
                 // 時単位線描画
-                m_Graphics.DrawLine(trainPen, currentPoint, drawPoint);
+                Graphics.DrawLine(trainPen, currentPoint, drawPoint);
 
                 // 前駅（跨り先)の時間を設定
-                DateTime baseDateTime = DateTime.Today.AddHours(m_StartHours);
+                DateTime baseDateTime = DateTime.Today.AddHours(StartHours);
                 DateTime targetDateTime = DateTime.Today.AddHours(currentDateTime.Hour);
-                if (currentDateTime.Hour > m_StartHours)
+                if (currentDateTime.Hour > StartHours)
                 {
                     targetDateTime = targetDateTime.AddDays(-1);
                 }
@@ -1704,27 +1719,27 @@ namespace TrainTimeTable.Common
                 currentDateHour = (int)differTimeSpan.TotalHours;
 
                 // 跨り先
-                currentPoint = new Point(CalculationTimePosition(currentDateHour, currentDateTime.Minute), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                currentPoint = new Point(CalculationTimePosition(currentDateHour, currentDateTime.Minute), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
 
                 // 次位置設定
-                drawPoint = new Point(GetTimePosition(nextDateTime), m_DiagramDrawProperties[next.Seq - 1].DrawHeight);
+                drawPoint = new Point(GetTimePosition(nextDateTime), DiagramDrawProperties[nextStationSequence.Seq - 1].DrawHeight);
 
                 // 列車名表示
                 DrawTrainNoName(drawPoint, currentPoint, drawPoint, train);
 
                 // 時単位線描画
-                m_Graphics.DrawLine(trainPen, currentPoint, drawPoint);
+                Graphics.DrawLine(trainPen, currentPoint, drawPoint);
             }
             else
             {
                 // 描画開始位置取得
-                Point currentPoint = new Point(GetTimePosition(currentDateTime), m_DiagramDrawProperties[current.Seq - 1].DrawHeight);
+                Point currentPoint = new Point(GetTimePosition(currentDateTime), DiagramDrawProperties[currentStationSequence.Seq - 1].DrawHeight);
 
                 // 次位置設定
-                Point drawPoint = new Point(GetTimePosition(nextDateTime), m_DiagramDrawProperties[next.Seq - 1].DrawHeight);
+                Point drawPoint = new Point(GetTimePosition(nextDateTime), DiagramDrawProperties[nextStationSequence.Seq - 1].DrawHeight);
 
                 // 時単位線描画
-                m_Graphics.DrawLine(trainPen, currentPoint, drawPoint);
+                Graphics.DrawLine(trainPen, currentPoint, drawPoint);
             }
 
             // ロギング

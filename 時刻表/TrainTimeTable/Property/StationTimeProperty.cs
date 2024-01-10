@@ -23,7 +23,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         /// <summary>
@@ -40,12 +40,6 @@ namespace TrainTimeTable.Property
         /// 列車Id
         /// </summary>
         public int TrainId { get; set; } = -1;
-
-        /// <summary>
-        /// シーケンス番号
-        /// </summary>
-        [Obsolete("StationTimePropertyクラスのシーケンス番号は今後使用不可となる予定です", false)]
-        public int Seq { get; set; } = 0;
 
         /// <summary>
         /// 駅名
@@ -126,7 +120,6 @@ namespace TrainTimeTable.Property
                 DiagramName = property.DiagramName;
                 Direction = property.Direction;
                 TrainId = property.TrainId;
-                Seq = property.Seq;
                 StationName = property.StationName;
                 StationTreatment = property.StationTreatment;
                 DepartureTime = property.DepartureTime;
@@ -175,15 +168,6 @@ namespace TrainTimeTable.Property
             {
                 // ロギング
                 Logger.DebugFormat("TrainId:[不一致][{0}][{1}]", TrainId, property.TrainId);
-                Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
-
-                // 不一致
-                return false;
-            }
-            if (Seq != property.Seq)
-            {
-                // ロギング
-                Logger.DebugFormat("Seq:[不一致][{0}][{1}]", Seq, property.Seq);
                 Logger.Debug("<<<<= StationTimeProperty::Compare(StationTimeProperty)");
 
                 // 不一致
@@ -327,7 +311,6 @@ namespace TrainTimeTable.Property
             result.AppendLine(indentstr + string.Format("　ダイヤグラム名  :[{0}] ", DiagramName));
             result.AppendLine(indentstr + string.Format("　方向種別        :[{0}] ", Direction.GetStringValue()));
             result.AppendLine(indentstr + string.Format("　列車ID          :[{0}] ", TrainId));
-            result.AppendLine(indentstr + string.Format("　シーケンス番号  :[{0}] ", Seq));
             result.AppendLine(indentstr + string.Format("　駅名            :[{0}] ", StationName));
             result.AppendLine(indentstr + string.Format("　駅扱い          :[{0}] ", StationTreatment.GetStringValue()));
             result.AppendLine(indentstr + string.Format("　発時刻          :[{0}] ", DepartureTime));

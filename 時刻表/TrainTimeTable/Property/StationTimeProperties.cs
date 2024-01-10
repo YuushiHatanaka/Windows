@@ -19,7 +19,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ロガーオブジェクト
         /// </summary>
-        private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
         #region コンストラクタ
