@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrainTimeTable.Property;
 
 namespace TrainTimeTable.Database.Table.Core
 {
@@ -106,7 +107,7 @@ namespace TrainTimeTable.Database.Table.Core
         {
             throw new NotImplementedException();
         }
-        #endregion    
+        #endregion
 
         #region 存在判定
         /// <summary>

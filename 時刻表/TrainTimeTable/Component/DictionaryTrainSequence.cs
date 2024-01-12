@@ -72,7 +72,7 @@ namespace TrainTimeTable.Component
             foreach (var key in properties.Keys)
             {
                 // 登録
-                Add(key, properties[key]);
+                Add(key, new TrainSequenceProperties(properties[key]));
             }
 
             // ロギング
@@ -124,6 +124,29 @@ namespace TrainTimeTable.Component
 
             // 一致
             return true;
+        }
+        #endregion
+
+        #region ダイアグラム名変更
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        /// <param name="name"></param>
+        public void ChangeDiagramName(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DictionaryTrainSequence::ChangeDiagramName(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // リストを繰り返す
+            foreach (var property in this)
+            {
+                // ダイアグラム名変更
+                property.Value.ChangeDiagramName(name);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DictionaryTrainSequence::ChangeDiagramName(string)");
         }
         #endregion
 

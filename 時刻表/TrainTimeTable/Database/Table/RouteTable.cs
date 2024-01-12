@@ -93,21 +93,32 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="property"></param>
-        public void Rebuilding(RouteProperty property)
+        /// <param name="oldProperty"></param>
+        /// <param name="newProperty"></param>
+        public void Rebuilding(RouteProperty oldProperty, RouteProperty newProperty)
         {
             // ロギング
-            Logger.Debug("=>>>> RouteTable::Rebuilding(RouteProperty)");
-            Logger.DebugFormat("properties:[{0}]", property);
+            Logger.Debug("=>>>> RouteTable::Rebuilding(RouteProperty, RouteProperty)");
+            Logger.DebugFormat("oldProperty:[{0}]", oldProperty);
+            Logger.DebugFormat("newProperty:[{0}]", newProperty);
 
             // データを読込
             RouteProperty orignalProperties = Load();
 
+            // 旧データと比較
+            if (!orignalProperties.Compare(oldProperty))
+            {
+                // ロギング
+                Logger.Warn("旧データ相違検出(RouteTable)");
+                Logger.Warn(oldProperty);
+                Logger.Warn(orignalProperties);
+            }
+
             // 比較
-            if (!orignalProperties.Compare(property))
+            if (!orignalProperties.Compare(newProperty))
             {
                 // 保存
-                Save(property);
+                Save(newProperty);
             }
 
             // ロギング

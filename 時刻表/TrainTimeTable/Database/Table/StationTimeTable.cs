@@ -235,21 +235,44 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public void Rebuilding(DiagramProperties properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public void Rebuilding(DiagramProperties oldProperties, DiagramProperties newProperties)
         {
             // ロギング
-            Logger.Debug("=>>>> StationTimeTable::Rebuilding(DiagramProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> StationTimeTable::Rebuilding(DiagramProperties, DiagramProperties)");
+            Logger.DebugFormat("oldProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
+
+            // 削除プロパティ取得
+            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+
+            // ロギング
+            Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
 
             // ダイヤグラム分繰り返す
-            foreach (var property in properties)
+            foreach (var removeProperty in removeProperties)
             {
                 // 方向種別分繰り返す
-                foreach (var directionType in property.Trains.Keys)
+                foreach (var direction in removeProperty.Trains.Keys)
                 {
                     // 列車分繰り返す
-                    foreach (var train in property.Trains[directionType])
+                    foreach (var train in removeProperty.Trains[direction])
+                    {
+                        // 削除
+                        Remove(train.StationTimes);
+                    }
+                }
+            }
+
+            // ダイヤグラム分繰り返す
+            foreach (var property in newProperties)
+            {
+                // 方向種別分繰り返す
+                foreach (var direction in property.Trains.Keys)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in property.Trains[direction])
                     {
                         // 再構築
                         Rebuilding(train, train.StationTimes);
@@ -258,7 +281,7 @@ namespace TrainTimeTable.Database.Table
             }
 
             // ロギング
-            Logger.Debug("<<<<= StationTimeTable::Rebuilding(DiagramProperties)");
+            Logger.Debug("<<<<= StationTimeTable::Rebuilding(DiagramProperties, DiagramProperties)");
         }
 
         /// <summary>

@@ -87,25 +87,36 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="property"></param>
-        public void Rebuilding(FileInfomationProperty property)
+        /// <param name="oldProperty"></param>
+        /// <param name="newProperty"></param>
+        public void Rebuilding(FileInfomationProperty oldProperty, FileInfomationProperty newProperty)
         {
             // ロギング
-            Logger.Debug("=>>>> FileInfomationTable::Rebuilding(FileInfomationProperty)");
-            Logger.DebugFormat("properties:[{0}]", property);
+            Logger.Debug("=>>>> FileInfomationTable::Rebuilding(FileInfomationProperty, FileInfomationProperty)");
+            Logger.DebugFormat("oldProperty:[{0}]", oldProperty);
+            Logger.DebugFormat("newProperty:[{0}]", newProperty);
 
             // データを読込
             FileInfomationProperty orignalProperties = Load();
 
+            // 旧データと比較
+            if (!orignalProperties.Compare(oldProperty))
+            {
+                // ロギング
+                Logger.Warn("旧データ相違検出(FileInfomationTable)");
+                Logger.Warn(oldProperty);
+                Logger.Warn(orignalProperties);
+            }
+
             // 比較
-            if (!orignalProperties.Compare(property))
+            if (!orignalProperties.Compare(newProperty))
             {
                 // 保存
-                Save(property);
+                Save(newProperty);
             }
 
             // ロギング
-            Logger.Debug("<<<<= FileInfomationTable::Rebuilding(FileInfomationProperty)");
+            Logger.Debug("<<<<= FileInfomationTable::Rebuilding(FileInfomationProperty, FileInfomationProperty)");
         }
         #endregion
 

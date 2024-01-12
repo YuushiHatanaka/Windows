@@ -83,21 +83,32 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="comment"></param>
-        public void Rebuilding(StringBuilder comment)
+        /// <param name="oldComment"></param>
+        /// <param name="newComment"></param>
+        public void Rebuilding(StringBuilder oldComment, StringBuilder newComment)
         {
             // ロギング
-            Logger.Debug("=>>>> CommentTable::Rebuilding(StringBuilder)");
-            Logger.DebugFormat("comment:[{0}]", comment);
+            Logger.Debug("=>>>> CommentTable::Rebuilding(StringBuilder, StringBuilder)");
+            Logger.DebugFormat("oldComment:[{0}]", oldComment);
+            Logger.DebugFormat("newComment:[{0}]", newComment);
 
             // データを読込
             StringBuilder orignalComment = Load();
 
+            // 旧データと比較
+            if (orignalComment.ToString() != oldComment.ToString())
+            {
+                // ロギング
+                Logger.Warn("旧データ相違検出(CommentTable)");
+                Logger.Warn(oldComment.ToString());
+                Logger.Warn(orignalComment.ToString());
+            }
+
             // 比較
-            if (orignalComment.ToString() != comment.ToString())
+            if (orignalComment.ToString() != newComment.ToString())
             {
                 // 保存
-                Save(comment);
+                Save(newComment);
             }
 
             // ロギング

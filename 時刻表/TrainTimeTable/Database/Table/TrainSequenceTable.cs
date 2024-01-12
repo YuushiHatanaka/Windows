@@ -82,7 +82,7 @@ namespace TrainTimeTable.Database.Table
 
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
-            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' ORDER BY Direction,Seq;", m_TableName, name));
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' ORDER BY Direction, Seq;", m_TableName, name));
 
             // クエリ実行
             using (SQLiteDataReader sqliteDataReader = base.Load(query.ToString()))
@@ -102,6 +102,45 @@ namespace TrainTimeTable.Database.Table
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
             Logger.Debug("<<<<= TrainSequenceTable::Load(int)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public TrainSequenceProperties Load(DirectionType direction, string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceTable::Load(DirectionType, string)");
+            Logger.DebugFormat("direction:[{0}]", direction.GetStringValue());
+            Logger.DebugFormat("name     :[{0}]", name);
+
+            // TrainSequenceTableオブジェクト生成
+            TrainSequenceProperties result = new TrainSequenceProperties();
+
+            // SQLクエリ生成
+            StringBuilder query = new StringBuilder();
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND Direction = {2} ORDER BY Seq;", m_TableName, name, (int)direction));
+
+            // クエリ実行
+            using (SQLiteDataReader sqliteDataReader = base.Load(query.ToString()))
+            {
+                // 1行のみデータを取得
+                while (sqliteDataReader.Read())
+                {
+                    // SELECTデータ登録
+                    SelectDataRegston(sqliteDataReader, ref result);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainSequenceTable::Load(DirectionType, string)");
 
             // 返却
             return result;
@@ -189,26 +228,75 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public void Rebuilding(DiagramProperties properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public void Rebuilding(DiagramProperties oldProperties, DiagramProperties newProperties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainSequenceTable::Rebuilding(DiagramProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> TrainSequenceTable::Rebuilding(DiagramProperties, DiagramProperties)");
+            Logger.DebugFormat("oldProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
+
+            // 削除プロパティ取得
+            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+
+            // ロギング
+            Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
+
+            // 削除プロパティ分繰り返す
+            foreach (var removeProperty in removeProperties)
+            {
+                // 方向種別分繰り返す
+                foreach (var direction in removeProperty.TrainSequence.Keys)
+                {
+                    // 削除
+                    Remove(removeProperty.TrainSequence[direction]);
+                }
+            }
 
             // ダイヤグラム分繰り返す
-            foreach (var property in properties)
+            foreach (var property in newProperties)
             {
                 // 方向種別分繰り返す
                 foreach (var direction in property.TrainSequence.Keys)
                 {
                     // 再構築
-                    Rebuilding(property.TrainSequence[direction]);
+                    Rebuilding(property.Name, direction, property.TrainSequence[direction]);
                 }
             }
 
             // ロギング
-            Logger.Debug("<<<<= TrainSequenceTable::Rebuilding(DiagramProperties)");
+            Logger.Debug("<<<<= TrainSequenceTable::Rebuilding(DiagramProperties, DiagramProperties)");
+        }
+
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="direction"></param>
+        /// <param name="properties"></param>
+        public void Rebuilding(string name, DirectionType direction, TrainSequenceProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceTable::Rebuilding(string, TrainProperties)");
+            Logger.DebugFormat("name      :[{0}]", name);
+            Logger.DebugFormat("direction :[{0}]", direction.GetStringValue());
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            TrainSequenceProperties orignalProperties = Load(direction, name);
+
+            // 削除対象キーを取得
+            TrainSequenceProperties removeKeys = GetRemoveKeys(orignalProperties, properties);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceTable::Rebuilding(string, TrainProperties)");
         }
         #endregion
 
@@ -340,6 +428,9 @@ namespace TrainTimeTable.Database.Table
             query.Append(string.Format("UPDATE {0} SET ", m_TableName));
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND Id = " + property.Id + " AND Seq = " + property.Seq +  ";");
+
+            // 更新
+            Update(query.ToString());
 
             // ロギング
             Logger.Debug("<<<<= TrainSequenceTable::Update(TrainSequenceProperty)");

@@ -85,25 +85,36 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="property"></param>
-        public void Rebuilding(DiagramScreenProperty property)
+        /// <param name="oldProperty"></param>
+        /// <param name="newProperty"></param>
+        public void Rebuilding(DiagramScreenProperty oldProperty, DiagramScreenProperty newProperty)
         {
             // ロギング
-            Logger.Debug("=>>>> DiagramScreenTable::Rebuilding(DiagramScreenProperty)");
-            Logger.DebugFormat("properties:[{0}]", property);
+            Logger.Debug("=>>>> DiagramScreenTable::Rebuilding(DiagramScreenProperty, DiagramScreenProperty)");
+            Logger.DebugFormat("oldProperty:[{0}]", oldProperty);
+            Logger.DebugFormat("newProperty:[{0}]", newProperty);
 
             // データを読込
             DiagramScreenProperty orignalProperties = Load();
 
+            // 旧データと比較
+            if (!orignalProperties.Compare(oldProperty))
+            {
+                // ロギング
+                Logger.Warn("旧データ相違検出(DiagramScreenTable)");
+                Logger.Warn(oldProperty);
+                Logger.Warn(orignalProperties);
+            }
+
             // 比較
-            if (!orignalProperties.Compare(property))
+            if (!orignalProperties.Compare(newProperty))
             {
                 // 保存
-                Save(property);
+                Save(newProperty);
             }
 
             // ロギング
-            Logger.Debug("<<<<= DiagramScreenTable::Rebuilding(DiagramScreenProperty)");
+            Logger.Debug("<<<<= DiagramScreenTable::Rebuilding(DiagramScreenProperty, DiagramScreenProperty)");
         }
         #endregion
 

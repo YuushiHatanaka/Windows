@@ -261,24 +261,6 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("<<<<= FormRoute::toolStripMenuItemFileSaveAs_Click(object, EventArgs)");
         }
-
-        /// <summary>
-        /// toolStripMenuItemFileExport_Click
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void toolStripMenuItemFileExport_Click(object sender, System.EventArgs e)
-        {
-            // ロギング
-            Logger.Debug("=>>>> FormRoute::toolStripMenuItemFileExport_Click(object, EventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
-
-            // TODO:未実装
-
-            // ロギング
-            Logger.Debug("<<<<= FormRoute::toolStripMenuItemFileExport_Click(object, EventArgs)");
-        }
         #endregion
 
         #region toolStripMenuItemWindowメニューイベント
@@ -985,7 +967,11 @@ namespace TrainTimeTable
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // コピー
+            m_CurrentRouteFileProperty.Diagrams.Copy(e.Properties);
+
+            // 更新通知
+            UpdateNotification();
 
             // ロギング
             Logger.Debug("<<<<= FormRoute::FormDiagramProperties_OnUpdate(object, DiagramPropertiesUpdateEventArgs)");
@@ -1256,7 +1242,7 @@ namespace TrainTimeTable
                 backgroundWorker.ReportProgress(progress, string.Format("{0}% 終了しました", progress));
 
                 // データベース再構成(キーを含む更新)
-                routeFileDatabase.Rebuilding(m_CurrentRouteFileProperty);
+                routeFileDatabase.Rebuilding(m_OriginalRouteFileProperty, m_CurrentRouteFileProperty);
             }
 
             // 経過メッセージ表示
@@ -1363,7 +1349,7 @@ namespace TrainTimeTable
             Logger.Debug("=>>>> FormRoute::SaveTimetableFile()");
 
             // DialogProgressオブジェクト生成
-            using (DialogProgress dialogProgress = new DialogProgress("時刻表ファイル保存", doWorkSaveTimetableFile))
+            using (DialogProgress dialogProgress = new DialogProgress("時刻表ファイル保存", doWorkDatabaseWrite))
             {
                 // 進行状況ダイアログを表示する
                 DialogResult result = dialogProgress.ShowDialog(this);
@@ -1381,58 +1367,13 @@ namespace TrainTimeTable
                 }
                 else if (result == DialogResult.OK)
                 {
-                    // 何もしない
+                    // タイトル設定
+                    SetTitle();
                 }
             }
 
             // ロギング
             Logger.Debug("<<<<= FormRoute::SaveTimetableFile()");
-        }
-
-        /// <summary>
-        /// doWorkSaveTimetableFile
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void doWorkSaveTimetableFile(object sender, DoWorkEventArgs e)
-        {
-            // ロギング
-            Logger.Debug("=>>>> FormRoute::doWorkSaveTimetableFile(object, DoWorkEventArgs)");
-            Logger.DebugFormat("sender:[{0}]", sender);
-            Logger.DebugFormat("e     :[{0}]", e);
-
-            // BackgroundWorkerオブジェクト取得
-            BackgroundWorker backgroundWorker = (BackgroundWorker)sender;
-
-            // 経過メッセージ表示
-            backgroundWorker.ReportProgress(0, "0% 終了しました");
-
-            // データベース書込
-            DatabaseWrite(0, 25, backgroundWorker);
-
-            // 経過メッセージ表示
-            backgroundWorker.ReportProgress(25, "25% 終了しました");
-
-            // タイトル設定
-            SetTitle();
-
-            // 経過メッセージ表示
-            backgroundWorker.ReportProgress(50, "50% 終了しました");
-
-            // データベース読込
-            DatabaseRead(50, 75, backgroundWorker);
-
-            // 経過メッセージ表示
-            backgroundWorker.ReportProgress(75, "75% 終了しました");
-
-            // 更新通知
-            UpdateNotification();
-
-            // 経過メッセージ表示
-            backgroundWorker.ReportProgress(100, "100% 終了しました");
-
-            // ロギング
-            Logger.Debug("<<<<= FormRoute::doWorkSaveTimetableFile(object, DoWorkEventArgs)");
         }
         #endregion
 

@@ -246,6 +246,9 @@ namespace TrainTimeTable.Database.Table
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE Name = '" + property.Name + "';");
 
+            // 更新
+            Update(query.ToString());
+
             // ロギング
             Logger.Debug("<<<<= TrainTypeTable::Update(TrainTypeProperty)");
         }

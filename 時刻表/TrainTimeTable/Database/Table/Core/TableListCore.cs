@@ -118,27 +118,29 @@ namespace TrainTimeTable.Database.Table.Core
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public virtual void Rebuilding(T properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public virtual void Rebuilding(T oldProperties, T newProperties)
         {
             // ロギング
-            Logger.Debug("=>>>> TableListCore::Rebuilding(T)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> TableListCore::Rebuilding(T, T)");
+            Logger.DebugFormat("oldProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
 
             // データを読込
             T orignalProperties = Load();
 
             // 削除対象キーを取得
-            T removeKeys = GetRemoveKeys(orignalProperties, properties);
+            T removeKeys = GetRemoveKeys(orignalProperties, newProperties);
 
             // 削除
             Remove(removeKeys);
 
             // 保存
-            Save(properties);
+            Save(newProperties);
 
             // ロギング
-            Logger.Debug("<<<<= TableListCore::Rebuilding(T)");
+            Logger.Debug("<<<<= TableListCore::Rebuilding(T, T)");
         }
         #endregion
 

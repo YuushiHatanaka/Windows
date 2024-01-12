@@ -333,41 +333,43 @@ namespace TrainTimeTable.Database
         /// 再構築
         /// </summary>
         /// <param name="property"></param>
-        public void Rebuilding(RouteFileProperty property)
+        /// <param name="property"></param>
+        public void Rebuilding(RouteFileProperty oldProperty, RouteFileProperty newProperty)
         {
             // ロギング
-            Logger.Debug("=>>>> RouteFileDatabase::Rebuilding(RouteProperties)");
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> RouteFileDatabase::Rebuilding(RouteFileProperty, RouteFileProperty)");
+            Logger.DebugFormat("oldProperty:[{0}]", oldProperty);
+            Logger.DebugFormat("newProperty:[{0}]", newProperty);
 
-            // 保存
             // トランザクション開始
             using (SQLiteTransaction sqliteTransaction = m_SqliteConnection.BeginTransaction())
             {
-                m_FileInfomationTable.Rebuilding(property.FileInfo);
-                m_RouteTable.Rebuilding(property.Route);
-                m_FontTable.Rebuilding(property.Fonts);
-                m_ColorTable.Rebuilding(property.Colors);
-                m_DiagramScreenTable.Rebuilding(property.DiagramScreen);
-                m_StationTable.Rebuilding(property.Stations);
-                m_StationSequenceTable.Rebuilding(property.StationSequences);
-                m_NextStationTable.Rebuilding(property.Stations);
-                m_TrainTypeTable.Rebuilding(property.TrainTypes);
-                m_TrainTypeSequenceTable.Rebuilding(property.TrainTypeSequences);
-                m_CommentTable.Rebuilding(property.Comment);
-                m_DiagramTable.Rebuilding(property.Diagrams);
-                m_DiagramSequenceTable.Rebuilding(property.DiagramSequences);
-                m_TrainTable.Rebuilding(property.Diagrams);
-                m_TrainSequenceTable.Rebuilding(property.Diagrams);
-                m_TrainMarkTable.Rebuilding(property.Diagrams);
-                m_TrainMarkSequenceTable.Rebuilding(property.Diagrams);
-                m_StationTimeTable.Rebuilding(property.Diagrams);
+                // 再構築
+                m_FileInfomationTable.Rebuilding(oldProperty.FileInfo, newProperty.FileInfo);
+                m_RouteTable.Rebuilding(oldProperty.Route, newProperty.Route);
+                m_FontTable.Rebuilding(oldProperty.Fonts, newProperty.Fonts);
+                m_ColorTable.Rebuilding(oldProperty.Colors, newProperty.Colors);
+                m_DiagramScreenTable.Rebuilding(oldProperty.DiagramScreen, newProperty.DiagramScreen);
+                m_StationTable.Rebuilding(oldProperty.Stations, newProperty.Stations);
+                m_StationSequenceTable.Rebuilding(oldProperty.StationSequences, newProperty.StationSequences);
+                m_NextStationTable.Rebuilding(oldProperty.Stations, newProperty.Stations);
+                m_TrainTypeTable.Rebuilding(oldProperty.TrainTypes, newProperty.TrainTypes);
+                m_TrainTypeSequenceTable.Rebuilding(oldProperty.TrainTypeSequences, newProperty.TrainTypeSequences);
+                m_CommentTable.Rebuilding(oldProperty.Comment, newProperty.Comment);
+                m_TrainTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_TrainSequenceTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_TrainMarkTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_TrainMarkSequenceTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_StationTimeTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_DiagramTable.Rebuilding(oldProperty.Diagrams, newProperty.Diagrams);
+                m_DiagramSequenceTable.Rebuilding(oldProperty.DiagramSequences, newProperty.DiagramSequences);
 
                 // トランザクションコミット
                 sqliteTransaction.Commit();
             }
 
             // ロギング
-            Logger.Debug("<<<<= RouteFileDatabase::Rebuilding(RouteFileProperty, RouteProperties)");
+            Logger.Debug("<<<<= RouteFileDatabase::Rebuilding(RouteFileProperty, RouteFileProperty)");
         }
         #endregion
 

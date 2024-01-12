@@ -180,6 +180,7 @@ namespace TrainTimeTable
 
             // 登録
             m_ListBoxDiagram.Items.Add(formDiagramProperty.Property);
+            m_RouteFileProperty.RegistonDiagrams(formDiagramProperty.Property);
 
             // シーケンス番号更新
             m_ListBoxDiagram.UpdateSeq();
@@ -232,11 +233,32 @@ namespace TrainTimeTable
                 return;
             }
 
-            // 更新
-            m_ListBoxDiagram.Update(selectedIndex, formDiagramProperty.Property);
+            // ダイアグラム名変更判定
+            if (result.Name != formDiagramProperty.Property.Name)
+            {
+                // 登録
+                if (m_ListBoxDiagram.Exists(formDiagramProperty.Property.Name))
+                {
+                    // エラーメッセージ作成
+                    string msg = string.Format(
+                        "ダイヤ名 {0} は既に存在しています。\r\nダイヤ名は重複してはいけません。\r\n他の名前を指定してください。",
+                        formDiagramProperty.Property.Name);
 
-            // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+                    // メッセージ表示
+                    MessageBox.Show(msg, AssemblyLibrary.GetTitleVersion(), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // ダイアグラム名変更
+                m_RouteFileProperty.ChangeDiagramName(result.Name, formDiagramProperty.Property.Name);
+                formDiagramProperty.Property.ChangeDiagramName();
+
+                // 更新
+                m_ListBoxDiagram.Update(selectedIndex, formDiagramProperty.Property);
+
+                // 更新通知
+                OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            }
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::buttonProperty_Click(object, EventArgs)");
@@ -296,8 +318,12 @@ namespace TrainTimeTable
                 return;
             }
 
+            // ダイアグラム名変更
+            formDiagramProperty.Property.ChangeDiagramName();
+
             // 登録
             m_ListBoxDiagram.Items.Add(formDiagramProperty.Property);
+            m_RouteFileProperty.RegistonDiagrams(formDiagramProperty.Property);
 
             // シーケンス番号更新
             m_ListBoxDiagram.UpdateSeq();
@@ -334,17 +360,29 @@ namespace TrainTimeTable
                 return;
             }
 
-            // 削除
-            m_ListBoxDiagram.Items.RemoveAt(selectedIndex);
+            // 選択項目取得
+            DiagramProperty result = GetSelectedCondition();
 
-            // シーケンス番号更新
-            m_ListBoxDiagram.UpdateSeq();
+            // メッセージ表示
+            DialogResult dialogResult = MessageBox.Show(
+                string.Format("ダイヤ「{0}」を削除します。\r\nよろしいですか？", result.Name),
+                "ダイヤの削除",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Question);
 
-            // シーケンス番号更新
-            m_ListBoxDiagram.UpdateSeq();
+            // メッセージ表示結果判定
+            if (dialogResult == DialogResult.OK)
+            {
+                // 削除
+                m_ListBoxDiagram.Items.RemoveAt(selectedIndex);
+                m_RouteFileProperty.RemoveDiagram(result.Name);
 
-            // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+                // シーケンス番号更新
+                m_ListBoxDiagram.UpdateSeq();
+
+                // 更新通知
+                OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            }
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::buttonRemove_Click(object, EventArgs)");

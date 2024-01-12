@@ -104,6 +104,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "FormDiagramProperty";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "ダイヤのプロパティ";
             this.Load += new System.EventHandler(this.FormDiagramProperty_Load);
             this.tableLayoutPanelMain.ResumeLayout(false);

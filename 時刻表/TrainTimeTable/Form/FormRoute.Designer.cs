@@ -33,7 +33,6 @@
             this.toolStripMenuItemFileClose = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemFileSave = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemFileSaveAs = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemFileExport = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWindow = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWindowDisplayOverlapping = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemWindowDisplayVertically = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,8 +63,7 @@
             this.toolStripMenuItemFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemFileClose,
             this.toolStripMenuItemFileSave,
-            this.toolStripMenuItemFileSaveAs,
-            this.toolStripMenuItemFileExport});
+            this.toolStripMenuItemFileSaveAs});
             this.toolStripMenuItemFile.MergeAction = System.Windows.Forms.MergeAction.MatchOnly;
             this.toolStripMenuItemFile.MergeIndex = 0;
             this.toolStripMenuItemFile.Name = "toolStripMenuItemFile";
@@ -98,14 +96,6 @@
             this.toolStripMenuItemFileSaveAs.Text = "名前を付けて保存(&A)";
             this.toolStripMenuItemFileSaveAs.Click += new System.EventHandler(this.toolStripMenuItemFileSaveAs_Click);
             // 
-            // toolStripMenuItemFileExport
-            // 
-            this.toolStripMenuItemFileExport.MergeAction = System.Windows.Forms.MergeAction.Replace;
-            this.toolStripMenuItemFileExport.Name = "toolStripMenuItemFileExport";
-            this.toolStripMenuItemFileExport.Size = new System.Drawing.Size(184, 22);
-            this.toolStripMenuItemFileExport.Text = "エクスポート";
-            this.toolStripMenuItemFileExport.Click += new System.EventHandler(this.toolStripMenuItemFileExport_Click);
-            // 
             // toolStripMenuItemWindow
             // 
             this.toolStripMenuItemWindow.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -123,28 +113,28 @@
             // toolStripMenuItemWindowDisplayOverlapping
             // 
             this.toolStripMenuItemWindowDisplayOverlapping.Name = "toolStripMenuItemWindowDisplayOverlapping";
-            this.toolStripMenuItemWindowDisplayOverlapping.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWindowDisplayOverlapping.Size = new System.Drawing.Size(177, 22);
             this.toolStripMenuItemWindowDisplayOverlapping.Text = "重ねて表示(&C)";
             this.toolStripMenuItemWindowDisplayOverlapping.Click += new System.EventHandler(this.toolStripMenuItemWindowDisplayOverlapping_Click);
             // 
             // toolStripMenuItemWindowDisplayVertically
             // 
             this.toolStripMenuItemWindowDisplayVertically.Name = "toolStripMenuItemWindowDisplayVertically";
-            this.toolStripMenuItemWindowDisplayVertically.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWindowDisplayVertically.Size = new System.Drawing.Size(177, 22);
             this.toolStripMenuItemWindowDisplayVertically.Text = "上下に並べて表示(&T)";
             this.toolStripMenuItemWindowDisplayVertically.Click += new System.EventHandler(this.toolStripMenuItemWindowDisplayVertically_Click);
             // 
             // toolStripMenuItemWindowDisplaySideBySide
             // 
             this.toolStripMenuItemWindowDisplaySideBySide.Name = "toolStripMenuItemWindowDisplaySideBySide";
-            this.toolStripMenuItemWindowDisplaySideBySide.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWindowDisplaySideBySide.Size = new System.Drawing.Size(177, 22);
             this.toolStripMenuItemWindowDisplaySideBySide.Text = "左右に並べて表示(&V)";
             this.toolStripMenuItemWindowDisplaySideBySide.Click += new System.EventHandler(this.toolStripMenuItemWindowDisplaySideBySide_Click);
             // 
             // toolStripMenuItemWindowArrangeIcons
             // 
             this.toolStripMenuItemWindowArrangeIcons.Name = "toolStripMenuItemWindowArrangeIcons";
-            this.toolStripMenuItemWindowArrangeIcons.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWindowArrangeIcons.Size = new System.Drawing.Size(177, 22);
             this.toolStripMenuItemWindowArrangeIcons.Text = "アイコンの整列(&A)";
             this.toolStripMenuItemWindowArrangeIcons.Click += new System.EventHandler(this.toolStripMenuItemWindowArrangeIcons_Click);
             // 
@@ -152,12 +142,12 @@
             // 
             this.toolStripMenuItem1.MergeIndex = 4;
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(174, 6);
             // 
             // toolStripMenuItemWindowCloseAll
             // 
             this.toolStripMenuItemWindowCloseAll.Name = "toolStripMenuItemWindowCloseAll";
-            this.toolStripMenuItemWindowCloseAll.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemWindowCloseAll.Size = new System.Drawing.Size(177, 22);
             this.toolStripMenuItemWindowCloseAll.Text = "すべて閉じる";
             this.toolStripMenuItemWindowCloseAll.Click += new System.EventHandler(this.toolStripMenuItemWindowCloseAll_Click);
             // 
@@ -210,7 +200,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFile;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFileSave;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFileSaveAs;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFileExport;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWindow;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWindowDisplayOverlapping;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemWindowDisplayVertically;

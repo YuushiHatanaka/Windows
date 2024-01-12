@@ -263,6 +263,65 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region ダイヤグラム登録
+        /// <summary>
+        /// ダイヤグラム登録
+        /// </summary>
+        /// <param name="property"></param>
+        public void RegistonDiagrams(DiagramProperty property)
+        {
+            Diagrams.Add(property);
+            DiagramSequences.Add(new DiagramSequenceProperty() { Name = property.Name });
+        }
+        #endregion
+
+        #region ダイヤグラム削除
+        /// <summary>
+        /// ダイヤグラム削除
+        /// </summary>
+        /// <param name="name"></param>
+        public void RemoveDiagram(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::RemoveDiagram(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // 削除
+            Diagrams.RemoveAll(s => s.Name == name);
+            DiagramSequences.RemoveAll(s => s.Name == name);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::RemoveDiagram(string)");
+        }
+        #endregion
+
+
+        #region ダイアグラム名変更
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="name"></param>
+        public void ChangeDiagramName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::ChangeDiagramName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 更新設定
+            DiagramProperty diagramProperty = Diagrams.Find(d => d.Name == oldName);
+            DiagramSequenceProperty diagramSequenceProperty = DiagramSequences.Find(d => d.Name == oldName);
+
+            // ダイアグラム名変更
+            diagramProperty.ChangeDiagramName(newName);
+            diagramSequenceProperty.Name = newName;
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::ChangeDiagramName(string, string)");
+        }
+        #endregion
+
         #region 駅追加
         /// <summary>
         /// 駅追加

@@ -187,30 +187,59 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public void Rebuilding(DiagramProperties properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public void Rebuilding(DiagramProperties oldProperties, DiagramProperties newProperties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainMarkSequenceTable::Rebuilding(DiagramProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> TrainMarkSequenceTable::Rebuilding(DiagramProperties, DiagramProperties)");
+            Logger.DebugFormat("oldProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
+
+            // 削除プロパティ取得
+            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+
+            // ロギング
+            Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
 
             // ダイヤグラム分繰り返す
-            foreach (var property in properties)
+            foreach (var removeProperty in removeProperties)
             {
                 // 方向種別分繰り返す
-                foreach (var value in property.Trains.Values)
+                foreach (var key in removeProperty.Trains.Keys)
                 {
                     // 列車分繰り返す
-                    foreach (var train in value)
+                    foreach (var removeTrain in removeProperty.Trains[key])
                     {
+                        // 削除
+                        Remove(removeTrain.MarkSequences);
+                    }
+                }
+            }
+
+            // ダイヤグラム分繰り返す
+            foreach (var newProperty in newProperties)
+            {
+                // 旧DiagramPropertyオブジェクト取得
+                DiagramProperty oldProperty = oldProperties.Find(d => d.Name == newProperty.Name);
+
+                // 方向種別分繰り返す
+                foreach (var key in newProperty.Trains.Keys)
+                {
+                    // 列車分繰り返す
+                    foreach (var newTrain in newProperty.Trains[key])
+                    {
+                        // 旧TrainPropertyオブジェクト取得
+                        TrainProperty oldTrain = oldProperty?.Trains[key].Find(t => t.Id == newTrain.Id);
+
                         // 再構築
-                        Rebuilding(train.MarkSequences);
+                        Rebuilding(oldTrain?.MarkSequences, newTrain.MarkSequences);
                     }
                 }
             }
 
             // ロギング
-            Logger.Debug("<<<<= TrainMarkSequenceTable::Rebuilding(DiagramProperties)");
+            Logger.Debug("<<<<= TrainMarkSequenceTable::Rebuilding(DiagramProperties, DiagramProperties)");
         }
         #endregion
 
@@ -345,6 +374,9 @@ namespace TrainTimeTable.Database.Table
             query.Append("MarkName = '" + property.MarkName.ToString() + "',");
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND TrainId = " + property.TrainId + " AND Direction = " + (int)property.Direction + " AND Seq = " + property.Seq + ";");
+
+            // 更新
+            Update(query.ToString());
 
             // ロギング
             Logger.Debug("<<<<= TrainMarkSequenceTable::Update(TrainMarkSequenceProperty)");

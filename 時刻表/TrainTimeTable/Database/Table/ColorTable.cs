@@ -233,6 +233,9 @@ namespace TrainTimeTable.Database.Table
             query.Append("updated = '" + GetCurrentDateTime() + "' ");
             query.Append("WHERE Name = '" + keyValuePair.Key + "';");
 
+            // 更新
+            Update(query.ToString());
+
             // ロギング
             Logger.Debug("<<<<= ColorTable::Update(KeyValuePair<string, ColorProperty>)");
         }

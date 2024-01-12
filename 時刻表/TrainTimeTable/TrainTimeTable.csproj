@@ -207,6 +207,7 @@
     <Compile Include="Database\Table\StationSequenceTable.cs" />
     <Compile Include="Database\Table\StationTable.cs" />
     <Compile Include="Database\Table\StationTimeTable.cs" />
+    <Compile Include="Database\Table\TableLibrary.cs" />
     <Compile Include="Database\Table\TrainMarkSequenceTable.cs" />
     <Compile Include="Database\Table\TrainTable.cs" />
     <Compile Include="Database\Table\TrainTypeSequenceTable.cs" />

@@ -133,6 +133,29 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region ダイアグラム名変更
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        /// <param name="name"></param>
+        public void ChangeDiagramName(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainMarkProperties::ChangeDiagramName(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // リストを繰り返す
+            foreach (var property in this)
+            {
+                // ダイアグラム名変更
+                property.DiagramName = name;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainMarkProperties::ChangeDiagramName(string)");
+        }
+        #endregion
+
         #region 文字列化
         /// <summary>
         /// 文字列化

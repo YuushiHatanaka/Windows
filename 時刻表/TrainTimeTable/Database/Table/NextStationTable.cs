@@ -194,18 +194,32 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public void Rebuilding(StationProperties properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public void Rebuilding(StationProperties oldProperties, StationProperties newProperties)
         {
             // ロギング
             Logger.Debug("=>>>> NextStationTable::Rebuilding(StationProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.DebugFormat("newProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
 
             // データを読込
             NextStationProperties orignalProperties = Load();
 
             // 次駅一覧取得
-            NextStationProperties nextStations = properties.GetNextStations();
+            NextStationProperties oldNextStations = oldProperties.GetNextStations();
+
+            // 旧データと比較
+            if (!orignalProperties.Compare(oldNextStations))
+            {
+                // ロギング
+                Logger.Warn("旧データ相違検出(NextStationTable)");
+                Logger.Warn(oldNextStations);
+                Logger.Warn(orignalProperties);
+            }
+
+            // 次駅一覧取得
+            NextStationProperties nextStations = newProperties.GetNextStations();
 
             // 削除対象キーを取得
             NextStationProperties removeKeys = GetRemoveKeys(orignalProperties, nextStations);
@@ -214,10 +228,10 @@ namespace TrainTimeTable.Database.Table
             Remove(removeKeys);
 
             // 保存
-            Save(properties);
+            Save(newProperties);
 
             // ロギング
-            Logger.Debug("<<<<= NextStationTable::Rebuilding(StationProperties)");
+            Logger.Debug("<<<<= NextStationTable::Rebuilding(StationProperties, StationProperties)");
         }
         #endregion
 

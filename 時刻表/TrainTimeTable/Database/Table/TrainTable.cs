@@ -77,7 +77,7 @@ namespace TrainTimeTable.Database.Table
         public new DictionaryTrain Load(string name)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainTable::Load(int)");
+            Logger.Debug("=>>>> TrainTable::Load(string)");
             Logger.DebugFormat("name:[{0}]", name);
 
             // DictionaryTrainオブジェクト生成
@@ -107,7 +107,46 @@ namespace TrainTimeTable.Database.Table
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= TrainTable::Load(int)");
+            Logger.Debug("<<<<= TrainTable::Load(string)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public TrainProperties Load(DirectionType direction, string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::Load(DirectionType, string)");
+            Logger.DebugFormat("direction:[{0}]", direction.GetStringValue());
+            Logger.DebugFormat("name     :[{0}]", name);
+
+            // TrainPropertiesオブジェクト生成
+            TrainProperties result = new TrainProperties();
+
+            // SQLクエリ生成
+            StringBuilder query = new StringBuilder();
+            query.Append(string.Format("SELECT * FROM {0} WHERE DiagramName = '{1}' AND Direction = {2};", m_TableName, name, (int)direction));
+
+            // クエリ実行
+            using (SQLiteDataReader sqliteDataReader = base.Load(query.ToString()))
+            {
+                // 1行のみデータを取得
+                while (sqliteDataReader.Read())
+                {
+                    // SELECTデータ登録
+                    SelectDataRegston(sqliteDataReader, ref result);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainTable::Load(DirectionType, string)");
 
             // 返却
             return result;
@@ -201,26 +240,75 @@ namespace TrainTimeTable.Database.Table
         /// <summary>
         /// 再構築
         /// </summary>
-        /// <param name="properties"></param>
-        public void Rebuilding(DiagramProperties properties)
+        /// <param name="oldProperties"></param>
+        /// <param name="newProperties"></param>
+        public void Rebuilding(DiagramProperties oldProperties, DiagramProperties newProperties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainTable::Rebuilding(DiagramProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> TrainTable::Rebuilding(DiagramProperties, DiagramProperties)");
+            Logger.DebugFormat("oldProperties:[{0}]", oldProperties);
+            Logger.DebugFormat("newProperties:[{0}]", newProperties);
+
+            // 削除プロパティ取得
+            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+
+            // ロギング
+            Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
+
+            // 削除プロパティ分繰り返す
+            foreach (var removeProperty in removeProperties)
+            {
+                // 方向種別分繰り返す
+                foreach (var direction in removeProperty.Trains.Keys)
+                {
+                    // 削除
+                    Remove(removeProperty.Trains[direction]);
+                }
+            }
 
             // ダイヤグラム分繰り返す
-            foreach (var property in properties)
+            foreach (var property in newProperties)
             {
                 // 方向種別分繰り返す
                 foreach (var direction in property.Trains.Keys)
                 {
                     // 再構築
-                    Rebuilding(property.Trains[direction]);
+                    Rebuilding(property.Name, direction, property.Trains[direction]);
                 }
             }
 
             // ロギング
-            Logger.Debug("<<<<= TrainTable::Rebuilding(DiagramProperties)");
+            Logger.Debug("<<<<= TrainTable::Rebuilding(DiagramProperties, DiagramProperties)");
+        }
+
+        /// <summary>
+        /// 再構築
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="direction"></param>
+        /// <param name="properties"></param>
+        public void Rebuilding(string name, DirectionType direction, TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTable::Rebuilding(string, TrainProperties)");
+            Logger.DebugFormat("name      :[{0}]", name);
+            Logger.DebugFormat("direction :[{0}]", direction.GetStringValue());
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // データを読込
+            TrainProperties orignalProperties = Load(direction, name);
+
+            // 削除対象キーを取得
+            TrainProperties removeKeys = GetRemoveKeys(orignalProperties, properties);
+
+            // 削除
+            Remove(removeKeys);
+
+            // 保存
+            Save(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTable::Rebuilding(string, TrainProperties)");
         }
         #endregion
 
@@ -249,7 +337,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var dst in dstProperties)
                 {
                     // キーを比較
-                    if (src.Name == dst.Name)
+                    if ((src.DiagramName == dst.DiagramName) && (src.Direction == dst.Direction) && (src.Id == dst.Id))
                     {
                         removeId = false;
                         break;
@@ -312,9 +400,6 @@ namespace TrainTimeTable.Database.Table
             // ロギング
             Logger.Debug("=>>>> TrainTable::GetMaxId()");
 
-            // 結果初期化
-            int result = 0;
-
             // SQLクエリ生成
             StringBuilder query = new StringBuilder();
             query.Append(string.Format("SELECT MAX(Id) FROM {0} WHERE ", m_TableName));
@@ -329,9 +414,10 @@ namespace TrainTimeTable.Database.Table
                 Logger.DebugFormat("ID最大値取得:[{0}]", query);
 
                 // クエリ実行
-                result = Convert.ToInt32(sqliteCommand.ExecuteScalar());
+                int result = Convert.ToInt32(sqliteCommand.ExecuteScalar());
 
                 // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
                 Logger.Debug("<<<<= TrainTable::GetMaxId()");
 
                 // 返却

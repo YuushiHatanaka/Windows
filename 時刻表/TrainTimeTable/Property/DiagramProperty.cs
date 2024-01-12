@@ -154,6 +154,45 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region ダイアグラム名変更
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        public void ChangeDiagramName()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperty::ChangeDiagramName()");
+
+            // ダイアグラム名変更
+            Trains.ChangeDiagramName(Name);
+            TrainSequence.ChangeDiagramName(Name);
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperty::ChangeDiagramName()");
+
+        }
+
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        /// <param name="name"></param>
+        public void ChangeDiagramName(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperty::ChangeDiagramName(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // 設定
+            Name = name;
+
+            // ダイアグラム名変更
+            ChangeDiagramName();
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperty::ChangeDiagramName(string)");
+        }
+        #endregion
+
         #region 文字列化
         /// <summary>
         /// 文字列化
