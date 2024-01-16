@@ -1,5 +1,7 @@
 ﻿using log4net;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using TrainTimeTable.Component;
@@ -78,5 +80,34 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= TreeNodeDia::Update(DiagramProperties)");
         }
         #endregion
+
+        /// <summary>
+        /// 削除
+        /// </summary>
+        /// <param name="properties"></param>
+        public void Remove(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TreeNodeDia::Remove(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ノードを繰り返す
+            foreach (DiagramProperty property in properties)
+            {
+                // 登録されているノードを繰り返す
+                foreach (TreeNodeDiagramDetail treeNode in Nodes)
+                {
+                    // ダイアグラム名判定
+                    if (treeNode.Property.Name == property.Name)
+                    {
+                        // ノード削除
+                        Nodes.Remove(treeNode);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TreeNodeDia::Remove(DiagramProperties)");
+        }
     }
 }

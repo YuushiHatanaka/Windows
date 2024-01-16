@@ -233,7 +233,7 @@ namespace TrainTimeTable.Control
             // 列車種別ノード更新
             m_TrainType.Update(property.TrainTypes);
 
-            // ダイヤノード
+            // ダイヤグラムノード
             m_DiagramNode.Update(property.Diagrams);
 
             // コメントノード
@@ -241,6 +241,25 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.Debug("<<<<= TreeViewRoute::Update(RouteFileProperty)");
+        }
+        #endregion
+
+        #region ダイアグラム削除
+        /// <summary>
+        /// ダイアグラム削除
+        /// </summary>
+        /// <param name="properties"></param>
+        public void RemoveDiagram(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TreeViewRoute::RemoveDiagram(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラムノード
+            m_DiagramNode.Remove(properties);
+
+            // ロギング
+            Logger.Debug("<<<<= TreeViewRoute::RemoveDiagram(DiagramProperties)");
         }
         #endregion
 

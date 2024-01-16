@@ -650,6 +650,7 @@ namespace TrainTimeTable
 
                 // イベント設定
                 form.OnUpdate += FormDiagramProperties_OnUpdate;
+                form.OnRemove += FormDiagramProperties_OnRemove;
 
                 // フォーム表示
                 form.StartPosition = FormStartPosition.CenterParent;
@@ -853,14 +854,11 @@ namespace TrainTimeTable
             // 登録名作成
             string regName = string.Format("{0} {1}", e.Parent.Text, e.Text);
 
-            // ダイアグラムインデックス取得
-            int diagramIndex = m_CurrentRouteFileProperty.Diagrams.GetIndex(e.Parent.Text);
-
             // 登録判定
             if (!IsMDIChildForm(typeof(FormStationTimetable), regName))
             {
                 // フォームオブジェクト生成
-                FormStationTimetable form = new FormStationTimetable(this, regName, diagramIndex, m_CurrentRouteFileProperty);
+                FormStationTimetable form = new FormStationTimetable(this, regName, e.Parent.Text, m_CurrentRouteFileProperty);
 
                 // イベント設定
                 form.OnUpdate += FormStationTimetable_OnUpdate;
@@ -975,6 +973,32 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormRoute::FormDiagramProperties_OnUpdate(object, DiagramPropertiesUpdateEventArgs)");
+        }
+
+        /// <summary>
+        /// FormDiagramProperties_OnRemove
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FormDiagramProperties_OnRemove(object sender, DiagramPropertiesRemoveEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormRoute::FormDiagramProperties_OnRemove(object, DiagramPropertiesRemoveEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // 削除ダイアグラム分繰り返す
+            foreach (var diagram in e.Properties)
+            {
+                // ダイアグラム削除
+                m_CurrentRouteFileProperty.RemoveDiagram(diagram.Name);
+            }
+
+            // 削除通知
+            RemoveNotification(e.Properties);
+
+            // ロギング
+            Logger.Debug("<<<<= FormRoute::FormDiagramProperties_OnRemove(object, DiagramPropertiesRemoveEventArgs)");
         }
 
         /// <summary>
@@ -1495,6 +1519,181 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormRoute::UpdateNotification()");
+        }
+        #endregion
+
+        #region 削除通知
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="properties"></param>
+        private void RemoveNotification(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormRoute::RemoveNotification(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // TreeView
+            m_TreeViewRoute.RemoveDiagram(properties);
+
+            List<Form> removeForms = new List<Form>();
+
+            // ダイアグラム分繰り返す
+            foreach (var property in properties)
+            {
+                // 登録されているコントロールを判定(Panel2)
+                foreach (var control in splitContainerMain.Panel2.Controls)
+                {
+                    // Formオブジェクト取得
+                    Form form = control as Form;
+
+                    // コントロールで分岐する
+                    switch (control.GetType())
+                    {
+                        case Type @_ when @_ == typeof(FormRouteFileProperty):
+                            {
+                                // フォーム取得
+                                FormRouteFileProperty formProperty = form as FormRouteFileProperty;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormStationProperties):
+                            {
+                                // フォーム取得
+                                FormStationProperties formProperty = form as FormStationProperties;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormTrainTypeProperties):
+                            {
+                                // フォーム取得
+                                FormTrainTypeProperties formProperty = form as FormTrainTypeProperties;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormDiagramProperties):
+                            {
+                                // フォーム取得
+                                FormDiagramProperties formProperty = form as FormDiagramProperties;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormDiagramDisplay):
+                            {
+                                // フォーム取得
+                                FormDiagramDisplay formProperty = form as FormDiagramDisplay;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormComment):
+                            {
+                                // フォーム取得
+                                FormComment formProperty = form as FormComment;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormTimetable):
+                            {
+                                // フォーム取得
+                                FormTimetable formProperty = form as FormTimetable;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormDiagramDisplay):
+                            {
+                                // フォーム取得
+                                FormDiagramDisplay formProperty = form as FormDiagramDisplay;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormStationTimetable):
+                            {
+                                // フォーム取得
+                                FormStationTimetable formProperty = form as FormStationTimetable;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        case Type @_ when @_ == typeof(FormStationTimetableDisplay):
+                            {
+                                // フォーム取得
+                                FormStationTimetableDisplay formProperty = form as FormStationTimetableDisplay;
+
+                                // ダイアグラム名判定
+                                if (formProperty.DiagramName == property.Name)
+                                {
+                                    // 削除コントロール登録
+                                    removeForms.Add(form);
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            // コントロール削除
+            foreach (var form in removeForms)
+            {
+                splitContainerMain.Panel2.Controls.Remove(form);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormRoute::RemoveNotification(DiagramProperties)");
         }
         #endregion
 

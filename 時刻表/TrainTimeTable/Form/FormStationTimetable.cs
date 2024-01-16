@@ -48,9 +48,9 @@ namespace TrainTimeTable
         private FormRoute m_Owner = null;
 
         /// <summary>
-        /// ダイヤグラムID
+        /// ダイアログ名
         /// </summary>
-        private int m_DiagramId = 0;
+        public string DiagramName { get; private set; } = string.Empty;
 
         /// <summary>
         /// RouteFilePropertyオブジェクト
@@ -70,29 +70,29 @@ namespace TrainTimeTable
         /// <param name="regName"></param>
         /// <param name="index"></param>
         /// <param name="property"></param>
-        public FormStationTimetable(FormRoute owner, string regName, int index, RouteFileProperty property)
+        public FormStationTimetable(FormRoute owner, string regName, string diagramName, RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormStationTimetable::FormStationTimetable(FormRoute, string, int, RouteFileProperty)");
-            Logger.DebugFormat("owner   :[{0}]", owner);
-            Logger.DebugFormat("regName :[{0}]", regName);
-            Logger.DebugFormat("index   :[{0}]", index);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> FormStationTimetable::FormStationTimetable(FormRoute, string, string, RouteFileProperty)");
+            Logger.DebugFormat("owner      :[{0}]", owner);
+            Logger.DebugFormat("regName    :[{0}]", regName);
+            Logger.DebugFormat("diagramName:[{0}]", diagramName);
+            Logger.DebugFormat("property   :[{0}]", property);
 
             InitializeComponent();
 
             // 設定
             m_Owner = owner;
-            m_DiagramId = index;
             m_RouteFileProperty = property;
             m_DataGridViewStationTimetable = new DataGridViewStationTimetable(property);
             m_DataGridViewStationTimetable.CellClick += DataGridViewStationTimetable_CellClick;
+            DiagramName = diagramName;
 
             // タイトル設定
             Text = string.Format("{0}", regName);
 
             // ロギング
-            Logger.Debug("<<<<= FormStationTimetable::FormStationTimetable(FormRoute, string, int, RouteFileProperty)");
+            Logger.Debug("<<<<= FormStationTimetable::FormStationTimetable(FormRoute, string, string, RouteFileProperty)");
         }
         #endregion
 
@@ -159,13 +159,13 @@ namespace TrainTimeTable
             if (property != null)
             {
                 // 登録名設定
-                string regName = FormStationTimetableDisplay.GetTitle(directionType, property.Name, m_RouteFileProperty.Diagrams[m_DiagramId].Name);
+                string regName = FormStationTimetableDisplay.GetTitle(directionType, property.Name, DiagramName);
 
                 // 登録判定
                 if (!m_Owner.IsMDIChildForm(typeof(FormStationTimetableDisplay), regName))
                 {
                     // フォーム生成
-                    FormStationTimetableDisplay form = new FormStationTimetableDisplay(m_RouteFileProperty.Diagrams[m_DiagramId].Name, directionType, property, m_RouteFileProperty);
+                    FormStationTimetableDisplay form = new FormStationTimetableDisplay(DiagramName, directionType, property, m_RouteFileProperty);
 
                     // フォーム登録
                     m_Owner.AddMDIChildForm(form);
@@ -230,6 +230,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormStationTimetable::Update(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationTimetable::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationTimetable::RemoveNotification(DiagramProperty)");
         }
         #endregion
     }

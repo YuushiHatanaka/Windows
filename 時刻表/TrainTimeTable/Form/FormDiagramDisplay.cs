@@ -130,6 +130,11 @@ namespace TrainTimeTable
         private int m_CurrentPageNumber { get; set; } = 0;
 
         /// <summary>
+        /// ダイアグラム名
+        /// </summary>
+        public string DiagramName { get; private set; } = string.Empty;
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="owner"></param>
@@ -152,6 +157,7 @@ namespace TrainTimeTable
             m_Owner = owner;
             m_RouteFileProperty = property;
             Text = string.Format("{0}", regName);
+            DiagramName = daiagramName;
             m_PictureBoxHours = new PictureBoxHours(m_Owner, m_RouteFileProperty);
             m_PictureBoxStations = new PictureBoxStations(m_Owner, m_RouteFileProperty);
             m_PictureBoxDiagram = new PictureBoxDiagram(m_Owner, daiagramName, m_RouteFileProperty);
@@ -765,14 +771,14 @@ namespace TrainTimeTable
         public void UpdateNotification(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormComment::UpdateNotification(RouteFileProperty)");
+            Logger.Debug("=>>>> FormDiagramDisplay::UpdateNotification(RouteFileProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 更新
             Update(property);
 
             // ロギング
-            Logger.Debug("<<<<= FormComment::UpdateNotification(RouteFileProperty)");
+            Logger.Debug("<<<<= FormDiagramDisplay::UpdateNotification(RouteFileProperty)");
         }
 
         /// <summary>
@@ -782,7 +788,7 @@ namespace TrainTimeTable
         public void Update(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormComment::Update(RouteFileProperty)");
+            Logger.Debug("=>>>> FormDiagramDisplay::Update(RouteFileProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
             // 描画更新
@@ -795,7 +801,28 @@ namespace TrainTimeTable
             ResumeLayout(false);
 
             // ロギング
-            Logger.Debug("<<<<= FormComment::Update(RouteFileProperty)");
+            Logger.Debug("<<<<= FormDiagramDisplay::Update(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationProperties::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if(property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationProperties::RemoveNotification(RouteFileProperty)");
         }
         #endregion
 
@@ -806,7 +833,7 @@ namespace TrainTimeTable
         private void UpdateLabelInfomation()
         {
             // ロギング
-            Logger.Debug("=>>>> FormComment::UpdateLabelInfomation()");
+            Logger.Debug("=>>>> FormDiagramDisplay::UpdateLabelInfomation()");
 
             // 表示文字列作成
             string message = string.Format("横:{0}%,縦:{1}%,列車番号:{2},列車名:{3},時刻:{4}", WidthPercent, HeightPercent, TrainNumberDisplay, TrainNameDisplay, TrainTimeDisplay);
@@ -815,7 +842,7 @@ namespace TrainTimeTable
             toolStripStatusLabelInfomation.Text = message;
 
             // ロギング
-            Logger.Debug("<<<<= FormComment::UpdateLabelInfomation()");
+            Logger.Debug("<<<<= FormDiagramDisplay::UpdateLabelInfomation()");
         }
         #endregion
     }

@@ -40,6 +40,11 @@ namespace TrainTimeTable
         private int m_DiagramIndex = 0;
 
         /// <summary>
+        /// ダイアログ名
+        /// </summary>
+        public string DiagramName { get; private set; } = string.Empty;
+
+        /// <summary>
         /// 方向種別
         /// </summary>
         private DirectionType m_DirectionType = DirectionType.None;
@@ -78,6 +83,7 @@ namespace TrainTimeTable
             m_DirectionType = type;
             m_RouteFileProperty = property;
             m_StationProperty = station;
+            DiagramName = text;
 
             // ダイヤインデックス取得
             m_DiagramIndex = property.Diagrams.GetIndex(text);
@@ -162,6 +168,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormStationTimetableDisplay::UpdateNotification(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationTimetableDisplay::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationTimetableDisplay::RemoveNotification(DiagramProperty)");
         }
         #endregion
     }

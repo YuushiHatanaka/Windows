@@ -40,22 +40,39 @@ namespace TrainTimeTable
         /// 更新 event
         /// </summary>
         public event UpdateEventHandler OnUpdate = delegate { };
+
+        /// <summary>
+        /// 削除 event delegate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void RemoveEventHandler(object sender, DiagramPropertiesRemoveEventArgs e);
+
+        /// <summary>
+        /// 削除 event
+        /// </summary>
+        public event RemoveEventHandler OnRemove = delegate { };
         #endregion
 
         /// <summary>
-        /// TimetablePropertyオブジェクト
+        /// RouteFilePropertyオブジェクト
         /// </summary>
         private RouteFileProperty m_RouteFileProperty = null;
 
         /// <summary>
-        /// DiagramPropertiesオブジェクト
+        /// 旧RouteFilePropertyオブジェクト
         /// </summary>
-        private DiagramProperties m_OldProperties = new DiagramProperties();
+        private RouteFileProperty m_OldRouteFileProperty = new RouteFileProperty();
 
         /// <summary>
         /// ListBoxDiagramオブジェクト
         /// </summary>
         private ListBoxDiagram m_ListBoxDiagram = null;
+
+        /// <summary>
+        /// ダイアグラム名
+        /// </summary>
+        public string DiagramName { get; private set; } = string.Empty;
 
         #region コンストラクタ
         /// <summary>
@@ -73,7 +90,7 @@ namespace TrainTimeTable
 
             // 設定
             m_RouteFileProperty = property;
-            m_OldProperties.Copy(property.Diagrams);
+            m_OldRouteFileProperty.Copy(property);
             m_ListBoxDiagram = new ListBoxDiagram(property);
 
             // ロギング
@@ -380,8 +397,11 @@ namespace TrainTimeTable
                 // シーケンス番号更新
                 m_ListBoxDiagram.UpdateSeq();
 
+                // 旧データにコピー
+                m_OldRouteFileProperty.Copy(m_RouteFileProperty);
+
                 // 更新通知
-                OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+                OnRemove(this, new DiagramPropertiesRemoveEventArgs() { Properties = new DiagramProperties() { result } });
             }
 
             // ロギング
@@ -445,7 +465,7 @@ namespace TrainTimeTable
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 変更判定
-            if (m_OldProperties.Compare(m_ListBoxDiagram.ToArray()))
+            if (m_OldRouteFileProperty.Diagrams.Compare(m_ListBoxDiagram.ToArray()))
             {
                 // 変更されていないのでキャンセル
                 DialogResult = DialogResult.Cancel;
@@ -482,7 +502,7 @@ namespace TrainTimeTable
             Logger.DebugFormat("property:[{0}]", property);
 
             // 設定
-            m_OldProperties.Copy(property.Diagrams);
+            m_OldRouteFileProperty.Copy(property);
 
             // リストボックス更新
             m_ListBoxDiagram.Update(property.Diagrams);
@@ -492,6 +512,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::UpdateNotification(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormDiagramProperties::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormDiagramProperties::RemoveNotification(RouteFileProperty)");
         }
         #endregion
 

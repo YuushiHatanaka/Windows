@@ -55,7 +55,7 @@ namespace TrainTimeTable
         /// <summary>
         /// ダイアログ名
         /// </summary>
-        private string m_DiagramName = string.Empty;
+        public string DiagramName { get; set; } = string.Empty;
 
         /// <summary>
         /// 方向種別
@@ -101,13 +101,13 @@ namespace TrainTimeTable
 
             // 設定
             m_Owner = owner;
-            m_DiagramName = text;
             m_DirectionType = type;
             m_RouteFileProperty = property;
             Text = regName;
+            DiagramName = text;
 
             // VirtualDataGridViewTimeTableオブジェクト生成
-            m_VirtualDataGridViewTimeTable = new VirtualDataGridViewTimeTable(m_DiagramName, m_DirectionType, m_RouteFileProperty);
+            m_VirtualDataGridViewTimeTable = new VirtualDataGridViewTimeTable(DiagramName, m_DirectionType, m_RouteFileProperty);
             m_VirtualDataGridViewTimeTable.Click += DataGridViewTimetable_Click;
             m_VirtualDataGridViewTimeTable.OnTrainPropertyUpdate += DataGridViewTimetable_OnTrainPropertyUpdate;
             m_VirtualDataGridViewTimeTable.OnStationPropertiesUpdate += DataGridViewTimetable_OnStationPropertiesUpdate;
@@ -205,7 +205,7 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
-            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DiagramName = DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
             eventArgs.UpdateObject = e.Property;
@@ -232,7 +232,7 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Properties.GetType();
-            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DiagramName = DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
             eventArgs.UpdateObject = e.Properties;
@@ -259,7 +259,7 @@ namespace TrainTimeTable
             // TimetableUpdateEventArgsオブジェクト
             TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
             eventArgs.UpdateType = e.Property.GetType();
-            eventArgs.DiagramName = m_DiagramName;
+            eventArgs.DiagramName = DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
             eventArgs.UpdateObject = e.Property;
@@ -426,6 +426,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormTimetable::Update(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::RemoveNotification(DiagramProperty)");
         }
         #endregion
     }

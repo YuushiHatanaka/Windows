@@ -49,6 +49,11 @@ namespace TrainTimeTable
         public RouteFileProperty Property { get; set; } = new RouteFileProperty();
 
         /// <summary>
+        /// ダイアグラム名
+        /// </summary>
+        public string DiagramName { get; } = string.Empty;
+
+        /// <summary>
         /// FontListBoxオブジェクト
         /// </summary>
         private ListBoxFont m_FontListBox = null;
@@ -410,6 +415,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormRouteFileProperty::Update(RouteFileProperty)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormRouteFileProperty::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormRouteFileProperty::RemoveNotification(RouteFileProperty)");
         }
         #endregion
 

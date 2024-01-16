@@ -47,6 +47,11 @@ namespace TrainTimeTable
         private StringBuilder m_Comment = new StringBuilder();
         #endregion
 
+        /// <summary>
+        /// ダイアグラム名
+        /// </summary>
+        public string DiagramName { get; private set; } = string.Empty;
+
         #region コンストラクタ
         /// <summary>
         /// コンストラクタ
@@ -178,6 +183,27 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormComment::Update(StringBuilder)");
+        }
+
+        /// <summary>
+        /// 削除通知
+        /// </summary>
+        /// <param name="property"></param>
+        public void RemoveNotification(DiagramProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormComment::RemoveNotification(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // ダイアグラム名判定
+            if (property.Name == DiagramName)
+            {
+                // フォームクローズ
+                Close();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= FormComment::RemoveNotification(DiagramProperty)");
         }
         #endregion
 

@@ -233,6 +233,7 @@
       <DependentUpon>DialogProgress.cs</DependentUpon>
     </Compile>
     <Compile Include="EventArgs\CommentUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\DiagramPropertiesRemoveEventArgs.cs" />
     <Compile Include="EventArgs\DiagramPropertiesUpdateEventArgs.cs" />
     <Compile Include="EventArgs\FontNameSelectedIndexChangedEventArgs.cs" />
     <Compile Include="EventArgs\FontSizeSelectedIndexChangedEventArgs.cs" />

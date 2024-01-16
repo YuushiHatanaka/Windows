@@ -209,15 +209,20 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> ListBoxDiagram::Update(DiagramProperties)");
             Logger.DebugFormat("properties:[{0}]", properties);
 
+            // アイテムクリア
             Items.Clear();
-            foreach (DiagramProperty property in properties)
+
+            // プロパティ分繰り返す
+            foreach (var property in properties)
             {
+                // 登録
                 Items.Add(property);
             }
 
             // シーケンス番号更新
             UpdateSeq();
 
+            // 選択インデックス設定
             if (Items.Count > 0)
             {
                 SelectedIndex = 0;
