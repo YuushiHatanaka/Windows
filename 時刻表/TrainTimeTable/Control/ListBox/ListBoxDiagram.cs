@@ -43,7 +43,7 @@ namespace TrainTimeTable.Control
             m_RouteFileProperty = property;
 
             // 更新
-            Update(property.Diagrams);
+            Update(property.DiagramSequences, property.Diagrams);
 
             // ロギング
             Logger.Debug("<<<<= ListBoxDiagram::ListBoxDiagram(RouteFileProperty)");
@@ -178,43 +178,89 @@ namespace TrainTimeTable.Control
             Logger.Debug("<<<<= ListBoxDiagram::ChangeOrder(int, int)");
         }
 
+        /// <summary>
+        /// DiagramProperty取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public DiagramProperty GetProperty(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> ListBoxDiagram::GetProperty(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // 結果オブジェクト取得
+            DiagramProperty result = null;
+
+            // 要素を繰り返す
+            foreach (DiagramProperty item in Items)
+            {
+                // 名前判定
+                if (item.Name == name)
+                {
+                    // 一致
+                    result = item;
+                    break;
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= ListBoxDiagram::GetProperty(string)");
+
+            // 返却
+            return result;
+        }
+
         #region 更新
         /// <summary>
         /// 更新
         /// </summary>
         /// <param name="index"></param>
         /// <param name="property"></param>
-        public void Update(int index, DiagramProperty property)
+        public void Update(DiagramProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> ListBoxDiagram::Update(int, DiagramProperty)");
-            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.Debug("=>>>> ListBoxDiagram::Update(DiagramProperty)");
             Logger.DebugFormat("property:[{0}]", property);
 
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty target = GetProperty(property.Name);
+
             // 更新
-            ((DiagramProperty)Items[index]).Copy(property);
-            RefreshItem(index);
+            target.Copy(property);
+
+            // 表示更新
+            RefreshItems();
 
             // ロギング
-            Logger.Debug("<<<<= ListBoxDiagram::Update(int, DiagramProperty)");
+            Logger.Debug("<<<<= ListBoxDiagram::Update(DiagramProperty)");
         }
 
         /// <summary>
         /// 更新
         /// </summary>
+        /// <param name="sequences"></param>
         /// <param name="properties"></param>
-        public void Update(DiagramProperties properties)
+        public void Update(DiagramSequenceProperties sequences, DiagramProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> ListBoxDiagram::Update(DiagramProperties)");
+            Logger.Debug("=>>>> ListBoxDiagram::Update(DiagramSequenceProperties, DiagramProperties)");
+            Logger.DebugFormat("sequences :[{0}]", sequences);
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // アイテムクリア
             Items.Clear();
 
-            // プロパティ分繰り返す
-            foreach (var property in properties)
+            // シーケンスコピー
+            m_RouteFileProperty.DiagramSequences.Copy(sequences);
+
+            // シーケンス分繰り返す
+            foreach (var sequence in m_RouteFileProperty.DiagramSequences.OrderBy(d => d.Seq))
             {
+                // 登録オブジェクト取得
+                DiagramProperty property = properties.Find(d => d.Name == sequence.Name);
+
                 // 登録
                 Items.Add(property);
             }
@@ -229,9 +275,31 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= ListBoxDiagram::Update(DiagramProperties)");
+            Logger.Debug("<<<<= ListBoxDiagram::Update(DiagramSequenceProperties, DiagramProperties)");
         }
         #endregion
+
+        /// <summary>
+        /// ダイアグラム名変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeDiagramName(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> ListBoxDiagram::ChangeDiagramName(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // DiagramPropertyオブジェクト取得(旧)
+            DiagramProperty property = GetProperty(oldName);
+
+            // ダイアグラム名変更
+            property.ChangeDiagramName(newName);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::ChangeDiagramName(string, string)");
+        }
         #endregion
     }
 }

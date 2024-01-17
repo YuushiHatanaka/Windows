@@ -55,32 +55,40 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 更新
         /// </summary>
+        /// <param name="sequences"></param>
         /// <param name="properties"></param>
-        public void Update(DiagramProperties properties)
+        public void Update(DiagramSequenceProperties sequences, DiagramProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> TreeNodeDia::Update(DiagramProperties)");
+            Logger.Debug("=>>>> TreeNodeDia::Update(DiagramSequenceProperties, DiagramProperties)");
+            Logger.DebugFormat("sequences :[{0}]", sequences);
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // ノードクリア
             Nodes.Clear();
 
-            // ノードを繰り返す
-            foreach (DiagramProperty property in properties)
+            // シーケンス分繰り返す
+            foreach (var sequence in sequences.OrderBy(d => d.Seq))
             {
-                // TreeNode登録
-                TreeNodeDiagramDetail treeNode = new TreeNodeDiagramDetail(property);
-                Nodes.Add(treeNode);
+                // 登録オブジェクト取得
+                DiagramProperty property = properties.Find(d => d.Name == sequence.Name);
 
-                // 全て展開状態にする
-                ExpandAll();
+                // TreeNodeDiagramDetailオブジェクト生成
+                TreeNodeDiagramDetail treeNode = new TreeNodeDiagramDetail(property);
+
+                // 登録
+                Nodes.Add(treeNode);
             }
 
+            // 全て展開状態にする
+            ExpandAll();
+
             // ロギング
-            Logger.Debug("<<<<= TreeNodeDia::Update(DiagramProperties)");
+            Logger.Debug("<<<<= TreeNodeDia::Update(DiagramSequenceProperties, DiagramProperties)");
         }
         #endregion
 
+        #region 削除
         /// <summary>
         /// 削除
         /// </summary>
@@ -91,6 +99,9 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> TreeNodeDia::Remove(DiagramProperties)");
             Logger.DebugFormat("properties:[{0}]", properties);
 
+            // 削除対象ノード
+            List<TreeNodeDiagramDetail> removeNodes = new List<TreeNodeDiagramDetail>();
+
             // ノードを繰り返す
             foreach (DiagramProperty property in properties)
             {
@@ -100,14 +111,22 @@ namespace TrainTimeTable.Control
                     // ダイアグラム名判定
                     if (treeNode.Property.Name == property.Name)
                     {
-                        // ノード削除
-                        Nodes.Remove(treeNode);
+                        // 削除ノード登録
+                        removeNodes.Add(treeNode);
                     }
                 }
+            }
+
+            // ノード削除
+            foreach (TreeNodeDiagramDetail treeNode in removeNodes)
+            {
+                // ノード削除
+                Nodes.Remove(treeNode);
             }
 
             // ロギング
             Logger.Debug("<<<<= TreeNodeDia::Remove(DiagramProperties)");
         }
+        #endregion
     }
 }

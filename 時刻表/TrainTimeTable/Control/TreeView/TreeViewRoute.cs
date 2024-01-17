@@ -234,7 +234,7 @@ namespace TrainTimeTable.Control
             m_TrainType.Update(property.TrainTypes);
 
             // ダイヤグラムノード
-            m_DiagramNode.Update(property.Diagrams);
+            m_DiagramNode.Update(property.DiagramSequences, property.Diagrams);
 
             // コメントノード
             m_CommentNode.Update(property.Comment);

@@ -203,7 +203,7 @@ namespace TrainTimeTable
             m_ListBoxDiagram.UpdateSeq();
 
             // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::buttonCreateNew_Click(object, EventArgs)");
@@ -267,14 +267,17 @@ namespace TrainTimeTable
                 }
 
                 // ダイアグラム名変更
+                string oldDiagramName = result.Name;
+                string newDiagramName = formDiagramProperty.Property.Name;
                 m_RouteFileProperty.ChangeDiagramName(result.Name, formDiagramProperty.Property.Name);
                 formDiagramProperty.Property.ChangeDiagramName();
+                m_ListBoxDiagram.Update(m_RouteFileProperty.DiagramSequences, m_RouteFileProperty.Diagrams);
 
-                // 更新
-                m_ListBoxDiagram.Update(selectedIndex, formDiagramProperty.Property);
+                // 選択インデックスを元に戻す
+                m_ListBoxDiagram.SelectedIndex = selectedIndex;
 
                 // 更新通知
-                OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+                OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
             }
 
             // ロギング
@@ -346,7 +349,7 @@ namespace TrainTimeTable
             m_ListBoxDiagram.UpdateSeq();
 
             // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::buttonCopy_Click(object, EventArgs)");
@@ -479,7 +482,7 @@ namespace TrainTimeTable
             m_ListBoxDiagram.UpdateSeq();
 
             // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
 
             // 正常終了
             DialogResult = DialogResult.OK;
@@ -505,7 +508,7 @@ namespace TrainTimeTable
             m_OldRouteFileProperty.Copy(property);
 
             // リストボックス更新
-            m_ListBoxDiagram.Update(property.Diagrams);
+            m_ListBoxDiagram.Update(property.DiagramSequences, property.Diagrams);
 
             // リストボックス選択反映
             ListBoxSelectedReflection();
@@ -692,7 +695,7 @@ namespace TrainTimeTable
             m_ListBoxDiagram.SelectedIndex = selectedIndex - 1;
 
             // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::FormDiagramProperties_KeysShiftAndUp()");
@@ -739,7 +742,7 @@ namespace TrainTimeTable
             m_ListBoxDiagram.SelectedIndex = selectedIndex + 1;
 
             // 更新通知
-            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Properties = m_ListBoxDiagram.ToArray() });
+            OnUpdate(this, new DiagramPropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.DiagramSequences, Properties = m_ListBoxDiagram.ToArray() });
 
             // ロギング
             Logger.Debug("<<<<= FormDiagramProperties::FormDiagramProperties_KeysShiftAndDown()");

@@ -15,6 +15,11 @@ namespace TrainTimeTable.EventArgs
         /// <summary>
         /// DiagramPropertiesオブジェクト
         /// </summary>
+        public DiagramSequenceProperties Sequences { get; set; } = null;
+
+        /// <summary>
+        /// DiagramPropertiesオブジェクト
+        /// </summary>
         public DiagramProperties Properties { get; set; } = null;
     }
 }

@@ -71,7 +71,7 @@ namespace TrainTimeTable.Database.Table.Core
         /// 読込
         /// </summary>
         /// <returns></returns>
-        public T Load()
+        public virtual T Load()
         {
             // ロギング
             Logger.Debug("=>>>> TableListCore::Load()");

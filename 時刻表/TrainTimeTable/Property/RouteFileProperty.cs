@@ -295,13 +295,12 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
-
         #region ダイアグラム名変更
         /// <summary>
         /// ダイアグラム名変更
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="name"></param>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
         public void ChangeDiagramName(string oldName, string newName)
         {
             // ロギング

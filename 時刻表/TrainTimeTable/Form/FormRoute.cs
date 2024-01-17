@@ -966,6 +966,7 @@ namespace TrainTimeTable
             Logger.DebugFormat("e     :[{0}]", e);
 
             // コピー
+            m_CurrentRouteFileProperty.DiagramSequences.Copy(e.Sequences);
             m_CurrentRouteFileProperty.Diagrams.Copy(e.Properties);
 
             // 更新通知
