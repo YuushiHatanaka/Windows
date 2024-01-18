@@ -289,7 +289,7 @@ namespace TrainTimeTable.Control
                     var sortStationTimeProperties = m_StationTimeProperties[currentDateTime.Hour].OrderBy(t => t.DepartureTime);
 
                     // 存在していたら列車時刻分繰り返す
-                    foreach (var property in sortStationTimeProperties)//m_StationTimeProperties[currentDateTime.Hour])
+                    foreach (var property in sortStationTimeProperties)
                     {
                         // 追加文字列オブジェクト
                         StringBuilder sb = new StringBuilder();
@@ -298,7 +298,7 @@ namespace TrainTimeTable.Control
                         TrainProperty trainProperty = trainProperties.Find(t => t.Id == property.TrainId);
 
                         // 列車種別
-                        string trainType = m_DiaProFont[trainTypeProperties.Find(t => t.Name == trainProperty.TrainTypeName).Name];
+                        string trainType = m_DiaProFont[trainTypeProperties.GetTrainType(trainProperty.TrainTypeName).Name];
                         if (trainType != string.Empty) { sb.AppendLine(trainType); }
 
                         // 列車名取得
@@ -315,7 +315,7 @@ namespace TrainTimeTable.Control
 
                         // 登録
                         columns.Add(sb.ToString());
-                        colors.Add(trainTypeProperties.Find(t => t.Name == trainProperty.TrainTypeName).StringsColor);
+                        colors.Add(trainTypeProperties.GetTrainType(trainProperty.TrainTypeName).StringsColor);
                     }
                 }
 

@@ -7,8 +7,34 @@ using TrainTimeTable.Property;
 
 namespace TrainTimeTable.EventArgs
 {
+    /// <summary>
+    /// TrainTypePropertiesUpdateEventArgsクラス
+    /// </summary>
     public class TrainTypePropertiesUpdateEventArgs : System.EventArgs
     {
-        public TrainTypeProperties Property { get; set; } = null;
+        /// <summary>
+        /// 旧列車種別名
+        /// </summary>
+        public string OldTrainTypeName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 新列車種別名
+        /// </summary>
+        public string NewTrainTypeName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 旧TrainTypePropertiesオブジェクト
+        /// </summary>
+        public TrainTypeProperties OldProperties { get; set; } = new TrainTypeProperties();
+
+        /// <summary>
+        /// TrainTypePropertiesオブジェクト
+        /// </summary>
+        public TrainTypeProperties Properties { get; set; } = null;
+
+        /// <summary>
+        /// TrainTypeSequencePropertiesオブジェクト
+        /// </summary>
+        public TrainTypeSequenceProperties Sequences { get; set; } = null;
     }
 }

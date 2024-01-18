@@ -1,11 +1,13 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
@@ -39,14 +41,9 @@ namespace TrainTimeTable.Control
         #endregion
 
         /// <summary>
-        /// m_FontProperties
+        /// RouteFilePropertyオブジェクト
         /// </summary>
-        private FontProperties m_FontProperties = null;
-
-        /// <summary>
-        /// TrainTypePropertiesオブジェクト
-        /// </summary>
-        private TrainTypeProperties Property { get; set; } = new TrainTypeProperties();
+        private RouteFileProperty m_RouteFileProperty { get; set; } = null;
 
         #region コンストラクタ
         /// <summary>
@@ -103,6 +100,8 @@ namespace TrainTimeTable.Control
             ContextMenuStrip = contextMenuStrip;
             ContextMenuStrip.Opened += ContextMenuStripOpened;
             ContextMenuStrip.Items["pasting"].Enabled = false;
+            ContextMenuStrip.Items["up"].Enabled = false;
+            ContextMenuStrip.Items["down"].Enabled = false;
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType()");
@@ -111,22 +110,22 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="fonts"></param>
-        /// <param name="properties"></param>
-        public DataGridViewTrainType(FontProperties fonts, TrainTypeProperties properties)
+        /// <param name="property"></param>
+        public DataGridViewTrainType(RouteFileProperty property)
             : this()
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType(FontProperties, TrainTypeProperties)");
-            Logger.DebugFormat("fonts     :[{0}]", fonts);
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> DataGridViewTrainType::DataGridViewTrainType(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
 
-            m_FontProperties = fonts;
+            //　設定
+            m_RouteFileProperty = property;
 
-            Update(properties);
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType(FontProperties, TrainTypeProperties)");
+            Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType(RouteFileProperty)");
         }
         #endregion
 
@@ -143,7 +142,33 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            TrainTypeProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCutoutOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // クリップボードにコピー
+            Clipboard.SetDataObject(new TrainTypeProperty(result), true);
+
+            // シーケンス番号削除
+            m_RouteFileProperty.TrainTypeSequences.DeleteSequenceNumber(result);
+
+            // 削除
+            m_RouteFileProperty.TrainTypes.Remove(result);
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCutoutOnClick(object, EventArgs)");
@@ -161,7 +186,21 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            TrainTypeProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCopyOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // クリップボードにコピー
+            Clipboard.SetDataObject(new TrainTypeProperty(result), true);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCopyOnClick(object, EventArgs)");
@@ -179,7 +218,27 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainTypeProperty))))
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
+
+                // 対象外
+                return;
+            }
+
+            // コピー項目取得
+            TrainTypeProperty result = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
@@ -197,7 +256,27 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            TrainTypeProperty result = GetSelectedCondition();
+
+            // 選択状態設定
+            if (result == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDeleteOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // 列車種別削除
+            m_RouteFileProperty.RemoveTrainType(result);
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDeleteOnClick(object, EventArgs)");
@@ -215,7 +294,50 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // 選択インデックス判定
+            int index;
+            if (selectedIndex == -1)
+            {
+                index = m_RouteFileProperty.TrainTypes.Count + 1;
+            }
+            else
+            {
+                index = selectedIndex;
+            }
+
+            // FormTrainTypePropertyオブジェクト生成
+            FormTrainTypeProperty form = new FormTrainTypeProperty();
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeInsertOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
+
+            // 選択状態設定
+            if (selectedIndex < 0)
+            {
+                // 駅追加
+                m_RouteFileProperty.AddTrainType(form.Property);
+            }
+            else
+            {
+                // 駅挿入
+                m_RouteFileProperty.InsertTrainType(selectedIndex, form.Property);
+            }
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeInsertOnClick(object, EventArgs)");
@@ -233,7 +355,43 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // 選択状態設定
+            if (selectedIndex < 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeUpOnClick(object, EventArgs)");
+
+                // 未選択なので何もしない
+                return;
+            }
+
+            // インデックス判定
+            if (selectedIndex == 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeUpOnClick(object, EventArgs)");
+
+                // 先頭なので何もしない
+                return;
+            }
+
+            // 選択項目取得
+            TrainTypeProperty property = GetSelectedCondition();
+
+            // TrainTypeSequenceProperty取得
+            TrainTypeSequenceProperty sequenceProperty = m_RouteFileProperty.TrainTypeSequences.Find(t => t.Name == property.Name);
+
+            // 入れ替え
+            m_RouteFileProperty.TrainTypeSequences.ChangeOrder(sequenceProperty.Seq, sequenceProperty.Seq - 1);
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeUpOnClick(object, EventArgs)");
@@ -251,7 +409,43 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // 選択状態設定
+            if (selectedIndex < 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDownOnClick(object, EventArgs)");
+
+                // 未選択なので何もしない
+                return;
+            }
+
+            // インデックス判定
+            if (selectedIndex == RowCount - 1)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDownOnClick(object, EventArgs)");
+
+                // 末尾なので何もしない
+                return;
+            }
+
+            // 選択項目取得
+            TrainTypeProperty property = GetSelectedCondition();
+
+            // TrainTypeSequenceProperty取得
+            TrainTypeSequenceProperty sequenceProperty = m_RouteFileProperty.TrainTypeSequences.Find(t => t.Name == property.Name);
+
+            // 入れ替え
+            m_RouteFileProperty.TrainTypeSequences.ChangeOrder(sequenceProperty.Seq, sequenceProperty.Seq + 1);
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDownOnClick(object, EventArgs)");
@@ -270,21 +464,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainTypeProperty result = GetSelectedTrainTypeProperty();
+            TrainTypeProperty result = GetSelectedCondition();
 
-            // 選択状態設定
-            if (result != null)
-            {
-                FormTrainTypeProperty form = new FormTrainTypeProperty(m_FontProperties, result);
-                form.OnUpdate += DataGridViewTrainType_OnUpdate;
-
-                DialogResult dialogResult = form.ShowDialog();
-                if (dialogResult == DialogResult.OK)
-                {
-                    // イベント呼出
-                    OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Property = this.Property });
-                }
-            }
+            // 編集
+            Edit(result);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePropertyOnClick(object, EventArgs)");
@@ -304,7 +487,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainTypeProperty result = GetSelectedTrainTypeProperty();
+            TrainTypeProperty result = GetSelectedCondition();
 
             // 選択状態設定
             if (result == null)
@@ -318,6 +501,39 @@ namespace TrainTimeTable.Control
                 ContextMenuStrip.Items["cutout"].Enabled = true;
                 ContextMenuStrip.Items["copy"].Enabled = true;
                 ContextMenuStrip.Items["delete"].Enabled = true;
+            }
+
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainTypeProperty))))
+            {
+                ContextMenuStrip.Items["pasting"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["pasting"].Enabled = true;
+            }
+
+            // 選択インデクス取得
+            int selectedIndex = GetSelectedIndex();
+
+            // インデックス判定
+            if (selectedIndex == 0)
+            {
+                ContextMenuStrip.Items["up"].Enabled = false;
+                ContextMenuStrip.Items["down"].Enabled = true;
+            }
+            else if (selectedIndex == RowCount - 1)
+            {
+                ContextMenuStrip.Items["up"].Enabled = true;
+                ContextMenuStrip.Items["down"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["up"].Enabled = true;
+                ContextMenuStrip.Items["down"].Enabled = true;
             }
 
             // ロギング
@@ -345,10 +561,10 @@ namespace TrainTimeTable.Control
                 e.Graphics.FillRectangle(Brushes.White, e.CellBounds);
 
                 // セル内に線を描画するためのペンを作成
-                using (Pen pen = new Pen(Property[e.RowIndex].DiagramLineColor))
+                using (Pen pen = new Pen(m_RouteFileProperty.TrainTypes[e.RowIndex].DiagramLineColor))
                 {
                     // スタイル設定
-                    pen.DashStyle = Property[e.RowIndex].DiagramLineStyle;
+                    pen.DashStyle = m_RouteFileProperty.TrainTypes[e.RowIndex].DiagramLineStyle;
 
                     // 描画
                     e.Graphics.DrawLine(
@@ -405,19 +621,11 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // FormTrainTypePropertyオブジェクト生成
-            FormTrainTypeProperty form = new FormTrainTypeProperty(m_FontProperties, Property[e.RowIndex]);
-            form.OnUpdate += DataGridViewTrainType_OnUpdate;
+            // 選択項目取得
+            TrainTypeProperty result = GetSelectedCondition(e.RowIndex);
 
-            // FormTrainTypeProperty表示
-            DialogResult dialogResult = form.ShowDialog();
-
-            // FormTrainTypeProperty表示結果判定
-            if (dialogResult == DialogResult.OK)
-            {
-                // イベント呼出
-                OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Property = this.Property });
-            }
+            // 編集
+            Edit(result);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::DataGridViewTrainType_CellDoubleClick(object, DataGridViewCellEventArgs)");
@@ -446,34 +654,91 @@ namespace TrainTimeTable.Control
 
         #region privateメソッド
         /// <summary>
-        /// 選択StationProperty取得
+        /// 選択インデックス取得
         /// </summary>
         /// <returns></returns>
-        private TrainTypeProperty GetSelectedTrainTypeProperty()
+        private int GetSelectedIndex()
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+            Logger.Debug("=>>>> DataGridViewTrainType::GetSelectedCondition()");
 
             // 選択状態設定
             if (SelectedCells.Count == 0)
             {
                 // ロギング
-                Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+                Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition()");
+
+                // 選択なし
+                return -1;
+            }
+
+            // 選択インデックス設定
+            int result = SelectedCells[0].RowIndex;
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition()");
+
+            // 返却
+            return result;
+        }
+
+        #region 選択情報取得
+        /// <summary>
+        /// 選択情報取得
+        /// </summary>
+        /// <returns></returns>
+        private TrainTypeProperty GetSelectedCondition()
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::GetSelectedCondition()");
+
+            // 選択状態設定
+            if (SelectedCells.Count == 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition()");
 
                 // 選択なし
                 return null;
             }
 
             // 選択オブジェクト
-            TrainTypeProperty result = Property[SelectedCells[0].RowIndex];
+            TrainTypeProperty result = GetSelectedCondition(SelectedCells[0].RowIndex);
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedTrainTypeProperty()");
+            Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition()");
 
             // 返却
             return result;
         }
+
+        /// <summary>
+        /// 選択情報取得
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private TrainTypeProperty GetSelectedCondition(int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::GetSelectedCondition(int)");
+            Logger.DebugFormat("row:[{0}]", row);
+
+            // TrainTypeSequencePropertyオブジェクト取得
+            List<TrainTypeSequenceProperty> trainTypeSequence = m_RouteFileProperty.TrainTypeSequences.OrderBy(t => t.Seq).ToList();
+
+            // 選択オブジェクト
+            TrainTypeProperty result = m_RouteFileProperty.TrainTypes.Find(t => t.Name == trainTypeSequence[row].Name);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition(int)");
+
+            // 返却
+            return result;
+        }
+        #endregion
 
         #region 更新
         /// <summary>
@@ -487,10 +752,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("property:[{0}]", property);
 
             // コピー
-            Property.Find(t => t.Name == property.Name).Copy(property);
+            m_RouteFileProperty.TrainTypes.Find(t => t.Name == property.Name).Copy(property);
 
             // 更新
-            Update(Property);
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::Update(StationProperty)");
@@ -499,31 +764,32 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 更新
         /// </summary>
+        /// <param name="sequences"></param>
         /// <param name="properties"></param>
-        private void Update(TrainTypeProperties properties)
+        private void Update(TrainTypeSequenceProperties sequences, TrainTypeProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTrainType::Update(TrainTypeProperties)");
+            Logger.Debug("=>>>> DataGridViewTrainType::Update(TrainTypeSequenceProperties, TrainTypeProperties)");
+            Logger.DebugFormat("sequences :[{0}]", sequences);
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // 全行クリア
             Rows.Clear();
 
-            // プロパティ分繰り返す
-            int seq = 1;
-            foreach (var property in properties)
+            // シーケンス分繰り返す
+            foreach (var sequence in sequences.OrderBy(t => t.Seq))
             {
+                // TrainTypePropertyオブジェクト取得
+                TrainTypeProperty property = properties.Find(t=>t.Name == sequence.Name);
+
                 // 追加オブジェクト生成
                 List<string> values = new List<string>
                 {
-                    seq.ToString(),
+                    sequence.Seq.ToString(),
                     property.Name,
                     property.Abbreviation,
                     ""
                 };
-
-                // シーケンス番号更新
-                seq++;
 
                 // 行追加
                 Rows.Add(values.ToArray());
@@ -535,11 +801,70 @@ namespace TrainTimeTable.Control
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
-            // コピー
-            Property.Copy(properties);
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::Update(TrainTypeSequenceProperties, TrainTypeProperties)");
+        }
+        #endregion
+
+        #region 編集
+        /// <summary>
+        /// 編集
+        /// </summary>
+        /// <param name="property"></param>
+        private void Edit(TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::Edit(TrainTypeProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // TrainTypePropertiesUpdateEventArgsオブジェクト生成
+            TrainTypePropertiesUpdateEventArgs eventArgs = new TrainTypePropertiesUpdateEventArgs();
+            eventArgs.OldTrainTypeName = property.Name;
+            eventArgs.Properties = m_RouteFileProperty.TrainTypes;
+            eventArgs.Sequences = m_RouteFileProperty.TrainTypeSequences;
+            eventArgs.OldProperties.Copy(m_RouteFileProperty.TrainTypes);
+
+            // FormTrainTypePropertyオブジェクト生成
+            FormTrainTypeProperty form = new FormTrainTypeProperty(m_RouteFileProperty.Fonts, property);
+
+            // 結果判定
+            DialogResult dialogResult = form.ShowDialog();
+            if (dialogResult == DialogResult.OK)
+            {
+                // 駅名(キーが変更されたか？)
+                if (eventArgs.OldTrainTypeName != form.Property.Name)
+                {
+                    // 同一名判定
+                    if (m_RouteFileProperty.TrainTypes.Find(t => t.Name == form.Property.Name) != null)
+                    {
+                        // エラーメッセージ
+                        MessageBox.Show(string.Format("既に登録されている列車種別名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // イベント引数設定
+                    eventArgs.NewTrainTypeName = form.Property.Name;
+
+                    // 列車種別変更
+                    m_RouteFileProperty.ChangeTrainType(eventArgs.OldTrainTypeName, form.Property.Name);
+                }
+
+                // 結果保存
+                property.Copy(form.Property);
+
+                // 変更されたか？
+                if (!eventArgs.OldProperties.Compare(m_RouteFileProperty.TrainTypes))
+                {
+                    // 更新
+                    Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+                    // 更新通知
+                    OnUpdate(this, eventArgs);
+                }
+            }
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTrainType::Update(TrainTypeProperties)");
+            Logger.Debug("<<<<= DataGridViewTrainType::Edit(TrainTypeProperty)");
         }
         #endregion
         #endregion

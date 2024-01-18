@@ -204,7 +204,6 @@ namespace TrainTimeTable.Property
         /// </summary>
         /// <param name="seq"></param>
         /// <param name="property"></param>
-        /// <exception cref="NotImplementedException"></exception>
         public void InsertSequenceNumber(int seq, StationProperty property)
         {
             // ロギング

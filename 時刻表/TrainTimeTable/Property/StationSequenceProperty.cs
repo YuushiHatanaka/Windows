@@ -71,7 +71,7 @@ namespace TrainTimeTable.Property
         public StationSequenceProperty(int seq, StationProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> StationSequenceProperty::StationSequenceProperty(StationProperty)");
+            Logger.Debug("=>>>> StationSequenceProperty::StationSequenceProperty(int, StationProperty)");
             Logger.DebugFormat("seq     :[{0}]", seq);
             Logger.DebugFormat("property:[{0}]", property);
 
@@ -80,7 +80,7 @@ namespace TrainTimeTable.Property
             Seq = seq;
 
             // ロギング
-            Logger.Debug("<<<<= StationSequenceProperty::StationSequenceProperty(StationProperty)");
+            Logger.Debug("<<<<= StationSequenceProperty::StationSequenceProperty(int, StationProperty)");
         }
         #endregion
 

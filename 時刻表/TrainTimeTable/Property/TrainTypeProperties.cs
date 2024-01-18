@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Reflection;
@@ -132,6 +133,57 @@ namespace TrainTimeTable.Property
 
             // 一致
             return true;
+        }
+        #endregion
+
+        #region 列車種別取得
+        /// <summary>
+        /// 列車種別取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public TrainTypeProperty GetTrainType(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeProperties::GetTrainType(string)");
+
+            // TrainTypePropertyオブジェクト取得
+            TrainTypeProperty result = Find(t => t.Name == name);
+
+            // 取得結果判定
+            if (result == null)
+            {
+                // 文字色設定
+                result = new TrainTypeProperty();
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainTypeProperties::GetTrainType(string)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
+        #region 列車種別変更
+        /// <summary>
+        /// 列車種別変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeTrainType(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeProperties::ChangeTrainType(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 旧列車種別⇒新列車種別変換
+            FindAll(t => t.Name == oldName).ForEach(t => t.Name = newName);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeProperties::ChangeTrainType(string, string)");
         }
         #endregion
 

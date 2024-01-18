@@ -671,7 +671,7 @@ namespace TrainTimeTable.Control
                 Columns.Add(string.Format("Train{0}", train.Id), string.Format("{0}", train.No));
                 Columns[Columns.Count - 1].Width = 8 * m_RouteFileProperty.Route.TimetableTrainWidth;  // 列車
                 Columns[Columns.Count - 1].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = m_RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName).StringsColor;
+                Columns[Columns.Count - 1].DefaultCellStyle.ForeColor = m_RouteFileProperty.TrainTypes.GetTrainType(train.TrainTypeName).StringsColor;
             }
 
             // 固定列(発着)設定

@@ -789,7 +789,7 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
+                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.GetTrainType(train.TrainTypeName);
 
                 // 始発駅、終着駅StationTimePropertyを取得
                 StationTimeProperty startTime = RouteFileProperty.GetStartingStationTime(train, StationTreatment.Stop);
@@ -907,7 +907,7 @@ namespace TrainTimeTable.Common
             foreach (var train in properties)
             {
                 // TrainTypePropertyオブジェクト取得
-                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.Find(t => t.Name == train.TrainTypeName);
+                TrainTypeProperty trainTypeProperty = RouteFileProperty.TrainTypes.GetTrainType(train.TrainTypeName);
 
                 // 始発駅、終着駅StationTimePropertyを取得
                 StationTimeProperty startTime = RouteFileProperty.GetStartingStationTime(train, StationTreatment.Stop);
@@ -1335,7 +1335,7 @@ namespace TrainTimeTable.Common
             Bitmap img = new Bitmap(w, h);
 
             // ColorからSolidBrushに変換
-            SolidBrush brush = new SolidBrush(RouteFileProperty.TrainTypes.Find(t => t.Name == property.TrainTypeName).DiagramLineColor);
+            SolidBrush brush = new SolidBrush(RouteFileProperty.TrainTypes.GetTrainType(property.TrainTypeName).DiagramLineColor);
 
             //imgに文字列を描画する
             Graphics bg = Graphics.FromImage(img);

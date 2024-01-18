@@ -148,6 +148,165 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region シーケンス番号関連
+        /// <summary>
+        /// シーケンス番号削除
+        /// </summary>
+        /// <param name="property"></param>
+        public void DeleteSequenceNumber(TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::DeleteSequenceNumber(TrainTypeProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // TrainTypeSequencePropertyオブジェクト取得
+            TrainTypeSequenceProperty targetTrainTypeSequenceProperty = Find(s => s.Name == property.Name);
+
+            // リストから削除
+            Remove(targetTrainTypeSequenceProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::DeleteSequenceNumber(TrainTypeProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号追加
+        /// </summary>
+        /// <param name="property"></param>
+        public void AddSequenceNumber(TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::AddSequenceNumber(TrainTypeProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 最大シーケンス番号取得
+            int insertSeq = this.Max(s => s.Seq) + 1;
+
+            // シーケンス番号挿入
+            InsertSequenceNumber(insertSeq, property);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::AddSequenceNumber(TrainTypeProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号挿入
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="property"></param>
+        public void InsertSequenceNumber(int seq, TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::InsertSequenceNumber(int, TrainTypeProperty)");
+            Logger.DebugFormat("seq     :[{0}]", seq);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // TrainTypeSequencePropertyオブジェクト生成
+            TrainTypeSequenceProperty targetTrainTypeSequenceProperty = new TrainTypeSequenceProperty(seq, property);
+
+            // 挿入
+            Insert(seq, targetTrainTypeSequenceProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::InsertSequenceNumber(int, TrainTypeProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号入れ替え
+        /// </summary>
+        /// <param name="oldSequence"></param>
+        /// <param name="newSequence"></param>
+        public void ChangeOrder(int oldSequence, int newSequence)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::ChangeOrder(int, int)");
+            Logger.DebugFormat("oldSequence:[{0}]", oldSequence);
+            Logger.DebugFormat("newSequence:[{0}]", newSequence);
+
+            // パラメータチェック
+            if (newSequence > this.Max(t=>t.Seq))
+            {
+                // ロギング
+                Logger.FatalFormat("引数エラー:[newIndex={0}][Max=[{1}]", newSequence, this.Max(t => t.Seq));
+                Logger.Debug("<<<<= ListTrainTypeProperty::ChangeOrder(int, int)");
+
+                // 例外
+                throw new ArgumentOutOfRangeException(nameof(newSequence));
+            }
+
+            // 新旧判定
+            if (oldSequence == newSequence)
+            {
+                // ロギング
+                Logger.WarnFormat("パラメータ同一のためインデックス変更なし:[{0}][{1}]", oldSequence, newSequence);
+                Logger.Debug("<<<<= ListTrainTypeProperty::ChangeOrder(int, int)");
+
+                // 終了
+                return;
+            }
+
+            // TrainTypeSequencePropertyオブジェクト設定
+            TrainTypeSequenceProperty oldProperty = Find(t => t.Seq == oldSequence);
+            TrainTypeSequenceProperty newProperty = Find(t => t.Seq == newSequence);
+            TrainTypeSequenceProperty tmpProperty = new TrainTypeSequenceProperty(oldProperty);
+
+            // 入れ替え
+            oldProperty.Copy(newProperty);
+            newProperty.Copy(tmpProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::ChangeOrder(int, int)");
+        }
+
+        /// <summary>
+        /// シーケンス番号再構築
+        /// </summary>
+        private void SequenceNumberReconstruction()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::SequenceNumberReconstruction()");
+
+            // シーケンス番号再付与
+            int seq = 1;
+            foreach (var property in this)
+            {
+                // 設定
+                property.Seq = seq++;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::SequenceNumberReconstruction()");
+        }
+        #endregion
+
+        /// <summary>
+        /// 列車種別変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeTrainType(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::ChangeTrainType(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 旧列車種別⇒新列車種別変換
+            FindAll(t => t.Name == oldName).ForEach(t => t.Name = newName);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::ChangeTrainType(string, string)");
+        }
+
         #region 文字列化
         /// <summary>
         /// 文字列化

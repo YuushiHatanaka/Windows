@@ -27,20 +27,6 @@ namespace TrainTimeTable
         private static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
-        #region 更新 Event
-        /// <summary>
-        /// 更新 event delegate
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public delegate void UpdateEventHandler(object sender, TrainTypePropertyUpdateEventArgs e);
-
-        /// <summary>
-        /// 更新 event
-        /// </summary>
-        public event UpdateEventHandler OnUpdate = delegate { };
-        #endregion
-
         /// <summary>
         /// TrainTypePropertyオブジェクト
         /// </summary>
@@ -67,6 +53,18 @@ namespace TrainTimeTable
         private ComboBoxStopStationClearlyIndicated m_ComboBoxStopStationClearlyIndicated = new ComboBoxStopStationClearlyIndicated();
 
         #region コンストラクタ
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public FormTrainTypeProperty()
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty()");
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty()");
+        }
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -180,9 +178,6 @@ namespace TrainTimeTable
 
             // 変換
             ControlToProperty();
-
-            // イベント呼出
-            OnUpdate(this, new TrainTypePropertyUpdateEventArgs() { Property = Property });
 
             // 正常終了
             DialogResult = DialogResult.OK;

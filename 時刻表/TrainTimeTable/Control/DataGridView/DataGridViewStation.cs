@@ -165,9 +165,7 @@ namespace TrainTimeTable.Control
             Update(m_RouteFileProperty.Stations);
 
             // イベント呼出
-            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations });
-
-            // TODO:シーケンス更新(イベント呼出)
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationCutoutOnClick(object, EventArgs)");
@@ -254,8 +252,6 @@ namespace TrainTimeTable.Control
             // イベント呼出
             OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
-            // TODO:シーケンス更新(イベント呼出)
-
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
         }
@@ -285,11 +281,8 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // シーケンス番号削除
-            m_RouteFileProperty.StationSequences.DeleteSequenceNumber(result);
-
-            // 削除
-            m_RouteFileProperty.Stations.Remove(result);
+            // 駅削除
+            m_RouteFileProperty.RemoveStation(result);
 
             // 更新
             Update(m_RouteFileProperty.Stations);
@@ -387,7 +380,7 @@ namespace TrainTimeTable.Control
                 if (dialogResult == DialogResult.OK)
                 {
                     // イベント呼出
-                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations });
+                    OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
                 }
             }
 
@@ -481,9 +474,8 @@ namespace TrainTimeTable.Control
                 StationPropertiesUpdateEventArgs eventArgs = new StationPropertiesUpdateEventArgs();
                 eventArgs.OldProperties.Copy(m_RouteFileProperty.Stations);
                 eventArgs.Properties = m_RouteFileProperty.Stations;
-
-                // 旧駅名保存
-                string oldStationName = property.Name;
+                eventArgs.Sequences = m_RouteFileProperty.StationSequences;
+                eventArgs.OldStationName = property.Name;
 
                 // FormStationPropertyオブジェクト生成
                 FormStationProperty form = new FormStationProperty(property);
@@ -494,22 +486,22 @@ namespace TrainTimeTable.Control
                 // FormStationProperty表示結果判定
                 if (dialogResult == DialogResult.OK)
                 {
-                    // 同一名判定
-                    if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
-                    {
-                        // エラーメッセージ
-                        MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                        return;
-                    }
-
                     // 駅名(キーが変更されたか？)
-                    if (oldStationName != form.Property.Name)
+                    if (eventArgs.OldStationName != form.Property.Name)
                     {
-                        eventArgs.OldStationName = oldStationName;
+                        // 同一名判定
+                        if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
+                        {
+                            // エラーメッセージ
+                            MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        // イベント引数設定
                         eventArgs.NewStationName = form.Property.Name;
 
                         // 駅名変換
-                        m_RouteFileProperty.ChangeStationName(oldStationName, form.Property.Name);
+                        m_RouteFileProperty.ChangeStationName(eventArgs.OldStationName, form.Property.Name);
                     }
 
                     // 結果保存

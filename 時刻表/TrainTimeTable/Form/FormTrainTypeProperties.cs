@@ -43,9 +43,9 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
-        /// TrainTypePropertiesオブジェクト
+        /// RouteFilePropertyオブジェクト
         /// </summary>
-        private TrainTypeProperties m_TrainTypeProperties = null;
+        private RouteFileProperty m_RouteFileProperty { get; set; } = null;
 
         /// <summary>
         /// DataGridViewTrainTypeオブジェクト
@@ -61,25 +61,23 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <param name="fonts"></param>
         /// <param name="properties"></param>
-        public FormTrainTypeProperties(FontProperties fonts, TrainTypeProperties properties)
+        public FormTrainTypeProperties(RouteFileProperty property)
         {
             // ロギング
-            Logger.Debug("=>>>> FormTrainTypeProperties::FormTrainTypeProperties(StationProperties)");
-            Logger.DebugFormat("fonts     :[{0}]", fonts);
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> FormTrainTypeProperties::FormTrainTypeProperties(RouteFileProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
-            m_TrainTypeProperties = properties;
-            m_DataGridViewTrainType = new DataGridViewTrainType(fonts, properties);
+            m_RouteFileProperty = property;
+            m_DataGridViewTrainType = new DataGridViewTrainType(property);
             m_DataGridViewTrainType.OnUpdate += DataGridViewTrainType_OnUpdate;
 
             // ロギング
-            Logger.Debug("<<<<= FormTrainTypeProperties::FormTrainTypeProperties(StationProperties)");
+            Logger.Debug("<<<<= FormTrainTypeProperties::FormTrainTypeProperties(RouteFileProperty)");
         }
         #endregion
 

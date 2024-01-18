@@ -54,7 +54,7 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// ダイヤグラム線スタイル
         /// </summary>
-        public DashStyle DiagramLineStyle { get; set; } = DashStyle.Dash;
+        public DashStyle DiagramLineStyle { get; set; } = DashStyle.Solid;
 
         /// <summary>
         /// ダイヤグラム線スタイル(太線)

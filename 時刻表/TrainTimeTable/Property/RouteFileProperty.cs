@@ -140,9 +140,11 @@ namespace TrainTimeTable.Property
                 Stations.Copy(property.Stations);
                 StationSequences.Copy(property.StationSequences);
                 TrainTypes.Copy(property.TrainTypes);
+                TrainTypeSequences.Copy(property.TrainTypeSequences);
                 Comment.Clear();
                 Comment.Append(property.Comment);
                 Diagrams.Copy(property.Diagrams);
+                DiagramSequences.Copy(property.DiagramSequences);
             }
 
             // ロギング
@@ -235,6 +237,15 @@ namespace TrainTimeTable.Property
                 // 不一致
                 return false;
             }
+            if (!TrainTypeSequences.Compare(property.TrainTypeSequences))
+            {
+                // ロギング
+                Logger.DebugFormat("TrainTypeSequences:[不一致][{0}][{1}]", TrainTypeSequences, property.TrainTypeSequences);
+                Logger.Debug("<<<<= RouteFileProperty::Compare(RouteFileProperty)");
+
+                // 不一致
+                return false;
+            }
             if (Comment.ToString() != property.Comment.ToString())
             {
                 // ロギング
@@ -253,6 +264,15 @@ namespace TrainTimeTable.Property
                 // 不一致
                 return false;
             }
+            if (!DiagramSequences.Compare(property.DiagramSequences))
+            {
+                // ロギング
+                Logger.DebugFormat("DiagramSequences:[不一致][{0}][{1}]", DiagramSequences, property.DiagramSequences);
+                Logger.Debug("<<<<= RouteFileProperty::Compare(RouteFileProperty)");
+
+                // 不一致
+                return false;
+            }
 
             // ロギング
             Logger.DebugFormat("result:[一致]");
@@ -263,6 +283,7 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region ダイアグラム関連
         #region ダイヤグラム登録
         /// <summary>
         /// ダイヤグラム登録
@@ -320,7 +341,9 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= RouteFileProperty::ChangeDiagramName(string, string)");
         }
         #endregion
+        #endregion
 
+        #region 駅関連
         #region 駅追加
         /// <summary>
         /// 駅追加
@@ -359,6 +382,30 @@ namespace TrainTimeTable.Property
             StationSequences.InsertSequenceNumber(index, property);
             Stations.Insert(index, property);
             Diagrams.InsertStation(index, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::InsertStation(int, StationProperty)");
+        }
+        #endregion
+
+        #region 駅削除
+        /// <summary>
+        /// 駅削除
+        /// </summary>
+        /// <param name="result"></param>
+        public void RemoveStation(StationProperty removeProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::RemoveStation(StationProperty)");
+            Logger.DebugFormat("removeProperty:[{0}]", removeProperty);
+
+            // 各プロパティで駅削除
+            StationSequences.DeleteSequenceNumber(removeProperty);
+            Stations.Remove(removeProperty);
+            Diagrams.RemoveStation(removeProperty);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::RemoveStation(StationProperty)");
         }
         #endregion
 
@@ -366,8 +413,8 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// 駅名変更
         /// </summary>
-        /// <param name="oldStationName"></param>
-        /// <param name="name"></param>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
         public void ChangeStationName(string oldName, string newName)
         {
             // ロギング
@@ -681,6 +728,95 @@ namespace TrainTimeTable.Property
             // 返却
             return result;
         }
+        #endregion
+        #endregion
+
+        #region 列車種別駅関連
+        #region 列車種別追加
+        /// <summary>
+        /// 列車種別追加
+        /// </summary>
+        /// <param name="property"></param>
+        public void AddTrainType(TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::AddTrainType(TrainTypeProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車種別追加
+            TrainTypeSequences.AddSequenceNumber(property);
+            TrainTypes.Add(property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::AddTrainType(TrainTypeProperty)");
+        }
+        #endregion
+
+        #region 列車種別挿入
+        /// <summary>
+        /// 列車種別挿入
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void InsertTrainType(int index, TrainTypeProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::InsertTrainType(int, TrainTypeProperty)");
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車種別挿入
+            TrainTypeSequences.InsertSequenceNumber(index, property);
+            TrainTypes.Add(property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::InsertTrainType(int, TrainTypeProperty)");
+        }
+        #endregion
+
+        #region 列車種別削除
+        /// <summary>
+        /// 列車種別削除
+        /// </summary>
+        /// <param name="removeProperty"></param>
+        internal void RemoveTrainType(TrainTypeProperty removeProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::RemoveTrainType(TrainTypeProperty)");
+            Logger.DebugFormat("removeProperty:[{0}]", removeProperty);
+
+            // 各プロパティで列車種別削除
+            TrainTypeSequences.DeleteSequenceNumber(removeProperty);
+            TrainTypes.Remove(removeProperty);
+            Diagrams.RemoveTrainType(removeProperty);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::RemoveTrainType(TrainTypeProperty)");
+        }
+        #endregion
+
+        #region 列車種別変更
+        /// <summary>
+        /// 列車種別変更
+        /// </summary>
+        /// <param name="oldStationName"></param>
+        /// <param name="name"></param>
+        public void ChangeTrainType(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::ChangeTrainType(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // 各プロパティで列車種別変更
+            TrainTypes.ChangeTrainType(oldName, newName);
+            TrainTypeSequences.ChangeTrainType(oldName, newName);
+            Diagrams.ChangeTrainType(oldName, newName);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::ChangeTrainType(string, string)");
+        }
+        #endregion
         #endregion
 
         #region StationTimeProperty取得

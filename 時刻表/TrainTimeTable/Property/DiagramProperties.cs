@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Util;
 using System.Windows.Forms;
 using TrainTimeTable.Common;
 using TrainTimeTable.Component;
@@ -281,6 +282,40 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 駅削除
+        /// <summary>
+        /// 駅削除
+        /// </summary>
+        /// <param name="removeProperty"></param>
+        public void RemoveStation(StationProperty removeProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::RemoveStation(StationProperty)");
+            Logger.DebugFormat("removeProperty:[{0}]", removeProperty);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach (var direction in property.Trains.Values)
+                {
+                    // 列車分繰り返す
+                    foreach (var train in direction)
+                    {
+                        // 削除オブジェクト取得
+                        StationTimeProperty removeStationTimeProperty = train.StationTimes.Find(s => s.StationName == removeProperty.Name);
+
+                        // 削除
+                        train.StationTimes.Remove(removeStationTimeProperty);
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::RemoveStation(StationProperty)");
+        }
+        #endregion
+
         #region 駅名変更
         /// <summary>
         /// 駅名変更
@@ -325,6 +360,69 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= DiagramProperties::ChangeStationName(string, string)");
+        }
+        #endregion
+
+        #region 列車種別変更
+        /// <summary>
+        /// 列車種別変更
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        public void ChangeTrainType(string oldName, string newName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::ChangeTrainType(string, string)");
+            Logger.DebugFormat("oldName:[{0}]", oldName);
+            Logger.DebugFormat("newName:[{0}]", newName);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach (var direction in property.Trains.Values)
+                {
+                    // 列車種別が一致する列車を全て検索して変換
+                    direction.FindAll(t => t.TrainTypeName == oldName).ForEach(t => t.TrainTypeName = newName);
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::ChangeTrainType(string, string)");
+        }
+        #endregion
+
+        #region 列車種別削除
+        /// <summary>
+        /// 列車種別削除
+        /// </summary>
+        /// <param name="removeProperty"></param>
+        public void RemoveTrainType(TrainTypeProperty removeProperty)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::RemoveTrainType(StationProperty)");
+            Logger.DebugFormat("removeProperty:[{0}]", removeProperty);
+
+            // ダイヤ数分繰り返す
+            foreach (var property in this)
+            {
+                // 列車下り上り分繰り返す
+                foreach (var direction in property.Trains.Values)
+                {
+                    // 列車種別が一致する列車を全て検索
+                    List<TrainProperty> targetTrain = direction.FindAll(t => t.TrainTypeName == removeProperty.Name);
+
+                    // 検索結果を繰り返す
+                    foreach (TrainProperty train in targetTrain)
+                    {
+                        // 列車種別名をクリア
+                        train.TrainTypeName = string.Empty;
+                    }
+                }
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::RemoveTrainType(StationProperty)");
         }
         #endregion
 
