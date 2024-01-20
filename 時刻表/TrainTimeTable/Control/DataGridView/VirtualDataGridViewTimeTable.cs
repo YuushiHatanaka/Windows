@@ -6,8 +6,10 @@ using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Configuration;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using TrainTimeTable.Common;
@@ -203,6 +205,43 @@ namespace TrainTimeTable.Control
             RowDirtyStateNeeded += new QuestionEventHandler(VirtualDataGridViewTimeTable_RowDirtyStateNeeded);
             CancelRowEdit += new QuestionEventHandler(VirtualDataGridViewTimeTable_CancelRowEdit);
             UserDeletingRow += new DataGridViewRowCancelEventHandler(VirtualDataGridViewTimeTable_UserDeletingRow);
+
+            // コンテキストメニュー追加
+            ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
+            contextMenuStrip.Items.AddRange
+            (
+                new ToolStripItem[]
+                {
+                    new ToolStripMenuItem("切り取り(&T)", null, CutoutOnClick,"cutout"){ ShortcutKeys = (Keys.Control|Keys.X) },
+                    new ToolStripMenuItem("コピー(&C)", null, CopyOnClick,"copy"){ ShortcutKeys = (Keys.Control|Keys.C) },
+                    new ToolStripMenuItem("貼り付け(&P)", null, PastingOnClick,"pasting"){ ShortcutKeys = (Keys.Control|Keys.V) },
+                    new ToolStripMenuItem("消去", null, DeleteOnClick,"delete"){ ShortcutKeys = Keys.Delete },
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("時刻のみ貼り付け", null, PasteOnlyTheTimeOnClick,"paste_only_the_time"),
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("列車のプロパティ(&A)", null, TrainPropertiesOnClick,"train_properties"){ ShortcutKeys = (Keys.Control|Keys.Enter) },
+                    new ToolStripMenuItem("列車の挿入(&A)", null, TrainInsertionOnClick,"train_insertion"){ ShortcutKeys = (Keys.Control|Keys.Enter) },
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("駅時刻のプロパティ(&A)", null, StationTimePropertiesOnClick,"station_time_properties"){ ShortcutKeys = (Keys.Control|Keys.Enter) },
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("前の列車と入れ替え", null, ReplaceThePreviousTrainOnClick,"replace_the_previous_train"),
+                    new ToolStripMenuItem("後の列車と入れ替え",null, ReplaceWithNextTrainOnClick,"replace_with_next_train"),
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("時刻消去", null, EraseTimeOnClick,"erase_time"),
+                    new ToolStripMenuItem("通過", null, PassingOnClick,"passing"),
+                    new ToolStripMenuItem("通過-停車", null, PassingStoppingOnClick,"passing_stopping"),
+                    new ToolStripMenuItem("経由なし", null, NoRouteOnClick,"no_route"),
+                    new ToolStripSeparator(),
+                    new ToolStripMenuItem("当駅始発", null, FirstTrainFromThisStationOnClick,"first_train_from_this_station"),
+                    new ToolStripMenuItem("当駅止り", null, StopsAtThisStationOnClick,"stops_at_this_station"),
+                    new ToolStripMenuItem("直通化", null, DirectCommunicationOnClick,"direct_communication"),
+                    new ToolStripMenuItem("分断", null, DivisionOnClick,"division"),
+                }
+            );
+
+            // コントロール設定
+            ContextMenuStrip = contextMenuStrip;
+            ContextMenuStrip.Opened += ContextMenuStripOpened;
 
             // イベント設定
             ColumnAdded += new DataGridViewColumnEventHandler(VirtualDataGridViewTimeTable_ColumnAdded);
@@ -486,7 +525,7 @@ namespace TrainTimeTable.Control
                 else
                 {
                     // 前カラムと値が同じか判定
-                    if (!IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
+                    if (!IsTheSameCellValue(e.ColumnIndex, 0, e.RowIndex, -1))
                     {
                         // セルの上側の境界線を既定の境界線に設定
                         e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
@@ -526,7 +565,7 @@ namespace TrainTimeTable.Control
             if ((e.ColumnIndex == 2) && (e.RowIndex > 0))
             {
                 // 前カラムと値が同じか判定
-                if (IsTheSameCellValue(e.ColumnIndex, e.RowIndex))
+                if (IsTheSameCellValue(e.ColumnIndex, 0, e.RowIndex, -1))
                 {
                     e.Value = "";
                     e.FormattingApplied = true; // 以降の書式設定は不要
@@ -573,6 +612,350 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::VirtualDataGridViewTimeTable_MouseDoubleClick(object, MouseEventArgs)");
+        }
+        #endregion
+
+        #region ContextMenuStripイベント
+        /// <summary>
+        /// CutoutOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CutoutOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::CutoutOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::CutoutOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// CopyOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CopyOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::CopyOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::CopyOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// PastingOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PastingOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PastingOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// DeleteOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DeleteOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DeleteOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DeleteOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// PasteOnlyTheTimeOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PasteOnlyTheTimeOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PasteOnlyTheTimeOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PasteOnlyTheTimeOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// TrainPropertiesOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TrainPropertiesOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::TrainPropertiesOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::TrainPropertiesOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// TrainInsertionOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TrainInsertionOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::TrainInsertionOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::TrainInsertionOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// StationTimePropertiesOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StationTimePropertiesOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::StationTimePropertiesOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StationTimePropertiesOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// ReplaceThePreviousTrainOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReplaceThePreviousTrainOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ReplaceThePreviousTrainOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceThePreviousTrainOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// ReplaceWithNextTrainOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReplaceWithNextTrainOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ReplaceWithNextTrainOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceWithNextTrainOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// EraseTimeOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EraseTimeOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EraseTimeOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EraseTimeOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// PassingOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PassingOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PassingOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PassingOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// PassingStoppingOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PassingStoppingOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PassingStoppingOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PassingStoppingOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// NoRouteOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NoRouteOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::NoRouteOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::NoRouteOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// FirstTrainFromThisStationOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FirstTrainFromThisStationOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::FirstTrainFromThisStationOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::FirstTrainFromThisStationOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// StopsAtThisStationOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StopsAtThisStationOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::StopsAtThisStationOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StopsAtThisStationOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// DirectCommunicationOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DirectCommunicationOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DirectCommunicationOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DirectCommunicationOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// DivisionOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DivisionOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DivisionOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DivisionOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// ContextMenuStripOpened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ContextMenuStripOpened(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ContextMenuStripOpened(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TODO:未実装
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ContextMenuStripOpened(object, EventArgs)");
         }
         #endregion
         #endregion
@@ -1147,50 +1530,60 @@ namespace TrainTimeTable.Control
         #endregion
 
         /// <summary>
-        /// 指定したセルと1つ上のセルの値を比較
+        /// 指定したセル比較
         /// </summary>
         /// <param name="column"></param>
+        /// <param name="columnOffset"></param>
         /// <param name="row"></param>
+        /// <param name="rowOffset"></param>
         /// <returns></returns>
-        private bool IsTheSameCellValue(int column, int row)
+        private bool IsTheSameCellValue(int column, int columnOffset, int row, int rowOffset)
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int)");
-            Logger.DebugFormat("column:[{0}]", column);
-            Logger.DebugFormat("row   :[{0}]", row);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int, int, int)");
+            Logger.DebugFormat("column      :[{0}]", column);
+            Logger.DebugFormat("columnOffset:[{0}]", columnOffset);
+            Logger.DebugFormat("row         :[{0}]", row);
+            Logger.DebugFormat("rowOffset   :[{0}]", rowOffset);
 
-            DataGridViewCell cell1 = this[column, row];
-            DataGridViewCell cell2 = this[column, row - 1];
+            // 結果設定
+            bool result = true;
 
-            if (cell1.Value == null || cell2.Value == null)
+            // DataGridViewCellオブジェクト取得
+            DataGridViewCell srcDataGridViewCell = this[column, row];
+            DataGridViewCell dstDataGridViewCell = this[column + columnOffset, row + rowOffset];
+
+            // ロギング
+            Logger.DebugFormat("srcDataGridViewCell:[{0}]", srcDataGridViewCell.Value);
+            Logger.DebugFormat("dstDataGridViewCell:[{0}]", dstDataGridViewCell.Value);
+
+            // 判定用ループ
+            do
             {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", false);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
+                // セルの値を判定
+                if (srcDataGridViewCell.Value == null || dstDataGridViewCell.Value == null)
+                {
+                    // 結果設定
+                    result = false;
+                    break;
+                }
 
-                // 不一致(false)を返却
-                return false;
-            }
+                // 文字列としてセルの値を比較
+                if (srcDataGridViewCell.Value.ToString() != dstDataGridViewCell.Value.ToString())
+                {
+                    // 結果設定
+                    result = false;
+                    break;
+                }
+                break;
+            } while (true);
 
-            // ここでは文字列としてセルの値を比較
-            if (cell1.Value.ToString() == cell2.Value.ToString())
-            {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", true);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int, int, int)");
 
-                // 一致(true)を返却
-                return true;
-            }
-            else
-            {
-                // ロギング
-                Logger.DebugFormat("result:[{0}]", false);
-                Logger.Debug("<<<<= DataGridViewTimetable::IsTheSameCellValue(int, int)");
-
-                // 不一致(false)を返却
-                return false;
-            }
+            // 返却
+            return result;
         }
 
         #region 描画文字列取得

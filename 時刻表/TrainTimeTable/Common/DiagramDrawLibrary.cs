@@ -1335,7 +1335,7 @@ namespace TrainTimeTable.Common
             Bitmap img = new Bitmap(w, h);
 
             // ColorからSolidBrushに変換
-            SolidBrush brush = new SolidBrush(RouteFileProperty.TrainTypes.GetTrainType(property.TrainTypeName).DiagramLineColor);
+            SolidBrush brush = new SolidBrush(RouteFileProperty.TrainTypes.GetTrainType(property.TrainTypeName).StringsColor);
 
             //imgに文字列を描画する
             Graphics bg = Graphics.FromImage(img);

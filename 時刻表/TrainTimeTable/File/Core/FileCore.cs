@@ -172,8 +172,8 @@ namespace TrainTimeTable.File.Core
             // 最終駅は下り着駅にする
             m_RouteFileProperty.Stations[m_RouteFileProperty.Stations.Count - 1].TimeFormat = TimeFormat.OutboundArrivalTime;
 
-            // 線種別(データなし削除)
-            m_RouteFileProperty.TrainTypes.RemoveNoData();
+            // 列車種別(データなし削除)
+            m_RouteFileProperty.TrainTypesRemoveNoData();
 
             // 発着駅設定
             m_RouteFileProperty.Diagrams.DepartureArrivalStationSetting();

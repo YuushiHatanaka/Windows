@@ -817,6 +817,24 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= RouteFileProperty::ChangeTrainType(string, string)");
         }
         #endregion
+
+        #region 列車種別駅関連
+        /// <summary>
+        /// 列車種別(データなし削除)
+        /// </summary>
+        public void TrainTypesRemoveNoData()
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::TrainTypesRemoveNoData()");
+
+            // 各プロパティで実施
+            TrainTypes.RemoveNoData();
+            TrainTypeSequences.RemoveNoData();
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::TrainTypesRemoveNoData()");
+        }
+        #endregion
         #endregion
 
         #region StationTimeProperty取得

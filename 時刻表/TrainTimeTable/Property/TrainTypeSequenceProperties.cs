@@ -254,14 +254,12 @@ namespace TrainTimeTable.Property
             // TrainTypeSequencePropertyオブジェクト設定
             TrainTypeSequenceProperty oldProperty = Find(t => t.Seq == oldSequence);
             TrainTypeSequenceProperty newProperty = Find(t => t.Seq == newSequence);
-            TrainTypeSequenceProperty tmpProperty = new TrainTypeSequenceProperty(oldProperty);
+            int oldSequenceNo = oldProperty.Seq;
+            int newSequenceNo = newProperty.Seq;
 
             // 入れ替え
-            oldProperty.Copy(newProperty);
-            newProperty.Copy(tmpProperty);
-
-            // シーケンス番号再構築
-            SequenceNumberReconstruction();
+            oldProperty.Seq = newSequenceNo;
+            newProperty.Seq = oldSequenceNo;
 
             // ロギング
             Logger.Debug("<<<<= TrainTypeSequenceProperties::ChangeOrder(int, int)");
@@ -288,6 +286,7 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 列車種別変更
         /// <summary>
         /// 列車種別変更
         /// </summary>
@@ -306,6 +305,34 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= TrainTypeSequenceProperties::ChangeTrainType(string, string)");
         }
+        #endregion
+
+        #region データなし削除
+        /// <summary>
+        /// データなし削除
+        /// </summary>
+        public void RemoveNoData()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceProperties::RemoveNoData()");
+
+            List<TrainTypeSequenceProperty> removeList = new List<TrainTypeSequenceProperty>();
+            foreach (var trainType in this)
+            {
+                if (trainType.Name == string.Empty)
+                {
+                    removeList.Add(trainType);
+                }
+            }
+            foreach (var property in removeList)
+            {
+                Remove(property);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainTypeSequenceProperties::RemoveNoData()");
+        }
+        #endregion
 
         #region 文字列化
         /// <summary>

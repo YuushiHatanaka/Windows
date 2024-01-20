@@ -11,6 +11,7 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
+using static log4net.Appender.ColoredConsoleAppender;
 
 namespace TrainTimeTable.Control
 {
@@ -74,6 +75,10 @@ namespace TrainTimeTable.Control
             Columns.Add("TrainTypeName", "列車種別名");
             Columns.Add("Abbreviation", "略称");
             Columns.Add("LineStyle", "線スタイル");
+            Columns[0].Width = 24;
+            Columns[1].Width = 128;
+            Columns[2].Width = 64;
+            Columns[3].Width = 96;
             CellPainting += DataGridViewTrainType_CellPainting;
             CellDoubleClick += DataGridViewTrainType_CellDoubleClick;
 
@@ -393,6 +398,12 @@ namespace TrainTimeTable.Control
             // イベント呼出
             OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
+            // 選択行を全て解除
+            ClearSelection();
+
+            // 選択行設定
+            Rows[selectedIndex - 1].Selected = true;
+
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeUpOnClick(object, EventArgs)");
         }
@@ -446,6 +457,12 @@ namespace TrainTimeTable.Control
 
             // イベント呼出
             OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
+
+            // 選択行を全て解除
+            ClearSelection();
+
+            // 選択行設定
+            Rows[selectedIndex + 1].Selected = true;
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeDownOnClick(object, EventArgs)");
@@ -554,17 +571,94 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // 線スタイルのセルか？
-            if (e.RowIndex >= 0 && e.ColumnIndex == 3)
+            // 略称のセルか？
+            if (e.RowIndex >= 0 && e.ColumnIndex == 2)
             {
+                // TrainTypePropertyオブジェクト取得
+                TrainTypeProperty property = GetSelectedCondition(e.RowIndex);
+
                 // 背景を塗りつぶす色を指定
-                e.Graphics.FillRectangle(Brushes.White, e.CellBounds);
+                Color fillRectangleColor;
+                if ((e.PaintParts & DataGridViewPaintParts.SelectionBackground) == DataGridViewPaintParts.SelectionBackground &&
+                    (e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected)
+                {
+                    fillRectangleColor = e.CellStyle.SelectionBackColor;
+                }
+                else
+                {
+                    fillRectangleColor = e.CellStyle.BackColor;
+                }
+
+                // セルを塗りつぶすためのペンを作成
+                using (Pen pen = new Pen(fillRectangleColor))
+                {
+                    //セルを塗りつぶす
+                    e.Graphics.FillRectangle(pen.Brush, e.CellBounds);
+                }
 
                 // セル内に線を描画するためのペンを作成
-                using (Pen pen = new Pen(m_RouteFileProperty.TrainTypes[e.RowIndex].DiagramLineColor))
+                using (Pen pen = new Pen(property.StringsColor))
+                {
+                    // StringFormatオブジェクト生成
+                    StringFormat format = new StringFormat();
+                    format.LineAlignment = StringAlignment.Center;
+                    format.Alignment = StringAlignment.Near;
+
+                    // 文字列描写
+                    e.Graphics.DrawString(
+                        property.Abbreviation,
+                        m_RouteFileProperty.Fonts.GetFont(property.TimetableFontName),
+                        pen.Brush,
+                        new Rectangle()
+                        {
+                            X = e.CellBounds.X,
+                            Y = e.CellBounds.Y,
+                            Width = e.CellBounds.Width,
+                            Height = e.CellBounds.Height
+                        },
+                        format);
+                }
+
+                // セル内のグリッド線を描画するためのペンを作成
+                using (Pen pen = new Pen(Brushes.DarkGray))
+                {
+                    // セル内に線を描画
+                    e.Graphics.DrawRectangle(pen, e.CellBounds.Left - 1, e.CellBounds.Top - 1, e.CellBounds.Width, e.CellBounds.Height);
+                }
+
+                // イベントを処理したことを通知
+                e.Handled = true;
+            }
+            // 線スタイルのセルか？
+            else if (e.RowIndex >= 0 && e.ColumnIndex == 3)
+            {
+                // TrainTypePropertyオブジェクト取得
+                TrainTypeProperty property = GetSelectedCondition(e.RowIndex);
+
+                // 背景を塗りつぶす色を指定
+                Color fillRectangleColor;
+                if ((e.PaintParts & DataGridViewPaintParts.SelectionBackground) == DataGridViewPaintParts.SelectionBackground &&
+                    (e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected)
+                {
+                    fillRectangleColor = e.CellStyle.SelectionBackColor;
+                }
+                else
+                {
+                    fillRectangleColor = e.CellStyle.BackColor;
+                }
+
+                // セルを塗りつぶすためのペンを作成
+                using (Pen pen = new Pen(fillRectangleColor))
+                {
+                    //セルを塗りつぶす
+                    e.Graphics.FillRectangle(pen.Brush, e.CellBounds);
+                }
+
+                // セル内に線を描画するためのペンを作成
+                using (Pen pen = new Pen(property.DiagramLineColor))
                 {
                     // スタイル設定
-                    pen.DashStyle = m_RouteFileProperty.TrainTypes[e.RowIndex].DiagramLineStyle;
+                    pen.DashStyle = property.DiagramLineStyle;
 
                     // 描画
                     e.Graphics.DrawLine(
