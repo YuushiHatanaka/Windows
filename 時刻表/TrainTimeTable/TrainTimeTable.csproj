@@ -244,6 +244,7 @@
     <Compile Include="EventArgs\StationTimePropertyUpdateEventArgs.cs" />
     <Compile Include="EventArgs\StationTimetableUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TimetableUpdateEventArgs.cs" />
+    <Compile Include="EventArgs\TrainPropertiesUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TrainPropertyUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TrainTypePropertiesUpdateEventArgs.cs" />
     <Compile Include="EventArgs\TrainTypePropertyUpdateEventArgs.cs" />

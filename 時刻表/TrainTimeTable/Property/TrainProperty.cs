@@ -120,12 +120,17 @@ namespace TrainTimeTable.Property
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <param name="name"></param>
         /// <param name="properties"></param>
-        public TrainProperty(StationProperties properties)
+        public TrainProperty(string name, StationProperties properties)
         {
             // ロギング
-            Logger.Debug("=>>>> TrainProperty::TrainProperty(StationProperties)");
+            Logger.Debug("=>>>> TrainProperty::TrainProperty(string, StationProperties)");
+            Logger.DebugFormat("name      :[{0}]", name);
             Logger.DebugFormat("properties:[{0}]", properties);
+
+            // ダイヤグラム名設定
+            DiagramName = name;
 
             // 駅時刻仮登録
             for (int i = 0; i < properties.Count; i++)
@@ -133,6 +138,7 @@ namespace TrainTimeTable.Property
                 // StationTimePropertyオブジェクト生成
                 StationTimeProperty property = new StationTimeProperty()
                 {
+                    DiagramName = name,
                     StationName = properties[i].Name,
                 };
 
@@ -141,7 +147,45 @@ namespace TrainTimeTable.Property
             }
 
             // ロギング
-            Logger.Debug("<<<<= TrainProperty::TrainProperty(StationProperties)");
+            Logger.Debug("<<<<= TrainProperty::TrainProperty(string, StationProperties)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="properties"></param>
+        public TrainProperty(string name, DirectionType type, StationProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::TrainProperty(string, DirectionType, StationProperties)");
+            Logger.DebugFormat("name      :[{0}]", name);
+            Logger.DebugFormat("type      :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 設定
+            Direction = type;
+            DiagramName = name;
+
+            // 駅時刻仮登録
+            for (int i = 0; i < properties.Count; i++)
+            {
+                // StationTimePropertyオブジェクト生成
+                StationTimeProperty property = new StationTimeProperty()
+                {
+                    DiagramName = name,
+                    Direction = type,
+                    StationName = properties[i].Name,
+                    StationTreatment = StationTreatment.NoService,
+                };
+
+                // 登録
+                StationTimes.Add(property);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainProperty::TrainProperty(string, DirectionType, StationProperties)");
         }
         #endregion
 

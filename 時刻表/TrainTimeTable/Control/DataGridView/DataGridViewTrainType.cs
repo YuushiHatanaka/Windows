@@ -90,7 +90,8 @@ namespace TrainTimeTable.Control
                 {
                     new ToolStripMenuItem("切り取り(&T)", null, TrainTypeCutoutOnClick,"cutout"){ ShortcutKeys = (Keys.Control|Keys.X) },
                     new ToolStripMenuItem("コピー(&C)", null, TrainTypeCopyOnClick,"copy"){ ShortcutKeys = (Keys.Control|Keys.C) },
-                    new ToolStripMenuItem("貼り付け(&P)", null, TrainTypePastingOnClick,"pasting"){ ShortcutKeys = (Keys.Control|Keys.V) },
+                    new ToolStripMenuItem("上へ貼り付け(&P)", null, TrainTypePasteOnTopOnClick,"paste_on_top"){ ShortcutKeys = (Keys.Control|Keys.V) },
+                    new ToolStripMenuItem("下へ貼り付け(&P)", null, TrainTypePasteBelowOnClick,"paste_below"){ ShortcutKeys = (Keys.Control|Keys.V) },
                     new ToolStripMenuItem("消去", null, TrainTypeDeleteOnClick,"delete"){ ShortcutKeys = Keys.Delete },
                     new ToolStripMenuItem("列車種別を挿入(&I)", null, TrainTypeInsertOnClick,"insert"){ ShortcutKeys = (Keys.Control|Keys.Insert) },
                     new ToolStripSeparator(),
@@ -104,7 +105,8 @@ namespace TrainTimeTable.Control
             // コントロール設定
             ContextMenuStrip = contextMenuStrip;
             ContextMenuStrip.Opened += ContextMenuStripOpened;
-            ContextMenuStrip.Items["pasting"].Enabled = false;
+            ContextMenuStrip.Items["paste_on_top"].Enabled = false;
+            ContextMenuStrip.Items["paste_below"].Enabled = false;
             ContextMenuStrip.Items["up"].Enabled = false;
             ContextMenuStrip.Items["down"].Enabled = false;
 
@@ -163,11 +165,8 @@ namespace TrainTimeTable.Control
             // クリップボードにコピー
             Clipboard.SetDataObject(new TrainTypeProperty(result), true);
 
-            // シーケンス番号削除
-            m_RouteFileProperty.TrainTypeSequences.DeleteSequenceNumber(result);
-
-            // 削除
-            m_RouteFileProperty.TrainTypes.Remove(result);
+            // 列車種別削除
+            m_RouteFileProperty.RemoveTrainType(result);
 
             // 更新
             Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
@@ -212,14 +211,14 @@ namespace TrainTimeTable.Control
         }
 
         /// <summary>
-        /// TrainTypePastingOnClick
+        /// TrainTypePasteOnTopOnClick
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void TrainTypePastingOnClick(object sender, System.EventArgs e)
+        private void TrainTypePasteOnTopOnClick(object sender, System.EventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
+            Logger.Debug("=>>>> DataGridViewTrainType::TrainTypePasteOnTopOnClick(object, EventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
@@ -230,7 +229,7 @@ namespace TrainTimeTable.Control
             if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainTypeProperty))))
             {
                 // ロギング
-                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteOnTopOnClick(object, EventArgs)");
 
                 // 対象外
                 return;
@@ -239,6 +238,20 @@ namespace TrainTimeTable.Control
             // コピー項目取得
             TrainTypeProperty result = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
 
+            // 選択インデクス取得
+            int index = GetSelectedIndex();
+
+            // 選択インデックス判定
+            if (index == -1)
+            {
+                index = 0;
+            }
+
+            // TODO:編集(同一名はNG)
+
+            // 列車種別挿入
+            m_RouteFileProperty.InsertTrainType(index, result);
+
             // 更新
             Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
 
@@ -246,7 +259,59 @@ namespace TrainTimeTable.Control
             OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePastingOnClick(object, EventArgs)");
+            Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteOnTopOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// TrainTypePasteBelowOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TrainTypePasteBelowOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewTrainType::TrainTypePasteBelowOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainTypeProperty))))
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteBelowOnClick(object, EventArgs)");
+
+                // 対象外
+                return;
+            }
+
+            // コピー項目取得
+            TrainTypeProperty result = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
+
+            // 選択インデクス取得
+            int index = GetSelectedIndex();
+
+            // 選択インデックス判定
+            if (index == -1)
+            {
+                index = m_RouteFileProperty.TrainTypes.Count + 1;
+            }
+
+            // TODO:編集(同一名はNG)
+
+            // 列車種別挿入
+            m_RouteFileProperty.InsertTrainType(index + 1, result);
+
+            // 更新
+            Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
+
+            // イベント呼出
+            OnUpdate(this, new TrainTypePropertiesUpdateEventArgs() { Sequences = m_RouteFileProperty.TrainTypeSequences, Properties = m_RouteFileProperty.TrainTypes });
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteBelowOnClick(object, EventArgs)");
         }
 
         /// <summary>
@@ -329,12 +394,12 @@ namespace TrainTimeTable.Control
             // 選択状態設定
             if (selectedIndex < 0)
             {
-                // 駅追加
+                // 列車種別追加
                 m_RouteFileProperty.AddTrainType(form.Property);
             }
             else
             {
-                // 駅挿入
+                // 列車種別挿入
                 m_RouteFileProperty.InsertTrainType(selectedIndex, form.Property);
             }
 
@@ -526,11 +591,13 @@ namespace TrainTimeTable.Control
             // クリップボードの内容判定
             if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainTypeProperty))))
             {
-                ContextMenuStrip.Items["pasting"].Enabled = false;
+                ContextMenuStrip.Items["paste_on_top"].Enabled = false;
+                ContextMenuStrip.Items["paste_below"].Enabled = false;
             }
             else
             {
-                ContextMenuStrip.Items["pasting"].Enabled = true;
+                ContextMenuStrip.Items["paste_on_top"].Enabled = true;
+                ContextMenuStrip.Items["paste_below"].Enabled = true;
             }
 
             // 選択インデクス取得

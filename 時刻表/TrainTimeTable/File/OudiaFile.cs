@@ -600,17 +600,16 @@ namespace TrainTimeTable.File
             {
                 case "Ressya.":
                     // TrainPropertyオブジェクト生成
-                    TrainProperty trainProperty = new TrainProperty(m_RouteFileProperty.Stations);
-                    trainProperty.DiagramName = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Name;
-                    trainProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Count + 1;
-                    // TrainPropertyオブジェクト生成
                     TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
                     trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[diagramsArrayIndex].Name;
                     trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].GetNewId();
-                    trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Count + 1;
+                    // TrainPropertyオブジェクト生成
+                    TrainProperty trainProperty = new TrainProperty(m_RouteFileProperty.Diagrams[diagramsArrayIndex].Name, m_RouteFileProperty.Stations);
+                    trainProperty.Id = trainSequenceProperty.Id;
                     // 仮登録
                     m_RouteFileProperty.Diagrams[diagramsArrayIndex].Trains[m_CurrentDirectionType].Add(trainProperty);
                     m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].Add(trainSequenceProperty);
+                    m_RouteFileProperty.Diagrams[diagramsArrayIndex].TrainSequence[m_CurrentDirectionType].SequenceNumberReconstruction();
                     return;
                 default:
                     break;

@@ -498,22 +498,22 @@ namespace TrainTimeTable.File
             Logger.Debug("=>>>> WinDiaFile::SetOutboundSection(string)");
             Logger.DebugFormat("line:[{0}]", line);
 
-            // TrainPropertyオブジェクト生成
-            TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
-            trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
-            trainProperty.Direction = DirectionType.Outbound;
-
-            // TrainPropertyオブジェクト生成
+            // TrainSequencePropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
             trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].GetNewId();
-            trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Outbound;
+
+            // TrainPropertyオブジェクト生成
+            TrainProperty trainProperty = new TrainProperty();
+            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
+            trainProperty.Id = trainSequenceProperty.Id;
+            trainProperty.Direction = DirectionType.Outbound;
 
             // 仮登録
             m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Add(trainProperty);
             m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].Add(trainSequenceProperty);
+            m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].SequenceNumberReconstruction();
 
             // 設定
             SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Outbound].Count, line);
@@ -532,22 +532,22 @@ namespace TrainTimeTable.File
             Logger.Debug("=>>>> WinDiaFile::SetInboundSection(string)");
             Logger.DebugFormat("line:[{0}]", line);
 
-            // TrainPropertyオブジェクト生成
-            TrainProperty trainProperty = new TrainProperty();
-            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
-            trainProperty.Id = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
-            trainProperty.Direction = DirectionType.Inbound;
-
-            // TrainPropertyオブジェクト生成
+            // TrainSequencePropertyオブジェクト生成
             TrainSequenceProperty trainSequenceProperty = new TrainSequenceProperty();
             trainSequenceProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
             trainSequenceProperty.Id = m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].GetNewId();
-            trainSequenceProperty.Seq = m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count + 1;
             trainSequenceProperty.Direction = DirectionType.Inbound;
+
+            // TrainPropertyオブジェクト生成
+            TrainProperty trainProperty = new TrainProperty();
+            trainProperty.DiagramName = m_RouteFileProperty.Diagrams[0].Name;
+            trainProperty.Id = trainSequenceProperty.Id;
+            trainProperty.Direction = DirectionType.Inbound;
 
             // 仮登録
             m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Add(trainProperty);
             m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Inbound].Add(trainSequenceProperty);
+            m_RouteFileProperty.Diagrams[0].TrainSequence[DirectionType.Outbound].SequenceNumberReconstruction();
 
             // 設定
             SetTrainSection(m_RouteFileProperty.Stations, trainProperty, m_RouteFileProperty.Diagrams[0].Trains[DirectionType.Inbound].Count, line);

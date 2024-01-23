@@ -767,7 +767,7 @@ namespace TrainTimeTable.Property
 
             // 各プロパティで列車種別挿入
             TrainTypeSequences.InsertSequenceNumber(index, property);
-            TrainTypes.Add(property);
+            TrainTypes.Insert(index, property);
 
             // ロギング
             Logger.Debug("<<<<= RouteFileProperty::InsertTrainType(int, TrainTypeProperty)");
@@ -833,6 +833,73 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= RouteFileProperty::TrainTypesRemoveNoData()");
+        }
+        #endregion
+        #endregion
+
+        #region 列車関連
+        #region 列車追加
+        /// <summary>
+        /// 列車追加
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        public void AddTrain(DirectionType type, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::AddTrain(DirectionType, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車追加
+            Diagrams.AddTrain(type, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::AddTrain(DirectionType, TrainProperty)");
+        }
+        #endregion
+
+        #region 列車挿入
+        /// <summary>
+        /// 列車挿入
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void InsertTrain(DirectionType type, int index, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::InsertTrain(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車挿入
+            Diagrams.InsertTrain(type, index, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::InsertTrain(DirectionType, int, TrainProperty)");
+        }
+        #endregion
+
+        #region 列車削除
+        /// <summary>
+        /// 列車削除
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        public void RemoveTrain(DirectionType type, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::RemoveTrain(DirectionType, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車削除
+            Diagrams.RemoveTrain(type, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::RemoveTrain(DirectionType, TrainProperty)");
         }
         #endregion
         #endregion

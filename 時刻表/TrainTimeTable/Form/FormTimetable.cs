@@ -110,6 +110,7 @@ namespace TrainTimeTable
             m_VirtualDataGridViewTimeTable = new VirtualDataGridViewTimeTable(DiagramName, m_DirectionType, m_RouteFileProperty);
             m_VirtualDataGridViewTimeTable.Click += DataGridViewTimetable_Click;
             m_VirtualDataGridViewTimeTable.OnTrainPropertyUpdate += DataGridViewTimetable_OnTrainPropertyUpdate;
+            m_VirtualDataGridViewTimeTable.OnTrainPropertiesUpdate += DataGridViewTimeTable_OnTrainPropertiesUpdate;
             m_VirtualDataGridViewTimeTable.OnStationPropertiesUpdate += DataGridViewTimetable_OnStationPropertiesUpdate;
             m_VirtualDataGridViewTimeTable.OnStationTimePropertyUpdate += DataGridViewTimetable_OnStationTimePropertyUpdate;
 
@@ -218,6 +219,35 @@ namespace TrainTimeTable
         }
 
         /// <summary>
+        /// DataGridViewTimeTable_OnTrainPropertiesUpdate
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+
+        private void DataGridViewTimeTable_OnTrainPropertiesUpdate(object sender, TrainPropertiesUpdateEventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTimetable::DataGridViewTimeTable_OnTrainPropertiesUpdate(object, TrainPropertyUpdateEventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // TimetableUpdateEventArgsオブジェクト
+            TimetableUpdateEventArgs eventArgs = new TimetableUpdateEventArgs();
+            eventArgs.UpdateType = e.Properties.GetType();
+            eventArgs.DiagramName = DiagramName;
+            eventArgs.DirectionType = m_DirectionType;
+            eventArgs.RouteFileProperty = m_RouteFileProperty;
+            eventArgs.SequenceObject = e.Sequences;
+            eventArgs.UpdateObject = e.Properties;
+
+            // 更新通知
+            OnUpdate(this, eventArgs);
+
+            // ロギング
+            Logger.Debug("<<<<= FormTimetable::DataGridViewTimeTable_OnTrainPropertiesUpdate(object, TrainPropertyUpdateEventArgs)");
+        }
+
+        /// <summary>
         /// DataGridViewTimetable_OnStationPropertiesUpdate
         /// </summary>
         /// <param name="sender"></param>
@@ -235,6 +265,7 @@ namespace TrainTimeTable
             eventArgs.DiagramName = DiagramName;
             eventArgs.DirectionType = m_DirectionType;
             eventArgs.RouteFileProperty = m_RouteFileProperty;
+            eventArgs.SequenceObject = e.Sequences;
             eventArgs.UpdateObject = e.Properties;
 
             // 更新通知

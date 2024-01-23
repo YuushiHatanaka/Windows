@@ -72,6 +72,26 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= TrainSequenceProperty::TrainSequenceProperty(TrainSequenceProperty)");
         }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="property"></param>
+        public TrainSequenceProperty(TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperty::TrainSequenceProperty(TrainProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // コピー
+            DiagramName = property.DiagramName;
+            Direction = property.Direction;
+            Id = property.Id;
+            Seq = -1;
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceProperty::TrainSequenceProperty(TrainProperty)");
+        }
         #endregion
 
         #region コピー

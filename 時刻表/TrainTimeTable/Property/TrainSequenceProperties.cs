@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.UI.WebControls;
 
 namespace TrainTimeTable.Property
 {
@@ -148,24 +150,69 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region シーケンス番号関連
+        /// <summary>
+        /// シーケンス番号削除
+        /// </summary>
+        /// <param name="property"></param>
+        public void DeleteSequenceNumber(TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperties::DeleteSequenceNumber(TrainProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // TrainSequencePropertyオブジェクト取得
+            TrainSequenceProperty targetProperty = Find(s => s.Id == property.Id);
+
+            // リストから削除
+            Remove(targetProperty);
+
+            // シーケンス番号再構築
+            SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceProperties::DeleteSequenceNumber(TrainProperty)");
+        }
+
+        /// <summary>
+        /// シーケンス番号再構築
+        /// </summary>
+        public void SequenceNumberReconstruction()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperties::SequenceNumberReconstruction()");
+
+            // シーケンス番号再付与
+            int seq = 1;
+            foreach (var property in this.OrderBy(s => s.Seq))
+            {
+                // 設定
+                property.Seq = seq++;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainSequenceProperties::SequenceNumberReconstruction()");
+        }
+        #endregion
+
+        #region ID関連
         #region 新ID取得
         /// <summary>
         /// 新ID取得
         /// </summary>
         /// <returns></returns>
-
         public int GetNewId()
         {
             // ロギング
             Logger.Debug("=>>>> TrainSequenceProperties::GetNewId()");
 
-            // 結果初期化
-            int result = 1;
+            // 空き番号取得
+            int result = GetVacantId();
 
-            // 登録件数判定
-            if(Count > 0)
+            // 空き番号取得結果判定
+            if (result == 0)
             {
-                // 最大値+1設定
+                // 空き無しの場合最大値+1を取得
                 result = this.Max(t => t.Id) + 1;
             }
 
@@ -176,6 +223,80 @@ namespace TrainTimeTable.Property
             // 返却
             return result;
         }
+        #endregion
+
+        #region 空きID取得
+        /// <summary>
+        /// 空きID取得
+        /// </summary>
+        /// <returns></returns>
+        public int GetVacantId()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperties::GetVacantId()");
+
+            // 結果取得
+            int result = GetVacantId(GetIdList().ToArray());
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainSequenceProperties::GetVacantId()");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 空きID取得
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private int GetVacantId(int[] array)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperties::GetVacantId(int[])");
+
+            // シーケンス生成
+            var allNumbers = Enumerable.Range(1, array.Length + 1);
+
+            // 空き番号取得
+            int result = allNumbers.Except(array).FirstOrDefault();
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainSequenceProperties::GetVacantId(int[])");
+
+            // 結果返却
+            return result;
+        }
+
+        /// <summary>
+        /// ID一覧取得
+        /// </summary>
+        /// <returns></returns>
+        private List<int> GetIdList()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainSequenceProperties::GetVacantId()");
+
+            // 結果オブジェクト生成
+            List<int> result = new List<int>();
+
+            // 登録リストを繰り返す
+            for (int i = 0; i < this.Count; i++)
+            {
+                // IDを登録
+                result.Add(this[i].Id);
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result.Count);
+            Logger.Debug("<<<<= TrainSequenceProperties::GetVacantId()");
+
+            // 結果を返却
+            return result;
+        }
+        #endregion
         #endregion
 
         #region ダイアグラム名変更

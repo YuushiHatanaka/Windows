@@ -160,10 +160,10 @@ namespace TrainTimeTable.Property
             Logger.DebugFormat("property:[{0}]", property);
 
             // TrainTypeSequencePropertyオブジェクト取得
-            TrainTypeSequenceProperty targetTrainTypeSequenceProperty = Find(s => s.Name == property.Name);
+            TrainTypeSequenceProperty targetProperty = Find(s => s.Name == property.Name);
 
             // リストから削除
-            Remove(targetTrainTypeSequenceProperty);
+            Remove(targetProperty);
 
             // シーケンス番号再構築
             SequenceNumberReconstruction();
@@ -275,7 +275,7 @@ namespace TrainTimeTable.Property
 
             // シーケンス番号再付与
             int seq = 1;
-            foreach (var property in this)
+            foreach (var property in this.OrderBy(s => s.Seq))
             {
                 // 設定
                 property.Seq = seq++;

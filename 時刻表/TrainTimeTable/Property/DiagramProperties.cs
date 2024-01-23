@@ -177,6 +177,7 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 駅関連
         #region 発着駅設定
         /// <summary>
         /// 発着駅設定
@@ -333,7 +334,7 @@ namespace TrainTimeTable.Property
             foreach (var property in this)
             {
                 // 列車下り上り分繰り返す
-                foreach(var direction  in property.Trains.Values)
+                foreach (var direction in property.Trains.Values)
                 {
                     // 列車分繰り返す
                     foreach (var train in direction)
@@ -362,7 +363,9 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= DiagramProperties::ChangeStationName(string, string)");
         }
         #endregion
+        #endregion
 
+        #region 列車種別関連
         #region 列車種別変更
         /// <summary>
         /// 列車種別変更
@@ -424,6 +427,131 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= DiagramProperties::RemoveTrainType(StationProperty)");
         }
+        #endregion
+        #endregion
+
+        #region 列車関連
+        #region 列車追加
+        /// <summary>
+        /// 列車追加
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        public void AddTrain(DirectionType type, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::AddTrain(DirectionType, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = Find(t => t.Name == property.DiagramName);
+
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trainProperties = diagramProperty.Trains[type];
+
+            // TrainSequencePropertiesオブジェクト取得
+            TrainSequenceProperties trainSequenceProperties = diagramProperty.TrainSequence[type];
+
+            // 登録新IDを取得
+            int newId = trainSequenceProperties.GetNewId();
+
+            // ID設定
+            property.Id = newId;
+
+            // 列車挿入
+            trainProperties.Add(property);
+            trainSequenceProperties.Add(new TrainSequenceProperty(property));
+
+            // シーケンス番号再構築
+            trainSequenceProperties.SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::AddTrain(DirectionType, TrainProperty)");
+        }
+        #endregion
+
+        #region 列車挿入
+        /// <summary>
+        /// 列車挿入
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void InsertTrain(DirectionType type, int index, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::InsertTrain(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = Find(t => t.Name == property.DiagramName);
+
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trainProperties = diagramProperty.Trains[type];
+
+            // TrainSequencePropertiesオブジェクト取得
+            TrainSequenceProperties trainSequenceProperties = diagramProperty.TrainSequence[type];
+
+            // 登録新IDを取得
+            int newId = trainSequenceProperties.GetNewId();
+
+            // ID設定
+            property.Id = newId;
+
+            // 列車挿入
+            trainProperties.Insert(index, property);
+            trainSequenceProperties.Insert(index, new TrainSequenceProperty(property));
+
+            // シーケンス番号再構築
+            trainSequenceProperties.SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::InsertTrain(DirectionType, int, TrainProperty)");
+        }
+        #endregion
+
+        #region 列車削除
+        /// <summary>
+        /// 列車削除
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        public void RemoveTrain(DirectionType type, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::RemoveTrain(DirectionType, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = Find(t => t.Name == property.DiagramName);
+
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trainProperties = diagramProperty.Trains[type];
+
+            // TrainSequencePropertiesオブジェクト取得
+            TrainSequenceProperties trainSequenceProperties = diagramProperty.TrainSequence[type];
+
+            // TrainPropertyオブジェクト取得
+            TrainProperty trainProperty = diagramProperty.Trains[type].Find(t=>t.Id == property.Id);
+
+            // TrainSequencePropertyオブジェクト取得
+            TrainSequenceProperty trainSequenceProperty = diagramProperty.TrainSequence[type].Find(t => t.Id == property.Id);
+
+            // 列車挿入
+            trainProperties.Remove(trainProperty);
+            trainSequenceProperties.Remove(trainSequenceProperty);
+
+            // シーケンス番号再構築
+            trainSequenceProperties.SequenceNumberReconstruction();
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::RemoveTrain(DirectionType, TrainProperty)");
+        }
+        #endregion
         #endregion
 
         #region 文字列化

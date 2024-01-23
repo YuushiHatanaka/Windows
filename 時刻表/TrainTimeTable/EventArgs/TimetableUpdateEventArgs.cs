@@ -31,6 +31,11 @@ namespace TrainTimeTable.EventArgs
         public RouteFileProperty RouteFileProperty { get; set; } = null;
 
         /// <summary>
+        /// 更新シーケンスオブジェクト
+        /// </summary>
+        public object SequenceObject { get; set; } = null;
+
+        /// <summary>
         /// 更新オブジェクト
         /// </summary>
         public object UpdateObject { get; set; } = null;
