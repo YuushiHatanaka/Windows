@@ -9,6 +9,7 @@ namespace TrainTimeTable.Common
     /// <summary>
     /// 方向種別
     /// </summary>
+    [Serializable]
     public enum DirectionType
     {
         /// <summary>

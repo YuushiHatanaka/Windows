@@ -84,7 +84,7 @@ namespace TrainTimeTable
             // 設定
             m_RouteFileProperty = property;
             Property.Copy(train);
-            m_ComboBoxTrainType = new ComboBoxTrainType(property.TrainTypes);
+            m_ComboBoxTrainType = new ComboBoxTrainType(property.TrainTypeSequences, property.TrainTypes);
             m_ComboBoxDepartingStation = new ComboBoxStation(property.Stations);
             m_ComboBoxDestinationStation = new ComboBoxStation(property.Stations);
 

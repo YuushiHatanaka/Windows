@@ -25,6 +25,11 @@ namespace TrainTimeTable.Control
         #endregion
 
         /// <summary>
+        /// TrainTypeSequencePropertiesオブジェクト
+        /// </summary>
+        private TrainTypeSequenceProperties m_TrainTypeSequenceProperties = new TrainTypeSequenceProperties();
+
+        /// <summary>
         /// TrainTypePropertiesオブジェクト
         /// </summary>
         private TrainTypeProperties m_TrainTypeProperties = new TrainTypeProperties();
@@ -33,16 +38,19 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <param name="sequences"></param>
         /// <param name="properties"></param>
-        public ComboBoxTrainType(TrainTypeProperties properties)
+        public ComboBoxTrainType(TrainTypeSequenceProperties sequences, TrainTypeProperties properties)
             : base()
         {
             // ロギング
-            Logger.Debug("=>>>> ComboBoxTrainType::ComboBoxTrainType(TrainTypeProperties)");
+            Logger.Debug("=>>>> ComboBoxTrainType::ComboBoxTrainType(TrainSequenceProperties, TrainTypeProperties)");
+            Logger.DebugFormat("sequences :[{0}]", sequences);
             Logger.DebugFormat("properties:[{0}]", properties);
 
             // 設定
             DropDownStyle = ComboBoxStyle.DropDownList;
+            m_TrainTypeSequenceProperties.Copy(sequences);
             m_TrainTypeProperties.Copy(properties);
 
             // 更新開始
@@ -55,7 +63,7 @@ namespace TrainTimeTable.Control
             EndUpdate();
 
             // ロギング
-            Logger.Debug("<<<<= ComboBoxTrainType::ComboBoxTrainType(TrainTypeProperties)");
+            Logger.Debug("<<<<= ComboBoxTrainType::ComboBoxTrainType(TrainSequenceProperties, TrainTypeProperties)");
         }
         #endregion
 
@@ -72,10 +80,13 @@ namespace TrainTimeTable.Control
             Items.Clear();
 
             // 列車種別を繰り返す
-            foreach (var type in m_TrainTypeProperties)
+            foreach (var sequence in m_TrainTypeSequenceProperties.OrderBy(t => t.Seq))
             {
+                // TrainTypePropertyオブジェクト取得
+                TrainTypeProperty trainTypeProperty = m_TrainTypeProperties.Find(t=>t.Name == sequence.Name);
+
                 // 登録
-                Items.Add(type.Name);
+                Items.Add(trainTypeProperty.Name);
             }
 
             // 登録数判定

@@ -9,6 +9,7 @@ namespace TrainTimeTable.Common
     /// <summary>
     /// ダイヤグラム列車情報
     /// </summary>
+    [Serializable]
     public enum DiagramTrainInformation
     {
         /// <summary>

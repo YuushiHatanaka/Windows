@@ -184,7 +184,7 @@ namespace TrainTimeTable.Property
 
             // シーケンス番号再付与
             int seq = 1;
-            foreach (var property in this.OrderBy(s => s.Seq))
+            foreach (var property in this)
             {
                 // 設定
                 property.Seq = seq++;

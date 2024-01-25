@@ -60,6 +60,43 @@ namespace TrainTimeTable.Database.Table
         }
         #endregion
 
+        #region 読込
+        /// <summary>
+        /// 読込
+        /// </summary>
+        /// <returns></returns>
+        public override TrainTypeSequenceProperties Load()
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainTypeSequenceTable::Load()");
+
+            // 結果オブジェクト生成
+            TrainTypeSequenceProperties result = new TrainTypeSequenceProperties();
+
+            // SQLクエリ生成
+            StringBuilder query = new StringBuilder();
+            query.Append(string.Format("SELECT * FROM {0} ORDER BY Seq;", m_TableName));
+
+            // クエリ実行
+            using (SQLiteDataReader sqliteDataReader = Load(query.ToString()))
+            {
+                // 1行のみデータを取得
+                while (sqliteDataReader.Read())
+                {
+                    // SELECTデータ登録
+                    SelectDataRegston(sqliteDataReader, ref result);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result.ToString());
+            Logger.Debug("<<<<= TrainTypeSequenceTable::Load()");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region SELECTデータ登録
         /// <summary>
         /// SELECTデータ登録

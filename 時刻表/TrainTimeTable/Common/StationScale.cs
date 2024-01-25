@@ -9,6 +9,7 @@ namespace TrainTimeTable.Common
     /// <summary>
     /// 駅規模
     /// </summary>
+    [Serializable]
     public enum StationScale
     {
         /// <summary>

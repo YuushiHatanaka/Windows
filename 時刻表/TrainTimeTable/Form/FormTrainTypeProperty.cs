@@ -28,6 +28,16 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
+        /// TrainTypePropertiesオブジェクト
+        /// </summary>
+        private TrainTypeProperties m_TrainTypeProperties = null;
+
+        /// <summary>
+        /// 旧列車種別名
+        /// </summary>
+        private string m_OldTrainTypeName = string.Empty;
+
+        /// <summary>
         /// TrainTypePropertyオブジェクト
         /// </summary>
         public TrainTypeProperty Property { get; set; } = new TrainTypeProperty();
@@ -56,36 +66,47 @@ namespace TrainTimeTable
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public FormTrainTypeProperty()
-        {
-            // ロギング
-            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty()");
-
-            // ロギング
-            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty()");
-        }
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
         /// <param name="fonts"></param>
-        /// <param name="property"></param>
-        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperty property)
+        /// <param name="types"></param>
+        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperties types)
         {
             // ロギング
-            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
-            Logger.DebugFormat("fonts   :[{0}]", fonts);
-            Logger.DebugFormat("property:[{0}]", property);
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties)");
+            Logger.DebugFormat("fonts:[{0}]", fonts);
+            Logger.DebugFormat("types:[{0}]", types);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
             m_ComboBoxFonts = new ComboBoxFonts(fonts);
+            m_TrainTypeProperties = types;
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="fonts"></param>
+        /// <param name="types"></param>
+        /// <param name="property"></param>
+        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperties types, TrainTypeProperty property)
+            : this(fonts, types)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties, TrainTypeProperty)");
+            Logger.DebugFormat("fonts   :[{0}]", fonts);
+            Logger.DebugFormat("types   :[{0}]", types);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            m_OldTrainTypeName = property.Name;
             Property.Copy(property);
 
             // ロギング
-            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties, TrainTypeProperty)");
         }
         #endregion
 
@@ -341,7 +362,28 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("=>>>> FormTrainTypeProperty::InputCheck()");
 
-            // TODO:未実装
+            // 入力判定
+            if (textBoxTrainTypeName.Text == string.Empty)
+            {
+                // メッセージ表示
+                MessageBox.Show("列車種別名が指定されていません", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                // 異常終了
+                return false;
+            }
+
+            // 同一名判定
+            if (m_OldTrainTypeName != textBoxTrainTypeName.Text)
+            {
+                if (m_TrainTypeProperties.Find(t => t.Name == textBoxTrainTypeName.Text) != null)
+                {
+                    // エラーメッセージ
+                    MessageBox.Show(string.Format("既に登録されている列車種別名は使用できません:[{0}]", textBoxTrainTypeName.Text), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                    // 異常終了
+                    return false;
+                }
+            }
 
             // ロギング
             Logger.Debug("<<<<= FormTrainTypeProperty::InputCheck()");

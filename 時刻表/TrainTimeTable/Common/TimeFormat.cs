@@ -9,6 +9,7 @@ namespace TrainTimeTable.Common
     /// <summary>
     /// 時刻形式
     /// </summary>
+    [Serializable]
     public enum TimeFormat
     {
         /// <summary>

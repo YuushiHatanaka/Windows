@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using TrainTimeTable.Common;
@@ -14,7 +15,7 @@ namespace TrainTimeTable.Component
     /// DictionaryDiagramTrainInformationクラス
     /// </summary>
     [Serializable]
-    public class DictionaryDiagramTrainInformation : Dictionary<DirectionType, DiagramTrainInformation>
+    public class DictionaryDiagramTrainInformation : Dictionary<DirectionType, DiagramTrainInformation>, ISerializable
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -51,6 +52,59 @@ namespace TrainTimeTable.Component
 
             // ロギング
             Logger.Debug("<<<<= DictionaryDiagramTrainInformation::DictionaryDiagramTrainInformation(DictionaryDiagramTrainInformation)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected DictionaryDiagramTrainInformation(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DictionaryDiagramTrainInformation::DictionaryDiagramTrainInformation(SerializationInfo info, StreamingContext context)");
+            Logger.DebugFormat("info   :[{0}]", info);
+            Logger.DebugFormat("context:[{0}]", context);
+
+            // デシリアライズ時の処理
+            SerializationInfoEnumerator serializationInfoEnumerator = info.GetEnumerator();
+            while (serializationInfoEnumerator.MoveNext())
+            {
+                // 変換
+                DirectionType key = (DirectionType)Enum.Parse(typeof(DirectionType), serializationInfoEnumerator.Name);
+                DiagramTrainInformation value = (DiagramTrainInformation)serializationInfoEnumerator.Value;
+
+                // 登録
+                Add(key, value);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DictionaryDiagramTrainInformation::DictionaryDiagramTrainInformation(SerializationInfo info, StreamingContext context)");
+        }
+        #endregion
+
+        #region シリアライズデータ取得
+        /// <summary>
+        /// シリアライズデータ取得
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Info("=>>>> DictionaryDiagramTrainInformation::GetObjectData(SerializationInfo info, StreamingContext context)");
+            Logger.InfoFormat("info   :[{0}]", info);
+            Logger.InfoFormat("context:[{0}]", context);
+
+            // シリアライズするデータを追加
+            foreach (var key in this.Keys)
+            {
+                info.AddValue(key.ToString(), this[key]);
+            }
+
+            // ロギング
+            Logger.Info("<<<<= DictionaryDiagramTrainInformation::GetObjectData(SerializationInfo info, StreamingContext context)");
         }
         #endregion
 

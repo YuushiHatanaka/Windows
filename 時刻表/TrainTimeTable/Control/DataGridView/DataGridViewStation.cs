@@ -86,18 +86,22 @@ namespace TrainTimeTable.Control
                 {
                     new ToolStripMenuItem("切り取り(&T)", null, StationCutoutOnClick,"cutout"){ ShortcutKeys = (Keys.Control|Keys.X) },
                     new ToolStripMenuItem("コピー(&C)", null, StationCopyOnClick,"copy"){ ShortcutKeys = (Keys.Control|Keys.C) },
-                    new ToolStripMenuItem("貼り付け(&P)", null, StationPastingOnClick,"pasting"){ ShortcutKeys = (Keys.Control|Keys.V) },
+                    new ToolStripMenuItem("上へ貼り付け", null, StationPastingOnTopOnClick,"paste_on_top"){ ShortcutKeys = (Keys.Control|Keys.Home) },
+                    new ToolStripMenuItem("下へ貼り付け", null, StationPastingBelowOnClick,"paste_below"){ ShortcutKeys = (Keys.Control|Keys.End) },
                     new ToolStripMenuItem("消去", null, StationDeleteOnClick,"delete"){ ShortcutKeys = Keys.Delete },
-                    new ToolStripMenuItem("駅を挿入(&I)", null, StationInsertOnClick,"insert"){ ShortcutKeys = (Keys.Control|Keys.Insert) },
-                    new ToolStripSeparator(),
-                    new ToolStripMenuItem("駅のプロパティ(&A)", null, StationPropertyOnClick,"property"){ ShortcutKeys = (Keys.Control|Keys.Enter) },
+                    new ToolStripSeparator(){ Name = "separator1" },
+                    new ToolStripMenuItem("前に駅を挿入", null, StationInsertStationBeforeOnClick,"insert_station_before"){ ShortcutKeys = (Keys.Control|Keys.Up) },
+                    new ToolStripMenuItem("後に駅を挿入", null, StationInsertStationAfterOnClick,"insert_station_after"){ ShortcutKeys = (Keys.Control|Keys.Down) },
+                    new ToolStripSeparator(){ Name = "separator2" },
+                    new ToolStripMenuItem("駅のプロパティ", null, StationPropertyOnClick,"property"){ ShortcutKeys = (Keys.Control|Keys.Enter) },
                 }
             );
 
             // コントロール設定
             ContextMenuStrip = contextMenuStrip;
             ContextMenuStrip.Opened += ContextMenuStripOpened;
-            ContextMenuStrip.Items["pasting"].Enabled = false;
+            ContextMenuStrip.Items["paste_on_top"].Enabled = false;
+            ContextMenuStrip.Items["paste_below"].Enabled = false;
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::DataGridViewStation()");
@@ -153,7 +157,7 @@ namespace TrainTimeTable.Control
             }
 
             // クリップボードにコピー
-            Clipboard.SetDataObject(new StationProperty(result), true);
+            Clipboard.SetDataObject(new StationProperty(result), false);
 
             // シーケンス番号削除
             m_RouteFileProperty.StationSequences.DeleteSequenceNumber(result);
@@ -197,21 +201,21 @@ namespace TrainTimeTable.Control
             }
 
             // クリップボードにコピー
-            Clipboard.SetDataObject(new StationProperty(result), true);
+            Clipboard.SetDataObject(new StationProperty(result), false);
 
             // ロギング
             Logger.Debug("<<<<= DataGridViewStation::StationCopyOnClick(object, EventArgs)");
         }
 
         /// <summary>
-        /// StationPastingOnClick
+        /// StationPastingOnTopOnClick
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StationPastingOnClick(object sender, System.EventArgs e)
+        private void StationPastingOnTopOnClick(object sender, System.EventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewStation::StationPastingOnClick(object, EventArgs)");
+            Logger.Debug("=>>>> DataGridViewStation::StationPastingOnTopOnClick(object, EventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
@@ -222,7 +226,7 @@ namespace TrainTimeTable.Control
             if (!(dataObject != null && dataObject.GetDataPresent(typeof(StationProperty))))
             {
                 // ロギング
-                Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
+                Logger.Debug("<<<<= DataGridViewStation::StationPastingOnTopOnClick(object, EventArgs)");
 
                 // 対象外
                 return;
@@ -232,19 +236,16 @@ namespace TrainTimeTable.Control
             StationProperty result = dataObject.GetData(typeof(StationProperty)) as StationProperty;
 
             // 選択インデクス取得
-            int selectedIndex = GetSelectedIndex();
+            int index = GetSelectedIndex();
 
-            // 選択状態設定
-            if (selectedIndex < 0)
+            // 選択インデックス判定
+            if (index == -1)
             {
-                // 駅追加
-                m_RouteFileProperty.AddStation(result);
+                index = 0;
             }
-            else
-            {
-                // 駅挿入
-                m_RouteFileProperty.InsertStation(selectedIndex, result);
-            }
+
+            // 駅挿入
+            m_RouteFileProperty.InsertStation(index, result);
 
             // 更新
             Update(m_RouteFileProperty.Stations);
@@ -253,7 +254,57 @@ namespace TrainTimeTable.Control
             OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewStation::StationPastingOnClick(object, EventArgs)");
+            Logger.Debug("<<<<= DataGridViewStation::StationPastingOnTopOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// StationPastingBelowOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StationPastingBelowOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::StationPastingBelowOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(StationProperty))))
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationPastingBelowOnClick(object, EventArgs)");
+
+                // 対象外
+                return;
+            }
+
+            // コピー項目取得
+            StationProperty result = dataObject.GetData(typeof(StationProperty)) as StationProperty;
+
+            // 選択インデクス取得
+            int index = GetSelectedIndex();
+
+            // 選択インデックス判定
+            if (index == -1)
+            {
+                index = 0;
+            }
+
+            // 駅挿入
+            m_RouteFileProperty.InsertStation(index + 1, result);
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::StationPastingBelowOnClick(object, EventArgs)");
         }
 
         /// <summary>
@@ -295,30 +346,16 @@ namespace TrainTimeTable.Control
         }
 
         /// <summary>
-        /// StationInsertOnClick
+        /// StationInsertStationBeforeOnClick
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StationInsertOnClick(object sender, System.EventArgs e)
+        private void StationInsertStationBeforeOnClick(object sender, System.EventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> DataGridViewStation::StationInsertOnClick(object, EventArgs)");
+            Logger.Debug("=>>>> DataGridViewStation::StationInsertStationBeforeOnClick(object, EventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
-
-            // 選択インデクス取得
-            int selectedIndex = GetSelectedIndex();
-
-            // 選択インデックス判定
-            int index;
-            if (selectedIndex == -1)
-            {
-                index = m_RouteFileProperty.Stations.Count + 1;
-            }
-            else
-            {
-                index = selectedIndex;
-            }
 
             // FormStationPropertyオブジェクト生成
             FormStationProperty form = new FormStationProperty();
@@ -333,17 +370,11 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // 選択状態設定
-            if (selectedIndex < 0)
-            {
-                // 駅追加
-                m_RouteFileProperty.AddStation(form.Property);
-            }
-            else
-            {
-                // 駅挿入
-                m_RouteFileProperty.InsertStation(selectedIndex, form.Property);
-            }
+            // 選択インデクス取得
+            int index = GetSelectedIndex();
+
+            // 駅挿入
+            m_RouteFileProperty.InsertStation(index, form.Property);
 
             // 更新
             Update(m_RouteFileProperty.Stations);
@@ -352,7 +383,48 @@ namespace TrainTimeTable.Control
             OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
 
             // ロギング
-            Logger.Debug("<<<<= DataGridViewStation::StationInsertOnClick(object, EventArgs)");
+            Logger.Debug("<<<<= DataGridViewStation::StationInsertStationBeforeOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// StationInsertStationAfterOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StationInsertStationAfterOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DataGridViewStation::StationInsertStationAfterOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // FormStationPropertyオブジェクト生成
+            FormStationProperty form = new FormStationProperty();
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationInsertStationAfterOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
+
+            // 選択インデクス取得
+            int index = GetSelectedIndex();
+
+            // 駅挿入
+            m_RouteFileProperty.InsertStation(index + 1, form.Property);
+
+            // 更新
+            Update(m_RouteFileProperty.Stations);
+
+            // イベント呼出
+            OnUpdate(this, new StationPropertiesUpdateEventArgs() { Properties = m_RouteFileProperty.Stations, Sequences = m_RouteFileProperty.StationSequences });
+
+            // ロギング
+            Logger.Debug("<<<<= DataGridViewStation::StationInsertStationAfterOnClick(object, EventArgs)");
         }
 
         /// <summary>
@@ -411,12 +483,16 @@ namespace TrainTimeTable.Control
                 ContextMenuStrip.Items["cutout"].Enabled = false;
                 ContextMenuStrip.Items["copy"].Enabled = false;
                 ContextMenuStrip.Items["delete"].Enabled = false;
+                ContextMenuStrip.Items["insert_station_before"].Enabled = false;
+                ContextMenuStrip.Items["insert_station_before"].Enabled = false;
             }
             else
             {
                 ContextMenuStrip.Items["cutout"].Enabled = true;
                 ContextMenuStrip.Items["copy"].Enabled = true;
                 ContextMenuStrip.Items["delete"].Enabled = true;
+                ContextMenuStrip.Items["insert_station_before"].Enabled = true;
+                ContextMenuStrip.Items["insert_station_after"].Enabled = true;
             }
 
             // クリップボードからコピー
@@ -425,11 +501,13 @@ namespace TrainTimeTable.Control
             // クリップボードの内容判定
             if (!(dataObject != null && dataObject.GetDataPresent(typeof(StationProperty))))
             {
-                ContextMenuStrip.Items["pasting"].Enabled = false;
+                ContextMenuStrip.Items["paste_on_top"].Enabled = false;
+                ContextMenuStrip.Items["paste_below"].Enabled = false;
             }
             else
             {
-                ContextMenuStrip.Items["pasting"].Enabled = true;
+                ContextMenuStrip.Items["paste_on_top"].Enabled = true;
+                ContextMenuStrip.Items["paste_below"].Enabled = true;
             }
 
             // ロギング

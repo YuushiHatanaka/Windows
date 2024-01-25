@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TrainTimeTable.Property
 {
@@ -12,7 +14,7 @@ namespace TrainTimeTable.Property
     /// StationMarksクラス
     /// </summary>
     [Serializable]
-    public class StationMarks : List<string>
+    public class StationMarks : List<string>, ISerializable
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -49,6 +51,53 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationMarks::StationMarks(StationMarks)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected StationMarks(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationMarks::StationMarks(SerializationInfo info, StreamingContext context)");
+            Logger.DebugFormat("info   :[{0}]", info);
+            Logger.DebugFormat("context:[{0}]", context);
+
+            // デシリアライズ時の処理
+            for (int i = 0; i < info.MemberCount; i++)
+            {
+                Add(info.GetValue(string.Format("StationMarks{0}", i), typeof(string)).ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationMarks::StationMarks(SerializationInfo info, StreamingContext context)");
+        }
+        #endregion
+
+        #region シリアライズデータ取得
+        /// <summary>
+        /// シリアライズデータ取得
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationMarks::GetObjectData(SerializationInfo info, StreamingContext context)");
+            Logger.DebugFormat("info   :[{0}]", info);
+            Logger.DebugFormat("context:[{0}]", context);
+
+            // シリアライズするデータを追加
+            int i = 0;
+            foreach (var item in this)
+            {
+                info.AddValue(string.Format("StationMarks{0}", i++), item.ToString());
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= StationMarks::GetObjectData(SerializationInfo info, StreamingContext context)");
         }
         #endregion
 

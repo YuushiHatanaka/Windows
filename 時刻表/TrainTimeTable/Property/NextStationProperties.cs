@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using TrainTimeTable.Common;
@@ -13,7 +14,7 @@ namespace TrainTimeTable.Property
     /// NextStationsクラス
     /// </summary>
     [Serializable]
-    public class NextStationProperties: List<NextStationProperty>
+    public class NextStationProperties : List<NextStationProperty>, ISerializable
     {
         #region ロガーオブジェクト
         /// <summary>
@@ -50,6 +51,53 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= NextStationProperties::NextStationProperties(NextStationProperties)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        protected NextStationProperties(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Debug("=>>>> NextStationProperties::NextStationProperties(SerializationInfo info, StreamingContext context)");
+            Logger.DebugFormat("info   :[{0}]", info);
+            Logger.DebugFormat("context:[{0}]", context);
+
+            // デシリアライズ時の処理
+            for (int i = 0; i < info.MemberCount; i++)
+            {
+                Add(info.GetValue(string.Format("NextStationProperty{0}", i), typeof(NextStationProperty)) as NextStationProperty);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= NextStationProperties::NextStationProperties(SerializationInfo info, StreamingContext context)");
+        }
+        #endregion
+
+        #region シリアライズデータ取得
+        /// <summary>
+        /// シリアライズデータ取得
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="context"></param>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // ロギング
+            Logger.Info("=>>>> NextStationProperties::GetObjectData(SerializationInfo info, StreamingContext context)");
+            Logger.InfoFormat("info   :[{0}]", info);
+            Logger.InfoFormat("context:[{0}]", context);
+
+            // シリアライズ時の処理
+            int i = 0;
+            foreach (var item in this)
+            {
+                info.AddValue(string.Format("NextStationProperty{0}", i++), item, typeof(NextStationProperty));
+            }
+
+            // ロギング
+            Logger.Info("<<<<= NextStationProperties::GetObjectData(SerializationInfo info, StreamingContext context)");
         }
         #endregion
 
