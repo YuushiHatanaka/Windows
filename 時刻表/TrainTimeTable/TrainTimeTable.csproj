@@ -128,9 +128,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Control\DataGridView\DataGridViewPrinter.cs" />
-    <Compile Include="Control\DataGridView\DataGridViewTimetable.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Control\DataGridView\DataGridViewStationTimetable.cs">
       <SubType>Component</SubType>
     </Compile>

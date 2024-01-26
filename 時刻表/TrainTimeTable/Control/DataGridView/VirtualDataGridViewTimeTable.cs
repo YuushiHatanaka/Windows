@@ -118,7 +118,7 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 描画対象列車情報
         /// </summary>
-        TrainProperties m_DrawTrainProperties = null;
+        private TrainProperties m_DrawTrainProperties = new TrainProperties();
 
         #region コンストラクタ
         /// <summary>
@@ -158,8 +158,8 @@ namespace TrainTimeTable.Control
                     "一般駅",
                 });
 
-            // TrainPropertiesオブジェクト取得
-            m_DrawTrainProperties = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
+            // 描画対象列車情報更新
+            UpdateDrawTrainProperties();
 
             // Font設定
             Font = m_FontDictionary["時刻表ビュー"];
@@ -226,7 +226,8 @@ namespace TrainTimeTable.Control
                 {
                     new ToolStripMenuItem("切り取り(&T)", null, CutoutOnClick,"cutout"){ ShortcutKeys = (Keys.Control|Keys.X) },
                     new ToolStripMenuItem("コピー(&C)", null, CopyOnClick,"copy"){ ShortcutKeys = (Keys.Control|Keys.C) },
-                    new ToolStripMenuItem("貼り付け(&P)", null, PastingOnClick,"pasting"){ ShortcutKeys = (Keys.Control|Keys.V) },
+                    new ToolStripMenuItem("列車の前に貼り付ける", null, PastingTrainInFrontOnClick,"pasting_train_in_front"){ ShortcutKeys = (Keys.Control|Keys.F) },
+                    new ToolStripMenuItem("列車の後に貼り付ける", null, PastingTrainLaterOnClick,"pasting_train_later"){ ShortcutKeys = (Keys.Control|Keys.L) },
                     new ToolStripMenuItem("消去", null, DeleteOnClick,"delete"){ ShortcutKeys = Keys.Delete },
                     new ToolStripSeparator(){ Name = "separator1" },
                     new ToolStripMenuItem("時刻のみ貼り付け", null, PasteOnlyTheTimeOnClick,"paste_only_the_time"),
@@ -643,10 +644,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainProperty result = GetSelectedCondition();
+            TrainProperty property = GetSelectedTrainProperty();
 
             // 選択状態設定
-            if (result == null)
+            if (property == null)
             {
                 // ロギング
                 Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCutoutOnClick(object, EventArgs)");
@@ -656,16 +657,13 @@ namespace TrainTimeTable.Control
             }
 
             // クリップボードにコピー
-            Clipboard.SetDataObject(new TrainProperty(result), false);
+            Clipboard.SetDataObject(new TrainProperty(property), false);
 
             // DiagramPropertyオブジェクト取得
             DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
-            // シーケンス番号削除
-            diagramProperty.TrainSequence[m_DirectionType].DeleteSequenceNumber(result);
-
-            // 削除
-            diagramProperty.Trains[m_DirectionType].Remove(result);
+            // 列車削除
+            m_RouteFileProperty.RemoveTrain(m_DirectionType, property);
 
             // 更新
             Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
@@ -690,10 +688,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainProperty result = GetSelectedCondition();
+            TrainProperty property = GetSelectedTrainProperty();
 
             // 選択状態設定
-            if (result == null)
+            if (property == null)
             {
                 // ロギング
                 Logger.Debug("<<<<= DataGridViewTrainType::TrainTypeCutoutOnClick(object, EventArgs)");
@@ -703,21 +701,21 @@ namespace TrainTimeTable.Control
             }
 
             // クリップボードにコピー
-            Clipboard.SetDataObject(new TrainProperty(result), false);
+            Clipboard.SetDataObject(new TrainProperty(property), false);
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::CopyOnClick(object, EventArgs)");
         }
 
         /// <summary>
-        /// PastingOnClick
+        /// PastingTrainInFrontOnClick
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PastingOnClick(object sender, System.EventArgs e)
+        private void PastingTrainInFrontOnClick(object sender, System.EventArgs e)
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PastingOnClick(object, EventArgs)");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PastingTrainInFrontOnClick(object, EventArgs)");
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
@@ -728,34 +726,29 @@ namespace TrainTimeTable.Control
             if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainProperty))))
             {
                 // ロギング
-                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingOnClick(object, EventArgs)");
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingTrainInFrontOnClick(object, EventArgs)");
 
                 // 対象外
                 return;
             }
 
-            // コピー項目取得
-            TrainProperty result = dataObject.GetData(typeof(TrainProperty)) as TrainProperty;
-
             // DiagramPropertyオブジェクト取得
             DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
+            // TrainPropertyオブジェクト取得
+            TrainProperty property = dataObject.GetData(typeof(TrainProperty)) as TrainProperty;
+
             // 選択インデクス取得
-            int selectedIndex = GetSelectedColumnIndex() - 4;
+            int index = GetSelectedTrainColumnIndex();
 
             // 選択インデックス判定
-            int index;
-            if (selectedIndex < 0)
+            if (index < 0)
             {
                 index = diagramProperty.Trains[m_DirectionType].Count + 1;
             }
-            else
-            {
-                index = selectedIndex;
-            }
 
             // 列車挿入
-            m_RouteFileProperty.InsertTrain(m_DirectionType, index, result);
+            m_RouteFileProperty.InsertTrain(m_DirectionType, index, property);
 
             // 更新
             Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
@@ -764,7 +757,60 @@ namespace TrainTimeTable.Control
             OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingOnClick(object, EventArgs)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingTrainInFrontOnClick(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// PastingTrainLaterOnClick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PastingTrainLaterOnClick(object sender, System.EventArgs e)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::PastingTrainLaterOnClick(object, EventArgs)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainProperty))))
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingTrainInFrontOnClick(object, EventArgs)");
+
+                // 対象外
+                return;
+            }
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
+
+            // TrainPropertyオブジェクト取得
+            TrainProperty property = dataObject.GetData(typeof(TrainProperty)) as TrainProperty;
+
+            // 選択インデクス取得
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択インデックス判定
+            if (index < 0)
+            {
+                index = diagramProperty.Trains[m_DirectionType].Count + 1;
+            }
+
+            // 列車挿入
+            m_RouteFileProperty.InsertTrain(m_DirectionType, index + 1, property);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PastingTrainLaterOnClick(object, EventArgs)");
         }
 
         /// <summary>
@@ -780,10 +826,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainProperty result = GetSelectedCondition();
+            TrainProperty property = GetSelectedTrainProperty();
 
             // 選択状態設定
-            if (result == null)
+            if (property == null)
             {
                 // ロギング
                 Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DeleteOnClick(object, EventArgs)");
@@ -796,7 +842,7 @@ namespace TrainTimeTable.Control
             DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
             // 列車削除
-            m_RouteFileProperty.RemoveTrain(m_DirectionType, result);
+            m_RouteFileProperty.RemoveTrain(m_DirectionType, property);
 
             // 更新
             Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
@@ -833,10 +879,29 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // コピー項目取得
-            TrainProperty result = dataObject.GetData(typeof(TrainProperty)) as TrainProperty;
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
-            // TODO:未実装
+            // TrainPropertyオブジェクト取得
+            TrainProperty property = dataObject.GetData(typeof(TrainProperty)) as TrainProperty;
+
+            // 選択インデクス取得
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択インデックス判定
+            if (index < 0)
+            {
+                index = diagramProperty.Trains[m_DirectionType].Count + 1;
+            }
+
+            // 列車時間コピー
+            m_RouteFileProperty.PasteOnlyTheTrainTime(m_DirectionType, index, property);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::PasteOnlyTheTimeOnClick(object, EventArgs)");
@@ -855,10 +920,10 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            TrainProperty result = GetSelectedCondition();
+            TrainProperty property = GetSelectedTrainProperty();
 
             // 選択状態設定
-            if (result == null)
+            if (property == null)
             {
                 // ロギング
                 Logger.Debug("<<<<= VirtualDataGridViewTimeTable::TrainPropertiesOnClick(object, EventArgs)");
@@ -868,7 +933,7 @@ namespace TrainTimeTable.Control
             }
 
             // 編集
-            Edit(result);
+            Edit(property);
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::TrainPropertiesOnClick(object, EventArgs)");
@@ -890,7 +955,7 @@ namespace TrainTimeTable.Control
             DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
             // 選択インデクス取得
-            int index = GetSelectedColumnIndex() - 4;
+            int index = GetSelectedTrainColumnIndex();
 
             // 選択インデックス判定
             if (index < 0)
@@ -930,7 +995,7 @@ namespace TrainTimeTable.Control
             DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
 
             // 選択インデクス取得
-            int index = GetSelectedColumnIndex() - 4;
+            int index = GetSelectedTrainColumnIndex();
 
             // 選択インデックス判定
             if (index < 0)
@@ -966,7 +1031,22 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択行・列取得
+            int columnIndex = GetSelectedColumnIndex();
+            int rowIndex = GetSelectedRowIndex();
+
+            // 選択行・列取得判定
+            if (columnIndex == -1 || rowIndex == -1)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StationPropertiesOnClick(object, EventArgs)");
+
+                // 何もしない
+                return;
+            }
+
+            // 駅情報編集
+            EditStationInformation(columnIndex, rowIndex);
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StationPropertiesOnClick(object, EventArgs)");
@@ -984,7 +1064,22 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択行・列取得
+            int columnIndex = GetSelectedColumnIndex();
+            int rowIndex = GetSelectedRowIndex();
+
+            // 選択行・列取得判定
+            if (columnIndex == -1 || rowIndex == -1)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StationPropertiesOnClick(object, EventArgs)");
+
+                // 何もしない
+                return;
+            }
+
+            // 列車時刻編集
+            EditTrainTimeInformation(columnIndex, rowIndex);
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::StationTimePropertiesOnClick(object, EventArgs)");
@@ -1002,7 +1097,30 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            TrainProperty property = GetSelectedTrainProperty();
+
+            // 選択状態設定
+            if (property == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceThePreviousTrainOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
+
+            // 列車入替
+            m_RouteFileProperty.ReplacementTrain(m_DirectionType, -1, property);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceThePreviousTrainOnClick(object, EventArgs)");
@@ -1020,7 +1138,30 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // TODO:未実装
+            // 選択項目取得
+            TrainProperty property = GetSelectedTrainProperty();
+
+            // 選択状態設定
+            if (property == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceThePreviousTrainOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName);
+
+            // 列車入替
+            m_RouteFileProperty.ReplacementTrain(m_DirectionType, 1, property);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ReplaceWithNextTrainOnClick(object, EventArgs)");
@@ -1192,7 +1333,8 @@ namespace TrainTimeTable.Control
                 // 表示/非表示設定
                 ContextMenuStrip.Items["cutout"].Visible = true;
                 ContextMenuStrip.Items["copy"].Visible = true;
-                ContextMenuStrip.Items["pasting"].Visible = true;
+                ContextMenuStrip.Items["pasting_train_in_front"].Visible = true;
+                ContextMenuStrip.Items["pasting_train_later"].Visible = true;
                 ContextMenuStrip.Items["delete"].Visible = true;
                 ContextMenuStrip.Items["separator1"].Visible = true;
                 ContextMenuStrip.Items["paste_only_the_time"].Visible = true;
@@ -1224,8 +1366,22 @@ namespace TrainTimeTable.Control
                 ContextMenuStrip.Items["train_properties"].Enabled = true;
                 ContextMenuStrip.Items["insert_train_in_front"].Enabled = true;
                 ContextMenuStrip.Items["insert_train_later"].Enabled = true;
-                ContextMenuStrip.Items["replace_the_previous_train"].Enabled = true;
-                ContextMenuStrip.Items["replace_with_next_train"].Enabled = true;
+                if (selectedColumnIndex == 4)
+                {
+                    ContextMenuStrip.Items["replace_the_previous_train"].Enabled = false;
+                }
+                else
+                {
+                    ContextMenuStrip.Items["replace_the_previous_train"].Enabled = true;
+                }
+                if (selectedColumnIndex == ColumnCount - 1)
+                {
+                    ContextMenuStrip.Items["replace_with_next_train"].Enabled = false;
+                }
+                else
+                {
+                    ContextMenuStrip.Items["replace_with_next_train"].Enabled = true;
+                }
                 if ((selectedRowIndex > 5) && (selectedRowIndex < RowCount - 1))
                 {
                     ContextMenuStrip.Items["station_time_properties"].Enabled = true;
@@ -1259,12 +1415,14 @@ namespace TrainTimeTable.Control
                 // クリップボードの内容判定
                 if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainProperty))))
                 {
-                    ContextMenuStrip.Items["pasting"].Enabled = false;
+                    ContextMenuStrip.Items["pasting_train_in_front"].Enabled = false;
+                    ContextMenuStrip.Items["pasting_train_later"].Enabled = false;
                     ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
                 }
                 else
                 {
-                    ContextMenuStrip.Items["pasting"].Enabled = true;
+                    ContextMenuStrip.Items["pasting_train_in_front"].Enabled = true;
+                    ContextMenuStrip.Items["pasting_train_later"].Enabled = true;
                     ContextMenuStrip.Items["paste_only_the_time"].Enabled = true;
                 }
             }
@@ -1273,7 +1431,8 @@ namespace TrainTimeTable.Control
                 // 表示/非表示設定
                 ContextMenuStrip.Items["cutout"].Visible = false;
                 ContextMenuStrip.Items["copy"].Visible = false;
-                ContextMenuStrip.Items["pasting"].Visible = false;
+                ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
+                ContextMenuStrip.Items["pasting_train_later"].Visible = false;
                 ContextMenuStrip.Items["delete"].Visible = false;
                 ContextMenuStrip.Items["separator1"].Visible = false;
                 ContextMenuStrip.Items["paste_only_the_time"].Visible = false;
@@ -1301,7 +1460,8 @@ namespace TrainTimeTable.Control
                 // 駅列の場合
                 ContextMenuStrip.Items["cutout"].Enabled = false;
                 ContextMenuStrip.Items["copy"].Enabled = false;
-                ContextMenuStrip.Items["pasting"].Enabled = false;
+                ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
+                ContextMenuStrip.Items["pasting_train_later"].Visible = false;
                 ContextMenuStrip.Items["delete"].Enabled = false;
                 ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
                 ContextMenuStrip.Items["train_properties"].Enabled = false;
@@ -1351,35 +1511,38 @@ namespace TrainTimeTable.Control
             RowCount = 0;
             ColumnCount = 0;
 
+            // TrainSequencePropertiesオブジェクト取得
+            TrainSequenceProperties sequences = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).TrainSequence[m_DirectionType];
+
             // TrainPropertiesオブジェクト取得
             TrainProperties trains = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
 
             // 列描画
-            DrawColumns(trains);
+            DrawColumns();
 
             // 列車番号描画
-            DrawRowsTrainNumber(trains);
+            DrawRowsTrainNumber();
 
             // 列車種別描画
-            DrawRowsTrainType(trains);
+            DrawRowsTrainType();
 
             // 列車名描画
-            DrawRowsTrainName(trains);
+            DrawRowsTrainName();
 
             // 列車記号描画
-            DrawRowsTrainMark(trains);
+            DrawRowsTrainMark();
 
             // 始発駅描画
-            DrawRowsDepartingStation(trains);
+            DrawRowsDepartingStation();
 
             // 終着駅描画
-            DrawRowsDestinationStation(trains);
+            DrawRowsDestinationStation();
 
             // 駅時刻描画
-            DrawRowsStationTime(trains);
+            DrawRowsStationTime();
 
             // 備考描画
-            DrawRowsRemarksStation(trains);
+            DrawRowsRemarksStation();
 
             // 描画再開
             ResumeLayout();
@@ -1391,12 +1554,10 @@ namespace TrainTimeTable.Control
         /// <summary>
         /// 列描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawColumns(TrainProperties properties)
+        private void DrawColumns()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawColumns(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawColumns()");
 
             // 固定カラム追加
             Columns.Add("Distance", "距離");
@@ -1421,8 +1582,8 @@ namespace TrainTimeTable.Control
             Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             Columns[3].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-            // 列車プロパティを繰り返す
-            foreach (var train in properties)
+            // 列車描写プロパティを繰り返す
+            foreach (TrainProperty train in m_DrawTrainProperties)
             {
                 // 列追加
                 Columns.Add(string.Format("Train{0}", train.Id), string.Format("{0}", train.No));
@@ -1435,18 +1596,16 @@ namespace TrainTimeTable.Control
             Columns["ArrivalAndDeparture"].Frozen = true;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawColumns(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawColumns()");
         }
 
         /// <summary>
         /// 列車番号描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainNumber(TrainProperties properties)
+        private void DrawRowsTrainNumber()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainNumber(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainNumber()");
 
             // 行追加
             RowCount += 1;
@@ -1457,18 +1616,16 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainNumber(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainNumber()");
         }
 
         /// <summary>
         /// 列車種別描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainType(TrainProperties properties)
+        private void DrawRowsTrainType()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainType(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainType()");
 
             // 行追加
             RowCount += 1;
@@ -1479,18 +1636,16 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainType(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainType()");
         }
 
         /// <summary>
         /// 列車名描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainName(TrainProperties properties)
+        private void DrawRowsTrainName()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainName(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainName()");
 
             // 行追加
             RowCount += 1;
@@ -1501,18 +1656,16 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainName(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainName()");
         }
 
         /// <summary>
         /// 列車記号描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsTrainMark(TrainProperties properties)
+        private void DrawRowsTrainMark()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainMark(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsTrainMark()");
 
             // 行追加
             RowCount += 1;
@@ -1523,18 +1676,16 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainMark(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsTrainMark()");
         }
 
         /// <summary>
         /// 始発駅描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsDepartingStation(TrainProperties properties)
+        private void DrawRowsDepartingStation()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDepartingStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDepartingStation()");
 
             // 行追加
             RowCount += 1;
@@ -1545,18 +1696,16 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.BackColor = SystemColors.Control;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDepartingStation(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDepartingStation()");
         }
 
         /// <summary>
         /// 終着駅描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsDestinationStation(TrainProperties properties)
+        private void DrawRowsDestinationStation()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDestinationStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsDestinationStation()");
 
             // 行追加
             RowCount += 1;
@@ -1568,47 +1717,43 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].Frozen = true;
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDestinationStation(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsDestinationStation()");
         }
 
         /// <summary>
         /// 駅時刻描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsStationTime(TrainProperties properties)
+        private void DrawRowsStationTime()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsStationTime()");
 
             // 方向種別で分岐
             switch (m_DirectionType)
             {
                 case DirectionType.Outbound:
                     // 駅時刻描画(下り)
-                    DrawRowsOutboundStationTime(properties);
+                    DrawRowsOutboundStationTime();
                     break;
                 case DirectionType.Inbound:
                     // 駅時刻描画(上り)
-                    DrawRowsInboundStationTime(properties);
+                    DrawRowsInboundStationTime();
                     break;
                 default:
                     throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", m_DirectionType));
             }
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsStationTime(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsStationTime()");
         }
 
         /// <summary>
         /// 駅時刻描画(下り)
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsOutboundStationTime(TrainProperties properties)
+        private void DrawRowsOutboundStationTime()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime()");
 
             // 初期化
             m_StationDrawRowInfomation.Clear();
@@ -1623,7 +1768,7 @@ namespace TrainTimeTable.Control
                 StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
                 // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, station, properties);
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Outbound, station);
 
                 // 駅時刻行分繰り返す
                 foreach (var departureArrivalType in columnsList.Keys)
@@ -1644,18 +1789,16 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime()");
         }
 
         /// <summary>
         /// 駅時刻描画(上り)
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsInboundStationTime(TrainProperties properties)
+        private void DrawRowsInboundStationTime()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsInboundStationTime()");
 
             // 初期化
             m_StationDrawRowInfomation.Clear();
@@ -1670,7 +1813,7 @@ namespace TrainTimeTable.Control
                 StationProperty station = m_RouteFileProperty.Stations.Find(t => t.Name == stationSequence.Name);
 
                 // 駅時刻行取得
-                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, station, properties);
+                Dictionary<DepartureArrivalType, List<string>> columnsList = GetStationTimeRows(DirectionType.Inbound, station);
 
                 // 駅時刻行分繰り返す
                 foreach (var departureArrivalType in columnsList.Keys)
@@ -1691,18 +1834,16 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsInboundStationTime()");
         }
 
         /// <summary>
         /// 備考描画
         /// </summary>
-        /// <param name="properties"></param>
-        private void DrawRowsRemarksStation(TrainProperties properties)
+        private void DrawRowsRemarksStation()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsRemarksStation(TrainProperties)");
-            Logger.DebugFormat("properties:[{0}]", properties);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::DrawRowsRemarksStation()");
 
             // 行追加
             RowCount += 1;
@@ -1712,7 +1853,7 @@ namespace TrainTimeTable.Control
             Rows[Rows.Count - 1].DefaultCellStyle.Font = m_FontDictionary["備考"];
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsRemarksStation(TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DrawRowsRemarksStation()");
         }
         #endregion
 
@@ -1732,6 +1873,9 @@ namespace TrainTimeTable.Control
             {
                 // データ更新
                 m_RouteFileProperty.Copy(property);
+
+                // 描写情報更新
+                UpdateDrawTrainProperties();
 
                 // 描画
                 Draw();
@@ -1765,6 +1909,9 @@ namespace TrainTimeTable.Control
             diagramProperty.TrainSequence[type].Copy(sequence);
             diagramProperty.Trains[type].Copy(properties);
 
+            // 描写情報更新
+            UpdateDrawTrainProperties();
+
             // 描画
             Draw();
 
@@ -1774,6 +1921,39 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::Update(TrainSequenceProperties, TrainProperties)");
         }
+
+        #region 描画対象列車情報更新
+        /// <summary>
+        /// 描画対象列車情報更新
+        /// </summary>
+        private void UpdateDrawTrainProperties()
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::UpdateDrawTrainProperties()");
+
+            // TrainSequencePropertiesオブジェクト取得
+            TrainSequenceProperties sequences = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).TrainSequence[m_DirectionType];
+
+            // TrainPropertiesオブジェクト取得
+            TrainProperties trains = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType];
+
+            // クリア
+            m_DrawTrainProperties.Clear();
+
+            // シーケンスを繰り返す
+            foreach (var sequence in sequences.OrderBy(s=>s.Seq))
+            {
+                // TrainPropertyオブジェクト取得
+                TrainProperty train = trains.Find(t=>t.Id == sequence.Id);
+
+                // 登録
+                m_DrawTrainProperties.Add(train);
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::UpdateDrawTrainProperties()");
+        }
+        #endregion
         #endregion
 
         #region 編集
@@ -1973,8 +2153,9 @@ namespace TrainTimeTable.Control
         }
         #endregion
 
+        #region セル比較
         /// <summary>
-        /// 指定したセル比較
+        /// セル比較
         /// </summary>
         /// <param name="column"></param>
         /// <param name="columnOffset"></param>
@@ -2029,7 +2210,9 @@ namespace TrainTimeTable.Control
             // 返却
             return result;
         }
+        #endregion
 
+        #region 選択インデックス取得
         /// <summary>
         /// 選択インデックス(列)取得
         /// </summary>
@@ -2091,36 +2274,61 @@ namespace TrainTimeTable.Control
         }
 
         /// <summary>
-        /// 選択情報取得
+        /// 選択列車インデックス取得
         /// </summary>
         /// <returns></returns>
-        private TrainProperty GetSelectedCondition()
+        private int GetSelectedTrainColumnIndex()
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetSelectedCondition()");
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetSelectedTrainColumnIndex()");
+
+            // 選択インデックス設定
+            int result = GetSelectedColumnIndex() - 4;
 
             // 選択状態設定
-            if (SelectedCells.Count == 0)
+            if (result < 0)
             {
                 // ロギング
-                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedCondition()");
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedTrainColumnIndex()");
+
+                // 選択なし
+                return -1;
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedTrainColumnIndex()");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
+        #region 選択列車情報取得
+        /// <summary>
+        /// 選択列車情報取得
+        /// </summary>
+        /// <returns></returns>
+        private TrainProperty GetSelectedTrainProperty()
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetSelectedTrainProperty()");
+
+            // 選択インデックス設定
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択状態設定
+            if (index < 0)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedTrainProperty()");
 
                 // 選択なし
                 return null;
             }
 
-            // 選択列判定
-            if (SelectedCells[0].ColumnIndex < 4)
-            {
-                // ロギング
-                Logger.Debug("<<<<= DataGridViewTrainType::GetSelectedCondition()");
-
-                // 選択なし(列車列でない)
-                return null;
-            }
-
             // 列車情報を取得
-            TrainProperty result = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][SelectedCells[0].ColumnIndex - 4];
+            TrainProperty result = m_DrawTrainProperties[index];
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
@@ -2129,6 +2337,7 @@ namespace TrainTimeTable.Control
             // 返却
             return result;
         }
+        #endregion
 
         #region 描画文字列取得
         /// <summary>
@@ -2430,26 +2639,27 @@ namespace TrainTimeTable.Control
         }
         #endregion
 
+        #region 描写情報取得
         /// <summary>
         /// 駅時刻行取得
         /// </summary>
         /// <param name="inbound"></param>
         /// <param name="station"></param>
-        /// <param name="properties"></param>
+        /// <param name="sequences"></param>
+        /// <param name="trains"></param>
         /// <returns></returns>
-        private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station, TrainProperties trains)
+        private Dictionary<DepartureArrivalType, List<string>> GetStationTimeRows(DirectionType type, StationProperty station)
         {
             // ロギング
-            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
-            Logger.DebugFormat("type   :[{0}]", type);
-            Logger.DebugFormat("station:[{0}]", station);
-            Logger.DebugFormat("trains :[{0}]", trains);
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty)");
+            Logger.DebugFormat("type     :[{0}]", type);
+            Logger.DebugFormat("station  :[{0}]", station);
 
             // 結果オブジェクト生成
             Dictionary<DepartureArrivalType, List<string>> result = ColumnsListInitialization(type, station);
 
-            // 列車プロパティを繰り返す
-            foreach (var train in trains)
+            // 列車描写プロパティを繰り返す
+            foreach (TrainProperty train in m_DrawTrainProperties)
             {
                 // 列車時刻を取得
                 Dictionary<DepartureArrivalType, string> trainTimes = GetStationTime(type, train, station);
@@ -2464,7 +2674,7 @@ namespace TrainTimeTable.Control
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty, TrainProperties)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetStationTimeRows(DirectionType, StationProperty)");
 
             // 返却
             return result;
@@ -2862,7 +3072,9 @@ namespace TrainTimeTable.Control
             // 返却
             return result;
         }
+        #endregion
 
+        #region 列車情報編集
         /// <summary>
         /// 列車情報編集
         /// </summary>
@@ -2873,16 +3085,37 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
-            // 列車情報を取得
-            TrainProperty property = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][info.ColumnIndex - 4];
-
-            // 編集
-            Edit(property);
+            // 列車情報編集
+            EditTrainInformation(info.ColumnIndex, info.RowIndex);
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainInformation(HitTestInfo)");
         }
 
+        /// <summary>
+        /// 列車情報編集
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        private void EditTrainInformation(int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainInformation(int, int)");
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
+            // 列車情報を取得
+            TrainProperty property = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][column - 4];
+
+            // 編集
+            Edit(property);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainInformation(int, int)");
+        }
+        #endregion
+
+        #region 列車時刻編集
         /// <summary>
         /// 列車時刻編集
         /// </summary>
@@ -2893,14 +3126,33 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainTimeInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
+            // 列車時刻編集
+            EditTrainTimeInformation(info.ColumnIndex, info.RowIndex);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainTimeInformation(HitTestInfo)");
+        }
+
+        /// <summary>
+        /// 列車時刻編集
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        private void EditTrainTimeInformation(int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditTrainTimeInformation(int, int)");
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
             // 駅名セルを取得
-            DataGridViewCell stationCell = this[2, info.RowIndex];
+            DataGridViewCell stationCell = this[2, row];
 
             // 駅情報を取得
             StationProperty stationProperty = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
 
             // 列車情報を取得
-            TrainProperty trainProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][info.ColumnIndex - 4];
+            TrainProperty trainProperty = m_RouteFileProperty.Diagrams.Find(t => t.Name == m_DiagramName).Trains[m_DirectionType][column - 4];
 
             // 列車時刻情報を取得
             StationTimeProperty property = trainProperty.StationTimes.Find(s => s.StationName == stationProperty.Name);
@@ -2926,9 +3178,11 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainTimeInformation(HitTestInfo)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditTrainTimeInformation(int, int)");
         }
+        #endregion
 
+        #region 駅情報編集
         /// <summary>
         /// 駅情報編集
         /// </summary>
@@ -2939,8 +3193,27 @@ namespace TrainTimeTable.Control
             Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditStationInformation(HitTestInfo)");
             Logger.DebugFormat("info:[{0}]", info);
 
+            // 駅情報編集
+            EditStationInformation(info.ColumnIndex, info.RowIndex);
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditStationInformation(HitTestInfo)");
+        }
+
+        /// <summary>
+        /// 駅情報編集
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        private void EditStationInformation(int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::EditStationInformation(int, int)");
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
             // 駅名セルを取得
-            DataGridViewCell stationCell = this[2, info.RowIndex];
+            DataGridViewCell stationCell = this[2, row];
 
             // 駅情報を取得
             StationProperty property = m_RouteFileProperty.Stations.Find(t => t.Name == stationCell.Value.ToString());
@@ -2950,11 +3223,9 @@ namespace TrainTimeTable.Control
             {
                 // StationPropertiesUpdateEventArgsオブジェクト生成
                 StationPropertiesUpdateEventArgs eventArgs = new StationPropertiesUpdateEventArgs();
+                eventArgs.OldStationName = property.Name;
                 eventArgs.OldProperties.Copy(m_RouteFileProperty.Stations);
                 eventArgs.Properties = m_RouteFileProperty.Stations;
-
-                // 旧駅名保存
-                string oldStationName = property.Name;
 
                 // FormStationPropertyオブジェクト生成
                 FormStationProperty form = new FormStationProperty(property);
@@ -2965,24 +3236,11 @@ namespace TrainTimeTable.Control
                 // FormStationProperty表示結果判定
                 if (dialogResult == DialogResult.OK)
                 {
-                    // 駅名(キーが変更されたか？)
-                    if (oldStationName != form.Property.Name)
-                    {
-                        // 同一名判定
-                        if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
-                        {
-                            // エラーメッセージ
-                            MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                            return;
-                        }
+                    // StationPropertiesUpdateEventArgsオブジェクト設定
+                    eventArgs.NewStationName = form.Property.Name;
 
-                        // StationPropertiesUpdateEventArgsオブジェクト設定
-                        eventArgs.OldStationName = oldStationName;
-                        eventArgs.NewStationName = form.Property.Name;
-
-                        // 駅名変換
-                        m_RouteFileProperty.ChangeStationName(oldStationName, form.Property.Name);
-                    }
+                    // 駅名変換
+                    m_RouteFileProperty.ChangeStationName(eventArgs.OldStationName, form.Property.Name);
 
                     // 結果保存
                     property.Copy(form.Property);
@@ -3003,8 +3261,9 @@ namespace TrainTimeTable.Control
             }
 
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditStationInformation(HitTestInfo)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::EditStationInformation(int, int)");
         }
+        #endregion
         #endregion
     }
 }

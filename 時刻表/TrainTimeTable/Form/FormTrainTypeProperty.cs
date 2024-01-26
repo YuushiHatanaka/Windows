@@ -28,19 +28,14 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
-        /// TrainTypePropertiesオブジェクト
-        /// </summary>
-        private TrainTypeProperties m_TrainTypeProperties = null;
-
-        /// <summary>
-        /// 旧列車種別名
-        /// </summary>
-        private string m_OldTrainTypeName = string.Empty;
-
-        /// <summary>
         /// TrainTypePropertyオブジェクト
         /// </summary>
         public TrainTypeProperty Property { get; set; } = new TrainTypeProperty();
+
+        /// <summary>
+        /// TrainTypePropertiesオブジェクト
+        /// </summary>
+        private TrainTypeProperties m_TrainTypeProperties { get; set; } = null;
 
         /// <summary>
         /// PanelLineオブジェクト
@@ -67,19 +62,56 @@ namespace TrainTimeTable
         /// コンストラクタ
         /// </summary>
         /// <param name="fonts"></param>
-        /// <param name="types"></param>
-        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperties types)
+        public FormTrainTypeProperty(FontProperties fonts)
         {
             // ロギング
-            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties)");
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties)");
             Logger.DebugFormat("fonts:[{0}]", fonts);
-            Logger.DebugFormat("types:[{0}]", types);
 
             // コンポーネント初期化
             InitializeComponent();
 
             // 設定
             m_ComboBoxFonts = new ComboBoxFonts(fonts);
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="fonts"></param>
+        /// <param name="property"></param>
+        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperty property)
+            : this(fonts)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
+            Logger.DebugFormat("fonts   :[{0}]", fonts);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            Property.Copy(property);
+
+            // ロギング
+            Logger.Debug("<<<<= FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperty)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="fonts"></param>
+        /// <param name="types"></param>
+        public FormTrainTypeProperty(FontProperties fonts, TrainTypeProperties types)
+            : this(fonts)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormTrainTypeProperty::FormTrainTypeProperty(FontProperties, TrainTypeProperties)");
+            Logger.DebugFormat("fonts:[{0}]", fonts);
+            Logger.DebugFormat("types:[{0}]", types);
+
+            // 設定
             m_TrainTypeProperties = types;
 
             // ロギング
@@ -102,7 +134,6 @@ namespace TrainTimeTable
             Logger.DebugFormat("property:[{0}]", property);
 
             // 設定
-            m_OldTrainTypeName = property.Name;
             Property.Copy(property);
 
             // ロギング
@@ -372,17 +403,14 @@ namespace TrainTimeTable
                 return false;
             }
 
-            // 同一名判定
-            if (m_OldTrainTypeName != textBoxTrainTypeName.Text)
+            // 同一名登録判定
+            if (m_TrainTypeProperties?.Find(t => t.Name == textBoxTrainTypeName.Text) != null)
             {
-                if (m_TrainTypeProperties.Find(t => t.Name == textBoxTrainTypeName.Text) != null)
-                {
-                    // エラーメッセージ
-                    MessageBox.Show(string.Format("既に登録されている列車種別名は使用できません:[{0}]", textBoxTrainTypeName.Text), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // エラーメッセージ
+                MessageBox.Show(string.Format("既に登録されている列車種別名は使用できません:[{0}]", textBoxTrainTypeName.Text), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                    // 異常終了
-                    return false;
-                }
+                // 異常終了
+                return false;
             }
 
             // ロギング

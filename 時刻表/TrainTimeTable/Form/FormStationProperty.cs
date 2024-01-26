@@ -44,9 +44,14 @@ namespace TrainTimeTable
         #endregion
 
         /// <summary>
-        /// StationPropertyオブジェクト生成
+        /// StationPropertyオブジェクト
         /// </summary>
         public StationProperty Property { get; set; } = null;
+
+        /// <summary>
+        /// StationPropertiesオブジェクト
+        /// </summary>
+        private StationProperties m_StationProperties { get; set; } = null;
 
         /// <summary>
         /// ComboBoxDiagramTrainInformation辞書オブジェクト
@@ -96,6 +101,44 @@ namespace TrainTimeTable
 
             // ロギング
             Logger.Debug("<<<<= FormStationProperty::FormStationProperty(StationProperty)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="property"></param>
+        public FormStationProperty(StationProperties stations)
+            : this()
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationProperty::FormStationProperty(StationProperties)");
+            Logger.DebugFormat("stations:[{0}]", stations);
+
+            // 設定
+            m_StationProperties = stations;
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationProperty::FormStationProperty(StationProperties)");
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="stations"></param>
+        /// <param name="property"></param>
+        public FormStationProperty(StationProperties stations, StationProperty property)
+            : this(stations)
+        {
+            // ロギング
+            Logger.Debug("=>>>> FormStationProperty::FormStationProperty(StationProperties, StationProperty)");
+            Logger.DebugFormat("stations:[{0}]", stations);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 設定
+            Property.Copy(property);
+
+            // ロギング
+            Logger.Debug("<<<<= FormStationProperty::FormStationProperty(StationProperties, StationProperty)");
         }
         #endregion
 
@@ -215,6 +258,16 @@ namespace TrainTimeTable
                 return false;
             }
 
+            // 同一名登録判定
+            if (m_StationProperties?.Find(t => t.Name == textBoxStationName.Text) != null)
+            {
+                // エラーメッセージ
+                MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", textBoxStationName.Text), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                // 異常終了
+                return false;
+            }
+            
             // ロギング
             Logger.Debug("<<<<= FormStationProperty::InputCheck()");
 

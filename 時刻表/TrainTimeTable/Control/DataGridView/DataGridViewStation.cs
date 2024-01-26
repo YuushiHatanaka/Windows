@@ -233,7 +233,7 @@ namespace TrainTimeTable.Control
             }
 
             // コピー項目取得
-            StationProperty result = dataObject.GetData(typeof(StationProperty)) as StationProperty;
+            StationProperty property = dataObject.GetData(typeof(StationProperty)) as StationProperty;
 
             // 選択インデクス取得
             int index = GetSelectedIndex();
@@ -244,8 +244,23 @@ namespace TrainTimeTable.Control
                 index = 0;
             }
 
+            // FormStationPropertyオブジェクト生成
+            FormStationProperty form = new FormStationProperty(m_RouteFileProperty.Stations, property);
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationPastingOnTopOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
+
+            // TODO:編集(同一名はNG)
+
             // 駅挿入
-            m_RouteFileProperty.InsertStation(index, result);
+            m_RouteFileProperty.InsertStation(index, property);
 
             // 更新
             Update(m_RouteFileProperty.Stations);
@@ -283,7 +298,7 @@ namespace TrainTimeTable.Control
             }
 
             // コピー項目取得
-            StationProperty result = dataObject.GetData(typeof(StationProperty)) as StationProperty;
+            StationProperty property = dataObject.GetData(typeof(StationProperty)) as StationProperty;
 
             // 選択インデクス取得
             int index = GetSelectedIndex();
@@ -294,8 +309,23 @@ namespace TrainTimeTable.Control
                 index = 0;
             }
 
+            // FormStationPropertyオブジェクト生成
+            FormStationProperty form = new FormStationProperty(m_RouteFileProperty.Stations, property);
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewStation::StationPastingBelowOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
+
+            // TODO:編集(同一名はNG)
+
             // 駅挿入
-            m_RouteFileProperty.InsertStation(index + 1, result);
+            m_RouteFileProperty.InsertStation(index + 1, property);
 
             // 更新
             Update(m_RouteFileProperty.Stations);
@@ -358,7 +388,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // FormStationPropertyオブジェクト生成
-            FormStationProperty form = new FormStationProperty();
+            FormStationProperty form = new FormStationProperty(m_RouteFileProperty.Stations);
 
             // フォーム表示
             if (form.ShowDialog() != DialogResult.OK)
@@ -399,7 +429,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // FormStationPropertyオブジェクト生成
-            FormStationProperty form = new FormStationProperty();
+            FormStationProperty form = new FormStationProperty(m_RouteFileProperty.Stations);
 
             // フォーム表示
             if (form.ShowDialog() != DialogResult.OK)
@@ -440,12 +470,12 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("e     :[{0}]", e);
 
             // 選択項目取得
-            StationProperty result = GetSelectedCondition();
+            StationProperty property = GetSelectedCondition();
 
             // 選択状態設定
-            if (result != null)
+            if (property != null)
             {
-                FormStationProperty form = new FormStationProperty(result);
+                FormStationProperty form = new FormStationProperty(property);
                 form.OnUpdate += DataGridViewStation_OnUpdate;
 
                 DialogResult dialogResult = form.ShowDialog();
@@ -564,23 +594,11 @@ namespace TrainTimeTable.Control
                 // FormStationProperty表示結果判定
                 if (dialogResult == DialogResult.OK)
                 {
-                    // 駅名(キーが変更されたか？)
-                    if (eventArgs.OldStationName != form.Property.Name)
-                    {
-                        // 同一名判定
-                        if (m_RouteFileProperty.Stations.Find(t => t.Name == form.Property.Name) != null)
-                        {
-                            // エラーメッセージ
-                            MessageBox.Show(string.Format("既に登録されている駅名は使用できません:[{0}]", form.Property.Name), "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
+                    // イベント引数設定
+                    eventArgs.NewStationName = form.Property.Name;
 
-                        // イベント引数設定
-                        eventArgs.NewStationName = form.Property.Name;
-
-                        // 駅名変換
-                        m_RouteFileProperty.ChangeStationName(eventArgs.OldStationName, form.Property.Name);
-                    }
+                    // 駅名変換
+                    m_RouteFileProperty.ChangeStationName(eventArgs.OldStationName, form.Property.Name);
 
                     // 結果保存
                     property.Copy(form.Property);

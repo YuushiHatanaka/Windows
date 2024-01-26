@@ -238,7 +238,7 @@ namespace TrainTimeTable.Control
             }
 
             // コピー項目取得
-            TrainTypeProperty result = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
+            TrainTypeProperty property = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
 
             // 選択インデクス取得
             int index = GetSelectedIndex();
@@ -249,10 +249,21 @@ namespace TrainTimeTable.Control
                 index = 0;
             }
 
-            // TODO:編集(同一名はNG)
+            // FormTrainTypePropertyオブジェクト生成
+            FormTrainTypeProperty form = new FormTrainTypeProperty(m_RouteFileProperty.Fonts, m_RouteFileProperty.TrainTypes, property);
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteOnTopOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
 
             // 列車種別挿入
-            m_RouteFileProperty.InsertTrainType(index, result);
+            m_RouteFileProperty.InsertTrainType(index, property);
 
             // 更新
             Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
@@ -290,7 +301,7 @@ namespace TrainTimeTable.Control
             }
 
             // コピー項目取得
-            TrainTypeProperty result = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
+            TrainTypeProperty property = dataObject.GetData(typeof(TrainTypeProperty)) as TrainTypeProperty;
 
             // 選択インデクス取得
             int index = GetSelectedIndex();
@@ -301,10 +312,21 @@ namespace TrainTimeTable.Control
                 index = m_RouteFileProperty.TrainTypes.Count + 1;
             }
 
-            // TODO:編集(同一名はNG)
+            // FormTrainTypePropertyオブジェクト生成
+            FormTrainTypeProperty form = new FormTrainTypeProperty(m_RouteFileProperty.Fonts, m_RouteFileProperty.TrainTypes, property);
+
+            // フォーム表示
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+                // ロギング
+                Logger.Debug("<<<<= DataGridViewTrainType::TrainTypePasteOnTopOnClick(object, EventArgs)");
+
+                // キャンセルなので何もしない
+                return;
+            }
 
             // 列車種別挿入
-            m_RouteFileProperty.InsertTrainType(index + 1, result);
+            m_RouteFileProperty.InsertTrainType(index + 1, property);
 
             // 更新
             Update(m_RouteFileProperty.TrainTypeSequences, m_RouteFileProperty.TrainTypes);
@@ -385,7 +407,7 @@ namespace TrainTimeTable.Control
             // 選択インデックス判定
             if (index < 0)
             {
-                index = m_RouteFileProperty.TrainTypes.Count + 1;
+                index = 0;
             }
 
             // 列車種別挿入
@@ -428,6 +450,12 @@ namespace TrainTimeTable.Control
 
             // 選択インデクス取得
             int index = GetSelectedIndex();
+
+            // 選択インデックス判定
+            if (index == -1)
+            {
+                index = m_RouteFileProperty.TrainTypes.Count + 1;
+            }
 
             // 列車種別挿入
             m_RouteFileProperty.InsertTrainType(index + 1, form.Property);
@@ -1019,7 +1047,7 @@ namespace TrainTimeTable.Control
             eventArgs.OldProperties.Copy(m_RouteFileProperty.TrainTypes);
 
             // FormTrainTypePropertyオブジェクト生成
-            FormTrainTypeProperty form = new FormTrainTypeProperty(m_RouteFileProperty.Fonts, m_RouteFileProperty.TrainTypes, property);
+            FormTrainTypeProperty form = new FormTrainTypeProperty(m_RouteFileProperty.Fonts, property);
 
             // 結果判定
             DialogResult dialogResult = form.ShowDialog();

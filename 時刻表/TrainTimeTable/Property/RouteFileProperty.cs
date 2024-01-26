@@ -902,6 +902,28 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= RouteFileProperty::RemoveTrain(DirectionType, TrainProperty)");
         }
         #endregion
+
+        #region 列車入替
+        /// <summary>
+        /// 列車入替
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="offset"></param>
+        /// <param name="property"></param>
+        public void ReplacementTrain(DirectionType type, int offset, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::ReplacementTrain(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("offset  :[{0}]", offset);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車入替
+            Diagrams.ReplacementTrain(type, offset, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::ReplacementTrain(DirectionType, int, TrainProperty)");
+        }
         #endregion
 
         #region StationTimeProperty取得
@@ -1018,6 +1040,30 @@ namespace TrainTimeTable.Property
             // 返却
             return result;
         }
+        #endregion
+
+        #region 列車時間コピー
+        /// <summary>
+        /// 列車時間コピー
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void PasteOnlyTheTrainTime(DirectionType type, int index, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::PasteOnlyTheTrainTime(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // 各プロパティで列車時間コピー
+            Diagrams.PasteOnlyTheTrainTime(type, index, property);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::PasteOnlyTheTrainTime(DirectionType, int, TrainProperty)");
+        }
+        #endregion
         #endregion
 
         #region 文字列化

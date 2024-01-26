@@ -552,6 +552,83 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= DiagramProperties::RemoveTrain(DirectionType, TrainProperty)");
         }
         #endregion
+
+        #region 列車入替
+        /// <summary>
+        /// 列車入替
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="offset"></param>
+        /// <param name="property"></param>
+        public void ReplacementTrain(DirectionType type, int offset, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::ReplacementTrain(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("offset  :[{0}]", offset);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = Find(t => t.Name == property.DiagramName);
+
+            // TrainSequencePropertyオブジェクト取得
+            TrainSequenceProperty trainSequenceProperty = diagramProperty.TrainSequence[type].Find(t => t.Id == property.Id);
+
+            // TrainSequencePropertyオブジェクト(入替先)取得
+            TrainSequenceProperty targetSequenceProperty = diagramProperty.TrainSequence[type].Find(t => t.Seq == trainSequenceProperty.Seq + offset);
+
+            // ターゲット存在判定
+            if (targetSequenceProperty == null)
+            {
+                // ロギング
+                Logger.Warn("入替対象の列車がありませんでした");
+                Logger.WarnFormat("type    :[{0}]", type.GetStringValue());
+                Logger.WarnFormat("offset  :[{0}]", offset);
+                Logger.WarnFormat("property:[{0}]", property);
+                Logger.Warn("<<<<= DiagramProperties::ReplacementTrain(DirectionType, int, TrainProperty)");
+
+                // ターゲットなし
+                return;
+            }
+
+            // 入替
+            int tmpSeq = targetSequenceProperty.Seq;
+            targetSequenceProperty.Seq = trainSequenceProperty.Seq;
+            trainSequenceProperty.Seq = tmpSeq;
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::ReplacementTrain(DirectionType, int, TrainProperty)");
+        }
+        #endregion
+
+        #region 列車時間コピー
+        /// <summary>
+        /// 列車時間コピー
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="property"></param>
+        public void PasteOnlyTheTrainTime(DirectionType type, int index, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::PasteOnlyTheTrainTime(DirectionType, int, TrainProperty)");
+            Logger.DebugFormat("type    :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index   :[{0}]", index);
+            Logger.DebugFormat("property:[{0}]", property);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = Find(t => t.Name == property.DiagramName);
+
+            // TrainPropertyオブジェクト取得
+            TrainProperty trainProperty = diagramProperty.Trains[type][index];
+
+            // 列車時間をコピーする
+            trainProperty.StationTimes.Copy(property.StationTimes);
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::PasteOnlyTheTrainTime(DirectionType, int, TrainProperty)");
+        }
+        #endregion
         #endregion
 
         #region 文字列化
