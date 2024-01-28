@@ -26,6 +26,7 @@ namespace TrainTimeTable.Property
         private readonly static ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         #endregion
 
+        #region 各種プロパティ
         /// <summary>
         /// ファイル情報プロパティ
         /// </summary>
@@ -85,6 +86,7 @@ namespace TrainTimeTable.Property
         /// ダイアグラムシーケンスプロパティ
         /// </summary>
         public DiagramSequenceProperties DiagramSequences { get; set; } = new DiagramSequenceProperties();
+        #endregion
 
         #region コンストラクタ
         /// <summary>
@@ -129,7 +131,7 @@ namespace TrainTimeTable.Property
             Logger.DebugFormat("property:[{0}]", property);
 
             // 同一オブジェクト以外に実施する
-            if (!ReferenceEquals(this ,property))
+            if (!ReferenceEquals(this, property))
             {
                 // コピー
                 FileInfo.Copy(property.FileInfo);
@@ -284,19 +286,46 @@ namespace TrainTimeTable.Property
         #endregion
 
         #region ダイアグラム関連
-        #region ダイヤグラム登録
+        /// <summary>
+        /// ダイヤグラム取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public DiagramProperty GetDiagram(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::GetDiagram(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty result = Diagrams.Find(t => t.Name == name);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= RouteFileProperty::GetDiagram(string)");
+
+            // 返却
+            return result;
+        }
+
         /// <summary>
         /// ダイヤグラム登録
         /// </summary>
         /// <param name="property"></param>
         public void RegistonDiagrams(DiagramProperty property)
         {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::RegistonDiagrams(DiagramProperty)");
+            Logger.DebugFormat("property:[{0}]", property);
+
             Diagrams.Add(property);
             DiagramSequences.Add(new DiagramSequenceProperty() { Name = property.Name });
-        }
-        #endregion
 
-        #region ダイヤグラム削除
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::RegistonDiagrams(DiagramProperty)");
+        }
+
         /// <summary>
         /// ダイヤグラム削除
         /// </summary>
@@ -314,9 +343,7 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= RouteFileProperty::RemoveDiagram(string)");
         }
-        #endregion
 
-        #region ダイアグラム名変更
         /// <summary>
         /// ダイアグラム名変更
         /// </summary>
@@ -341,9 +368,32 @@ namespace TrainTimeTable.Property
             Logger.Debug("<<<<= RouteFileProperty::ChangeDiagramName(string, string)");
         }
         #endregion
-        #endregion
 
         #region 駅関連
+        #region 駅取得
+        /// <summary>
+        /// 駅取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public StationProperty GetStation(string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::GetStation(string)");
+            Logger.DebugFormat("name:[{0}]", name);
+
+            // 駅情報を取得
+            StationProperty result = Stations.Find(t => t.Name == name);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= RouteFileProperty::GetStation(string)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 駅追加
         /// <summary>
         /// 駅追加
@@ -439,7 +489,6 @@ namespace TrainTimeTable.Property
         /// <param name="type"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        /// <exception cref="AggregateException"></exception>
         public StationProperty GetBeforeStation(DirectionType type, string name)
         {
             // ロギング

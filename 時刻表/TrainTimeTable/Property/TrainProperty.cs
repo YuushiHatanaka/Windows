@@ -438,6 +438,110 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        /// <summary>
+        /// 当駅始発設定
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        public void StartStationSetting(DirectionType type, StationSequenceProperties sequences, string stationName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::StartStationSetting(DirectionType, StationSequenceProperties, string)");
+            Logger.DebugFormat("type       :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+
+            // 設定
+            DepartingStation = stationName;
+
+            // シーケンスを取得
+            IOrderedEnumerable<StationSequenceProperty> orderedSequence = null;
+            switch (type)
+            {
+                case DirectionType.Outbound:
+                    orderedSequence = sequences.OrderBy(s => s.Seq);
+                    break;
+                case DirectionType.Inbound:
+                    orderedSequence = sequences.OrderByDescending(s => s.Seq);
+                    break;
+                default:
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", type));
+            }
+
+            // シーケンスを繰り返す
+            foreach(var sequence in orderedSequence)
+            {
+                // 始発駅に一致？
+                if (sequence.Name == stationName)
+                {
+                    // 処理を終了
+                    break;
+                }
+
+                // StationTimePropertyオブジェクト取得
+                StationTimeProperty stationTime = StationTimes.Find(s => s.StationName == sequence.Name);
+
+                // 時刻消去
+                stationTime.EraseTime();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainProperty::StartStationSetting(DirectionType, StationSequenceProperties, string)");
+        }
+
+        /// <summary>
+        /// 当駅止り設定
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        public void StopStationSetting(DirectionType type, StationSequenceProperties sequences, string stationName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::StopStationSetting(DirectionType, StationSequenceProperties, string)");
+            Logger.DebugFormat("type       :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+
+            // 設定
+            DestinationStation = stationName;
+
+            // シーケンスを取得
+            IOrderedEnumerable<StationSequenceProperty> orderedSequence = null;
+            switch (type)
+            {
+                case DirectionType.Outbound:
+                    orderedSequence = sequences.OrderByDescending(s => s.Seq);
+                    break;
+                case DirectionType.Inbound:
+                    orderedSequence = sequences.OrderBy(s => s.Seq);
+                    break;
+                default:
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", type));
+            }
+
+            // シーケンスを繰り返す
+            foreach (var sequence in orderedSequence)
+            {
+                // 始発駅に一致？
+                if (sequence.Name == stationName)
+                {
+                    // 処理を終了
+                    break;
+                }
+
+                // StationTimePropertyオブジェクト取得
+                StationTimeProperty stationTime = StationTimes.Find(s => s.StationName == sequence.Name);
+
+                // 時刻消去
+                stationTime.EraseTime();
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= TrainProperty::StopStationSetting(DirectionType, StationSequenceProperties, string)");
+        }
+
         #region 文字列化
         /// <summary>
         /// 文字列化

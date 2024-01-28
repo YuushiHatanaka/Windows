@@ -237,6 +237,75 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 時刻種別設定
+        /// <summary>
+        /// 時刻消去
+        /// </summary>
+        public void EraseTime()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeProperty::EraseTime()");
+
+            // 設定
+            StationTreatment = StationTreatment.NoService;
+            DepartureTime = "";
+            ArrivalTime = "";
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeProperty::EraseTime()");
+        }
+
+        /// <summary>
+        /// 通過設定
+        /// </summary>
+        public void SetPassing()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeProperty::SetPassing()");
+
+            // 設定
+            StationTreatment = StationTreatment.Passing;
+            DepartureTime = "";
+            ArrivalTime = "";
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeProperty::SetPassing()");
+        }
+
+        /// <summary>
+        /// 通過-停車設定
+        /// </summary>
+        public void SetPassingStopping()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeProperty::SetPassingStopping()");
+
+            // 時刻消去
+            StationTreatment = StationTreatment.Passing;
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeProperty::SetPassingStopping()");
+        }
+
+        /// <summary>
+        /// 経由なし設定
+        /// </summary>
+
+        public void SetNoRoute()
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationTimeProperty::SetNoRoute()");
+
+            // 時刻消去
+            StationTreatment = StationTreatment.NoRoute;
+            DepartureTime = "";
+            ArrivalTime = "";
+
+            // ロギング
+            Logger.Debug("<<<<= StationTimeProperty::SetNoRoute()");
+        }
+        #endregion
+
         #region 発時刻DateTime取得
         /// <summary>
         /// 発時刻DateTime取得

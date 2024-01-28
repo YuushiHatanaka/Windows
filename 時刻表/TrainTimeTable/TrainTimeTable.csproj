@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="Common\ClipboardLibrary.cs" />
     <Compile Include="Common\DashStyleInfo.cs" />
+    <Compile Include="Common\DataGridLocation.cs" />
     <Compile Include="Common\DepartureArrivalType.cs" />
     <Compile Include="Common\AssemblyLibrary.cs" />
     <Compile Include="Common\Const.cs" />
