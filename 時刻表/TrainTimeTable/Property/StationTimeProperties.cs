@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using TrainTimeTable.Common;
 
 namespace TrainTimeTable.Property
@@ -67,6 +68,33 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationTimeProperties::StationTimeProperties(IEnumerable<StationTimeProperty>)");
+        }
+        #endregion
+
+        #region インデクサ
+        /// <summary>
+        /// StationPropertyオブジェクト取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public StationTimeProperty this[string name]
+        {
+            get
+            {
+                // ロギング
+                Logger.Debug("=>>>> StationTimeProperties::[](string)");
+                Logger.DebugFormat("name:[{0}]", name);
+
+                // 結果オブジェクト生成
+                StationTimeProperty result = Find(s => s.StationName == name);
+
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
+                Logger.Debug("<<<<= StationTimeProperties::[](string)");
+
+                // 返却
+                return result;
+            }
         }
         #endregion
 

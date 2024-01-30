@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TrainTimeTable.Common;
 
 namespace TrainTimeTable.Property
 {
@@ -50,6 +51,33 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationSequenceProperties::StationSequenceProperties(StationSequenceProperties)");
+        }
+        #endregion
+
+        #region インデクサ
+        /// <summary>
+        /// StationPropertyオブジェクト取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public StationSequenceProperty this[string name]
+        {
+            get
+            {
+                // ロギング
+                Logger.Debug("=>>>> StationSequenceProperties::[](string)");
+                Logger.DebugFormat("name:[{0}]", name);
+
+                // 結果オブジェクト生成
+                StationSequenceProperty result = Find(s => s.Name == name);
+
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
+                Logger.Debug("<<<<= StationSequenceProperties::[](string)");
+
+                // 返却
+                return result;
+            }
         }
         #endregion
 
@@ -242,6 +270,43 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= StationSequenceProperties::SequenceNumberReconstruction()");
+        }
+        #endregion
+
+        #region 次駅StationPropertyオブジェクト取得
+        /// <summary>
+        /// 次駅StationPropertyオブジェクト取得
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="offset"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public StationSequenceProperty Next(DirectionType type, int offset, string name)
+        {
+            // ロギング
+            Logger.Debug("=>>>> StationSequenceProperties::Next(DirectionType, int, string)");
+            Logger.DebugFormat("type  :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("offset:[{0}]", offset);
+            Logger.DebugFormat("name  :[{0}]", name);
+
+            // 結果オブジェクト生成
+            StationSequenceProperty current = Find(s => s.Name == name);
+
+            // オフセット変換
+            if (type == DirectionType.Inbound)
+            {
+                offset = -offset;
+            }
+
+            // 結果オブジェクト生成
+            StationSequenceProperty result = Find(s => s.Seq == current.Seq + offset);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= StationSequenceProperties::Next(DirectionType, int, string)");
+
+            // 返却
+            return result;
         }
         #endregion
 

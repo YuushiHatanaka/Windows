@@ -56,6 +56,33 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region インデクサ
+        /// <summary>
+        /// StationPropertyオブジェクト取得
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public StationProperty this[string name]
+        {
+            get
+            {
+                // ロギング
+                Logger.Debug("=>>>> StationProperties::[](string)");
+                Logger.DebugFormat("name:[{0}]", name);
+
+                // 結果オブジェクト生成
+                StationProperty result = Find(s => s.Name == name);
+
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
+                Logger.Debug("<<<<= StationProperties::[](string)");
+
+                // 返却
+                return result;
+            }
+        }
+        #endregion
+
         #region コピー
         /// <summary>
         /// コピー

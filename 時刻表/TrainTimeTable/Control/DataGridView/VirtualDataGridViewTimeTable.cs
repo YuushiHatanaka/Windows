@@ -1,8 +1,10 @@
 ﻿using log4net;
+using log4net.Repository.Hierarchy;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +17,7 @@ using System.Windows.Forms;
 using TrainTimeTable.Common;
 using TrainTimeTable.EventArgs;
 using TrainTimeTable.Property;
+using static System.Collections.Specialized.BitVector32;
 
 namespace TrainTimeTable.Control
 {
@@ -1490,7 +1493,58 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // TODO:未実装
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.GetDiagram(m_DiagramName);
+
+            // 選択インデクス取得
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択インデックス判定
+            if (index < 0)
+            {
+                index = 0;
+            }
+
+            // 選択項目取得
+            TrainProperty property = GetSelectedTrainProperty();
+
+            // 選択状態設定
+            if (property == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DirectCommunicationOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // 選択項目取得
+            TrainProperty nextTrainProperty = GetSelectedNextTrainProperty(1);
+
+            // 選択状態設定
+            if (nextTrainProperty == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DirectCommunicationOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // 選択駅取得
+            string selectedStationName = GetSelectedStationName(dataLocation.Row);
+
+            // 結合
+            property.Join(m_RouteFileProperty.Stations, m_RouteFileProperty.StationSequences, selectedStationName, nextTrainProperty);
+
+            // 列車削除
+            m_RouteFileProperty.RemoveTrain(m_DirectionType, nextTrainProperty);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DirectCommunicationOnClick(object, EventArgs)");
@@ -1521,12 +1575,54 @@ namespace TrainTimeTable.Control
                 return;
             }
 
-            // TODO:未実装
+            // DiagramPropertyオブジェクト取得
+            DiagramProperty diagramProperty = m_RouteFileProperty.GetDiagram(m_DiagramName);
+
+            // 選択インデクス取得
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択インデックス判定
+            if (index < 0)
+            {
+                index = 0;
+            }
+
+            // 選択項目取得
+            TrainProperty property = GetSelectedTrainProperty();
+
+            // 選択状態設定
+            if (property == null)
+            {
+                // ロギング
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DivisionOnClick(object, EventArgs)");
+
+                // 選択なし
+                return;
+            }
+
+            // 選択駅取得
+            string selectedStationName = GetSelectedStationName(dataLocation.Row);
+
+            // 列車削除
+            m_RouteFileProperty.RemoveTrain(m_DirectionType, property);
+
+            // 分割
+            TrainProperties divideTrains = property.Divide(m_RouteFileProperty.Stations, m_RouteFileProperty.StationSequences, selectedStationName);
+
+            // 列車挿入
+            m_RouteFileProperty.InsertTrain(m_DirectionType, index, divideTrains);
+
+            // 更新
+            Update(m_DirectionType, diagramProperty.TrainSequence[m_DirectionType], diagramProperty.Trains[m_DirectionType]);
+
+            // イベント呼出
+            OnTrainPropertiesUpdate(this, new TrainPropertiesUpdateEventArgs() { DirectionType = m_DirectionType, Sequences = diagramProperty.TrainSequence[m_DirectionType], Properties = diagramProperty.Trains[m_DirectionType] });
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::DivisionOnClick(object, EventArgs)");
         }
 
+        #region ContextMenuStripOpened
         /// <summary>
         /// ContextMenuStripOpened
         /// </summary>
@@ -1546,154 +1642,134 @@ namespace TrainTimeTable.Control
             // 選択列判定
             if (selectedColumnIndex > 3)
             {
-                // 表示/非表示設定
-                ContextMenuStrip.Items["cutout"].Visible = true;
-                ContextMenuStrip.Items["copy"].Visible = true;
-                ContextMenuStrip.Items["pasting_train_in_front"].Visible = true;
-                ContextMenuStrip.Items["pasting_train_later"].Visible = true;
-                ContextMenuStrip.Items["delete"].Visible = true;
-                ContextMenuStrip.Items["separator1"].Visible = true;
-                ContextMenuStrip.Items["paste_only_the_time"].Visible = true;
-                ContextMenuStrip.Items["separator2"].Visible = true;
-                ContextMenuStrip.Items["train_properties"].Visible = true;
-                ContextMenuStrip.Items["insert_train_in_front"].Visible = true;
-                ContextMenuStrip.Items["insert_train_later"].Visible = true;
-                ContextMenuStrip.Items["separator3"].Visible = true;
-                ContextMenuStrip.Items["station_properties"].Visible = false;
-                ContextMenuStrip.Items["station_time_properties"].Visible = true;
-                ContextMenuStrip.Items["separator4"].Visible = true;
-                ContextMenuStrip.Items["replace_the_previous_train"].Visible = true;
-                ContextMenuStrip.Items["replace_with_next_train"].Visible = true;
-                ContextMenuStrip.Items["separator5"].Visible = true;
-                ContextMenuStrip.Items["erase_time"].Visible = true;
-                ContextMenuStrip.Items["passing"].Visible = true;
-                ContextMenuStrip.Items["passing_stopping"].Visible = true;
-                ContextMenuStrip.Items["no_route"].Visible = true;
-                ContextMenuStrip.Items["separator6"].Visible = true;
-                ContextMenuStrip.Items["first_train_from_this_station"].Visible = true;
-                ContextMenuStrip.Items["stops_at_this_station"].Visible = true;
-                ContextMenuStrip.Items["direct_communication"].Visible = true;
-                ContextMenuStrip.Items["division"].Visible = true;
-
-                // 列車列の場合
-                ContextMenuStrip.Items["cutout"].Enabled = true;
-                ContextMenuStrip.Items["copy"].Enabled = true;
-                ContextMenuStrip.Items["delete"].Enabled = true;
-                ContextMenuStrip.Items["train_properties"].Enabled = true;
-                ContextMenuStrip.Items["insert_train_in_front"].Enabled = true;
-                ContextMenuStrip.Items["insert_train_later"].Enabled = true;
-                if (selectedColumnIndex == 4)
-                {
-                    ContextMenuStrip.Items["replace_the_previous_train"].Enabled = false;
-                }
-                else
-                {
-                    ContextMenuStrip.Items["replace_the_previous_train"].Enabled = true;
-                }
-                if (selectedColumnIndex == ColumnCount - 1)
-                {
-                    ContextMenuStrip.Items["replace_with_next_train"].Enabled = false;
-                }
-                else
-                {
-                    ContextMenuStrip.Items["replace_with_next_train"].Enabled = true;
-                }
-                if ((selectedRowIndex > 5) && (selectedRowIndex < RowCount - 1))
-                {
-                    ContextMenuStrip.Items["station_time_properties"].Enabled = true;
-                    ContextMenuStrip.Items["station_properties"].Enabled = true;
-                    ContextMenuStrip.Items["erase_time"].Enabled = true;
-                    ContextMenuStrip.Items["passing"].Enabled = true;
-                    ContextMenuStrip.Items["passing_stopping"].Enabled = true;
-                    ContextMenuStrip.Items["no_route"].Enabled = true;
-                    ContextMenuStrip.Items["first_train_from_this_station"].Enabled = true;
-                    ContextMenuStrip.Items["stops_at_this_station"].Enabled = true;
-                    ContextMenuStrip.Items["direct_communication"].Enabled = true;
-                    ContextMenuStrip.Items["division"].Enabled = true;
-                }
-                else
-                {
-                    ContextMenuStrip.Items["station_time_properties"].Enabled = false;
-                    ContextMenuStrip.Items["station_properties"].Enabled = false;
-                    ContextMenuStrip.Items["erase_time"].Enabled = false;
-                    ContextMenuStrip.Items["passing"].Enabled = false;
-                    ContextMenuStrip.Items["passing_stopping"].Enabled = false;
-                    ContextMenuStrip.Items["no_route"].Enabled = false;
-                    ContextMenuStrip.Items["first_train_from_this_station"].Enabled = false;
-                    ContextMenuStrip.Items["stops_at_this_station"].Enabled = false;
-                    ContextMenuStrip.Items["direct_communication"].Enabled = false;
-                    ContextMenuStrip.Items["division"].Enabled = false;
-                }
-
-                // クリップボードからコピー
-                IDataObject dataObject = Clipboard.GetDataObject();
-
-                // クリップボードの内容判定
-                if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainProperty))))
-                {
-                    ContextMenuStrip.Items["pasting_train_in_front"].Enabled = false;
-                    ContextMenuStrip.Items["pasting_train_later"].Enabled = false;
-                    ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
-                }
-                else
-                {
-                    ContextMenuStrip.Items["pasting_train_in_front"].Enabled = true;
-                    ContextMenuStrip.Items["pasting_train_later"].Enabled = true;
-                    ContextMenuStrip.Items["paste_only_the_time"].Enabled = true;
-                }
+                // 列車列設定
+                ContextMenuStripOpenedTrainColumnSelection(sender, e, selectedColumnIndex, selectedRowIndex);
             }
             else if (selectedColumnIndex >= 0)
             {
-                // 表示/非表示設定
-                ContextMenuStrip.Items["cutout"].Visible = false;
-                ContextMenuStrip.Items["copy"].Visible = false;
-                ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
-                ContextMenuStrip.Items["pasting_train_later"].Visible = false;
-                ContextMenuStrip.Items["delete"].Visible = false;
-                ContextMenuStrip.Items["separator1"].Visible = false;
-                ContextMenuStrip.Items["paste_only_the_time"].Visible = false;
-                ContextMenuStrip.Items["separator2"].Visible = false;
-                ContextMenuStrip.Items["train_properties"].Visible = false;
-                ContextMenuStrip.Items["insert_train_in_front"].Visible = false;
-                ContextMenuStrip.Items["insert_train_later"].Visible = false;
-                ContextMenuStrip.Items["separator3"].Visible = false;
-                ContextMenuStrip.Items["station_properties"].Visible = true;
-                ContextMenuStrip.Items["station_time_properties"].Visible = false;
-                ContextMenuStrip.Items["separator4"].Visible = false;
-                ContextMenuStrip.Items["replace_the_previous_train"].Visible = false;
-                ContextMenuStrip.Items["replace_with_next_train"].Visible = false;
-                ContextMenuStrip.Items["separator5"].Visible = false;
-                ContextMenuStrip.Items["erase_time"].Visible = false;
-                ContextMenuStrip.Items["passing"].Visible = false;
-                ContextMenuStrip.Items["passing_stopping"].Visible = false;
-                ContextMenuStrip.Items["no_route"].Visible = false;
-                ContextMenuStrip.Items["separator6"].Visible = false;
-                ContextMenuStrip.Items["first_train_from_this_station"].Visible = false;
-                ContextMenuStrip.Items["stops_at_this_station"].Visible = false;
-                ContextMenuStrip.Items["direct_communication"].Visible = false;
-                ContextMenuStrip.Items["division"].Visible = false;
+                // 駅列設定
+                ContextMenuStripOpenedStationColumnSelection(sender, e, selectedColumnIndex, selectedRowIndex);
+            }
 
-                // 駅列の場合
-                ContextMenuStrip.Items["cutout"].Enabled = false;
-                ContextMenuStrip.Items["copy"].Enabled = false;
-                ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
-                ContextMenuStrip.Items["pasting_train_later"].Visible = false;
-                ContextMenuStrip.Items["delete"].Enabled = false;
-                ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
-                ContextMenuStrip.Items["train_properties"].Enabled = false;
-                ContextMenuStrip.Items["insert_train_in_front"].Enabled = false;
-                ContextMenuStrip.Items["insert_train_later"].Enabled = false;
-                if ((selectedRowIndex > 5) && (selectedRowIndex < RowCount - 1))
-                {
-                    ContextMenuStrip.Items["station_properties"].Enabled = true;
-                }
-                else
-                {
-                    ContextMenuStrip.Items["station_properties"].Enabled = false;
-                }
-                ContextMenuStrip.Items["station_time_properties"].Enabled = false;
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ContextMenuStripOpened(object, EventArgs)");
+        }
+
+        /// <summary>
+        /// ContextMenuStripOpenedTrainColumnSelection
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        private void ContextMenuStripOpenedTrainColumnSelection(object sender, System.EventArgs e, int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ContextMenuStripOpenedTrainColumnSelection(object, EventArgs, int ,int)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
+            #region 表示/非表示設定
+            ContextMenuStrip.Items["cutout"].Visible = true;
+            ContextMenuStrip.Items["copy"].Visible = true;
+            ContextMenuStrip.Items["pasting_train_in_front"].Visible = true;
+            ContextMenuStrip.Items["pasting_train_later"].Visible = true;
+            ContextMenuStrip.Items["delete"].Visible = true;
+            ContextMenuStrip.Items["separator1"].Visible = true;
+            ContextMenuStrip.Items["paste_only_the_time"].Visible = true;
+            ContextMenuStrip.Items["separator2"].Visible = true;
+            ContextMenuStrip.Items["train_properties"].Visible = true;
+            ContextMenuStrip.Items["insert_train_in_front"].Visible = true;
+            ContextMenuStrip.Items["insert_train_later"].Visible = true;
+            ContextMenuStrip.Items["separator3"].Visible = true;
+            ContextMenuStrip.Items["station_properties"].Visible = false;
+            ContextMenuStrip.Items["station_time_properties"].Visible = true;
+            ContextMenuStrip.Items["separator4"].Visible = true;
+            ContextMenuStrip.Items["replace_the_previous_train"].Visible = true;
+            ContextMenuStrip.Items["replace_with_next_train"].Visible = true;
+            ContextMenuStrip.Items["separator5"].Visible = true;
+            ContextMenuStrip.Items["erase_time"].Visible = true;
+            ContextMenuStrip.Items["passing"].Visible = true;
+            ContextMenuStrip.Items["passing_stopping"].Visible = true;
+            ContextMenuStrip.Items["no_route"].Visible = true;
+            ContextMenuStrip.Items["separator6"].Visible = true;
+            ContextMenuStrip.Items["first_train_from_this_station"].Visible = true;
+            ContextMenuStrip.Items["stops_at_this_station"].Visible = true;
+            ContextMenuStrip.Items["direct_communication"].Visible = true;
+            ContextMenuStrip.Items["division"].Visible = true;
+            #endregion
+
+            // 列車列の場合
+            ContextMenuStrip.Items["cutout"].Enabled = true;
+            ContextMenuStrip.Items["copy"].Enabled = true;
+            ContextMenuStrip.Items["delete"].Enabled = true;
+            ContextMenuStrip.Items["train_properties"].Enabled = true;
+            ContextMenuStrip.Items["insert_train_in_front"].Enabled = true;
+            ContextMenuStrip.Items["insert_train_later"].Enabled = true;
+            if (column == 4)
+            {
                 ContextMenuStrip.Items["replace_the_previous_train"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["replace_the_previous_train"].Enabled = true;
+            }
+            if (column == ColumnCount - 1)
+            {
                 ContextMenuStrip.Items["replace_with_next_train"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["replace_with_next_train"].Enabled = true;
+            }
+            if ((row > 5) && (row < RowCount - 1))
+            {
+                ContextMenuStrip.Items["station_time_properties"].Enabled = true;
+                ContextMenuStrip.Items["station_properties"].Enabled = true;
+                ContextMenuStrip.Items["erase_time"].Enabled = true;
+                ContextMenuStrip.Items["passing"].Enabled = true;
+                ContextMenuStrip.Items["passing_stopping"].Enabled = true;
+                ContextMenuStrip.Items["no_route"].Enabled = true;
+                ContextMenuStrip.Items["first_train_from_this_station"].Enabled = true;
+                ContextMenuStrip.Items["stops_at_this_station"].Enabled = true;
+
+                // 選択項目取得
+                TrainProperty property = GetSelectedTrainProperty();
+
+                // 無効化
+                ContextMenuStrip.Items["direct_communication"].Enabled = false;
+                ContextMenuStrip.Items["division"].Enabled = false;
+
+                // 直通化/分断化設定
+                if (property != null)
+                {
+                    // 選択駅取得
+                    string selectedStationName = GetSelectedStationName(row);
+
+                    // 選択項目取得
+                    TrainProperty nextTrainProperty = GetSelectedNextTrainProperty(1);
+
+                    // 直通化判定
+                    if (property.IsJoin(m_RouteFileProperty.Stations, m_RouteFileProperty.StationSequences, selectedStationName, nextTrainProperty))
+                    {
+                        // 有効化
+                        ContextMenuStrip.Items["direct_communication"].Enabled = true;
+                    }
+
+                    // 分割化判定
+                    if (property.IsDivisible(m_RouteFileProperty.Stations, m_RouteFileProperty.StationSequences, selectedStationName))
+                    {
+                        // 有効化
+                        ContextMenuStrip.Items["division"].Enabled = true;
+                    }
+                }
+            }
+            else
+            {
+                ContextMenuStrip.Items["station_time_properties"].Enabled = false;
+                ContextMenuStrip.Items["station_properties"].Enabled = false;
                 ContextMenuStrip.Items["erase_time"].Enabled = false;
                 ContextMenuStrip.Items["passing"].Enabled = false;
                 ContextMenuStrip.Items["passing_stopping"].Enabled = false;
@@ -1704,9 +1780,107 @@ namespace TrainTimeTable.Control
                 ContextMenuStrip.Items["division"].Enabled = false;
             }
 
+            // クリップボードからコピー
+            IDataObject dataObject = Clipboard.GetDataObject();
+
+            // クリップボードの内容判定
+            if (!(dataObject != null && dataObject.GetDataPresent(typeof(TrainProperty))))
+            {
+                ContextMenuStrip.Items["pasting_train_in_front"].Enabled = false;
+                ContextMenuStrip.Items["pasting_train_later"].Enabled = false;
+                ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
+            }
+            else
+            {
+                ContextMenuStrip.Items["pasting_train_in_front"].Enabled = true;
+                ContextMenuStrip.Items["pasting_train_later"].Enabled = true;
+                ContextMenuStrip.Items["paste_only_the_time"].Enabled = true;
+            }
+
             // ロギング
-            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ContextMenuStripOpened(object, EventArgs)");
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ContextMenuStripOpenedTrainColumnSelection(object, EventArgs, int ,int)");
         }
+
+        /// <summary>
+        /// ContextMenuStripOpenedStationColumnSelection
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <param name="column"></param>
+        /// <param name="row"></param>
+        private void ContextMenuStripOpenedStationColumnSelection(object sender, System.EventArgs e, int column, int row)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::ContextMenuStripOpenedStationColumnSelection(object, EventArgs, int ,int)");
+            Logger.DebugFormat("sender:[{0}]", sender);
+            Logger.DebugFormat("e     :[{0}]", e);
+            Logger.DebugFormat("column:[{0}]", column);
+            Logger.DebugFormat("row   :[{0}]", row);
+
+            #region 表示/非表示設定
+            ContextMenuStrip.Items["cutout"].Visible = false;
+            ContextMenuStrip.Items["copy"].Visible = false;
+            ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
+            ContextMenuStrip.Items["pasting_train_later"].Visible = false;
+            ContextMenuStrip.Items["delete"].Visible = false;
+            ContextMenuStrip.Items["separator1"].Visible = false;
+            ContextMenuStrip.Items["paste_only_the_time"].Visible = false;
+            ContextMenuStrip.Items["separator2"].Visible = false;
+            ContextMenuStrip.Items["train_properties"].Visible = false;
+            ContextMenuStrip.Items["insert_train_in_front"].Visible = false;
+            ContextMenuStrip.Items["insert_train_later"].Visible = false;
+            ContextMenuStrip.Items["separator3"].Visible = false;
+            ContextMenuStrip.Items["station_properties"].Visible = true;
+            ContextMenuStrip.Items["station_time_properties"].Visible = false;
+            ContextMenuStrip.Items["separator4"].Visible = false;
+            ContextMenuStrip.Items["replace_the_previous_train"].Visible = false;
+            ContextMenuStrip.Items["replace_with_next_train"].Visible = false;
+            ContextMenuStrip.Items["separator5"].Visible = false;
+            ContextMenuStrip.Items["erase_time"].Visible = false;
+            ContextMenuStrip.Items["passing"].Visible = false;
+            ContextMenuStrip.Items["passing_stopping"].Visible = false;
+            ContextMenuStrip.Items["no_route"].Visible = false;
+            ContextMenuStrip.Items["separator6"].Visible = false;
+            ContextMenuStrip.Items["first_train_from_this_station"].Visible = false;
+            ContextMenuStrip.Items["stops_at_this_station"].Visible = false;
+            ContextMenuStrip.Items["direct_communication"].Visible = false;
+            ContextMenuStrip.Items["division"].Visible = false;
+            #endregion
+
+            // 駅列の場合
+            ContextMenuStrip.Items["cutout"].Enabled = false;
+            ContextMenuStrip.Items["copy"].Enabled = false;
+            ContextMenuStrip.Items["pasting_train_in_front"].Visible = false;
+            ContextMenuStrip.Items["pasting_train_later"].Visible = false;
+            ContextMenuStrip.Items["delete"].Enabled = false;
+            ContextMenuStrip.Items["paste_only_the_time"].Enabled = false;
+            ContextMenuStrip.Items["train_properties"].Enabled = false;
+            ContextMenuStrip.Items["insert_train_in_front"].Enabled = false;
+            ContextMenuStrip.Items["insert_train_later"].Enabled = false;
+            if ((row > 5) && (row < RowCount - 1))
+            {
+                ContextMenuStrip.Items["station_properties"].Enabled = true;
+            }
+            else
+            {
+                ContextMenuStrip.Items["station_properties"].Enabled = false;
+            }
+            ContextMenuStrip.Items["station_time_properties"].Enabled = false;
+            ContextMenuStrip.Items["replace_the_previous_train"].Enabled = false;
+            ContextMenuStrip.Items["replace_with_next_train"].Enabled = false;
+            ContextMenuStrip.Items["erase_time"].Enabled = false;
+            ContextMenuStrip.Items["passing"].Enabled = false;
+            ContextMenuStrip.Items["passing_stopping"].Enabled = false;
+            ContextMenuStrip.Items["no_route"].Enabled = false;
+            ContextMenuStrip.Items["first_train_from_this_station"].Enabled = false;
+            ContextMenuStrip.Items["stops_at_this_station"].Enabled = false;
+            ContextMenuStrip.Items["direct_communication"].Enabled = false;
+            ContextMenuStrip.Items["division"].Enabled = false;
+
+            // ロギング
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::ContextMenuStripOpenedStationColumnSelection(object, EventArgs, int ,int)");
+        }
+        #endregion
         #endregion
         #endregion
 
@@ -2658,6 +2832,53 @@ namespace TrainTimeTable.Control
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedCondition()");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 選択隣列車情報取得
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        private TrainProperty GetSelectedNextTrainProperty(int offset)
+        {
+            // ロギング
+            Logger.Debug("=>>>> VirtualDataGridViewTimeTable::GetSelectedNextTrainProperty(int)");
+            Logger.DebugFormat("offset:[{0}]", offset);
+
+            // 選択インデックス設定
+            int index = GetSelectedTrainColumnIndex();
+
+            // 選択状態判定
+            if (index < 0)
+            {
+                // ロギング
+                Logger.Debug("result:[選択なし]");
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedNextTrainProperty(int)");
+
+                // 選択なし
+                return null;
+            }
+
+            // 選択次判定
+            if (index + offset < 0 || index + offset >= m_DrawTrainProperties.Count)
+            {
+                // ロギング
+                Logger.Debug("result:[範囲対象外]");
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedNextTrainProperty(int)");
+
+                // 範囲対象外
+                return null;
+            }
+
+            // 列車情報を取得
+            TrainProperty result = m_DrawTrainProperties[index + offset];
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= VirtualDataGridViewTimeTable::GetSelectedNextTrainProperty(int)");
 
             // 返却
             return result;

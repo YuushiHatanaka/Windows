@@ -500,6 +500,7 @@ namespace TrainTimeTable.Property
 
             // ID設定
             property.Id = newId;
+            property.StationTimes.ForEach(s=>s.TrainId = newId);
 
             // 列車挿入
             trainProperties.Insert(index, property);
@@ -510,6 +511,34 @@ namespace TrainTimeTable.Property
 
             // ロギング
             Logger.Debug("<<<<= DiagramProperties::InsertTrain(DirectionType, int, TrainProperty)");
+        }
+
+        /// <summary>
+        /// 列車挿入
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="properties"></param>
+        public void InsertTrain(DirectionType type, int index, TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::InsertTrain(DirectionType, int, TrainProperties)");
+            Logger.DebugFormat("type      :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index     :[{0}]", index);
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // プロパティ分繰り返す
+            foreach (var property in properties)
+            {
+                // 列車挿入
+                InsertTrain(type, index, property);
+
+                // インデックス更新
+                index += 1;
+            }
+
+            // ロギング
+            Logger.Debug("<<<<= DiagramProperties::InsertTrain(DirectionType, int, TrainProperties)");
         }
         #endregion
 

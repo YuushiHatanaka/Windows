@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using TrainTimeTable.Common;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace TrainTimeTable.Property
 {
@@ -343,6 +345,282 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 分割
+        /// <summary>
+        /// 分割判定
+        /// </summary>
+        /// <param name="stations"></param>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        /// <returns></returns>
+        public bool IsDivisible(StationProperties stations, StationSequenceProperties sequences, string stationName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::IsDivisible(StationProperties, StationSequenceProperties, string)");
+            Logger.DebugFormat("stations   :[{0}]", stations);
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+
+            // 結果設定
+            bool result = true;
+
+            #region 選択駅情報取得
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences[stationName];
+
+            // StationPropertyオブジェクト取得
+            StationProperty stationProperty = stations[stationName];
+
+            // StationTimePropertyオブジェクト取得
+            StationTimeProperty stationTimeProperty = StationTimes[stationName];
+            #endregion
+
+            #region 次駅情報取得
+            // 次駅
+            StationSequenceProperty nextStationSequenceProperty = sequences.Next(Direction, 1, stationName);
+
+            // StationPropertyオブジェクト取得
+            StationProperty nextStationProperty = stations[nextStationSequenceProperty?.Name];
+
+            // StationTimePropertyオブジェクト取得
+            StationTimeProperty nextStationTimeProperty = StationTimes[nextStationSequenceProperty?.Name];
+            #endregion
+
+            do
+            {
+                // 停車判定
+                if (!(stationTimeProperty.StationTreatment == StationTreatment.Stop || stationTimeProperty.StationTreatment == StationTreatment.Passing))
+                {
+                    // 結果設定
+                    result = false;
+
+                    // 終了
+                    break;
+                }
+
+                // 次駅存在判定
+                if (nextStationSequenceProperty == null)
+                {
+                    // 結果設定
+                    result = false;
+
+                    // 終了
+                    break;
+                }
+
+                // 停車判定
+                if (!(nextStationTimeProperty.StationTreatment == StationTreatment.Stop || nextStationTimeProperty.StationTreatment == StationTreatment.Passing))
+                {
+                    // 結果設定
+                    result = false;
+
+                    // 終了
+                    break;
+                }
+
+                // 終了
+                break;
+            } while (true);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainProperty::IsDivisible(StationProperties, StationSequenceProperties, string)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 分割
+        /// </summary>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        /// <returns></returns>
+        public TrainProperties Divide(StationProperties stations, StationSequenceProperties sequences, string stationName)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::Divide(StationProperties, StationSequenceProperties, string)");
+            Logger.DebugFormat("stations   :[{0}]", stations);
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+
+            // 結果オブジェクト生成
+            TrainProperties result = new TrainProperties()
+            {
+                new TrainProperty(this),
+                new TrainProperty(this),
+            };
+
+            // 設定
+            result[0].StopStationSetting(Direction, sequences, stationName);
+            result[1].StartStationSetting(Direction, sequences, stationName);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainProperty::Divide(StationProperties, StationSequenceProperties, string)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
+        #region 結合
+        /// <summary>
+        /// 結合判定
+        /// </summary>
+        /// <param name="stations"></param>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public bool IsJoin(StationProperties stations, StationSequenceProperties sequences, string stationName, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::IsJoin(StationProperties, StationSequenceProperties, string, TrainProperty)");
+            Logger.DebugFormat("stations   :[{0}]", stations);
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+            Logger.DebugFormat("property   :[{0}]", property);
+
+            // 結果設定
+            bool result = true;
+
+            #region 選択駅情報取得
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty stationSequenceProperty = sequences[stationName];
+
+            // StationPropertyオブジェクト取得
+            StationProperty stationProperty = stations[stationName];
+
+            // StationTimePropertyオブジェクト取得
+            StationTimeProperty stationTimeProperty = StationTimes[stationName];
+            #endregion
+
+            #region 次駅情報取得
+            // 次駅
+            StationSequenceProperty nextStationSequenceProperty = sequences.Next(Direction, 1, stationName);
+
+            // StationPropertyオブジェクト取得
+            StationProperty nextStationProperty = stations[nextStationSequenceProperty?.Name];
+
+            // StationTimePropertyオブジェクト取得
+            StationTimeProperty nextStationTimeProperty = StationTimes[nextStationSequenceProperty?.Name];
+            #endregion
+
+            do
+            {
+                // 結合対象TrainProperty判定
+                if (property == null)
+                {
+                    // 結果設定
+                    result = false;
+
+                    // 終了
+                    break;
+                }
+
+                // 列車番号判定
+                if (No != property.No)
+                {
+                    // 結果設定
+                    result = false;
+
+                    // 終了
+                    break;
+                }
+
+                // 終了
+                break;
+            } while (true);
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainProperty::IsJoin(StationProperties, StationSequenceProperties, string, TrainProperty)");
+
+            // 返却
+            return result;
+        }
+
+        /// <summary>
+        /// 結合
+        /// </summary>
+        /// <param name="stations"></param>
+        /// <param name="sequences"></param>
+        /// <param name="stationName"></param>
+        /// <param name="property"></param>
+        public void Join(StationProperties stations, StationSequenceProperties sequences, string stationName, TrainProperty property)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperty::Join(StationProperties, StationSequenceProperties, string, TrainProperty)");
+            Logger.DebugFormat("stations   :[{0}]", stations);
+            Logger.DebugFormat("sequences  :[{0}]", sequences);
+            Logger.DebugFormat("stationName:[{0}]", stationName);
+            Logger.DebugFormat("property   :[{0}]", property);
+
+            // StationSequencePropertyオブジェクト取得
+            StationSequenceProperty targetStationSequence = sequences.Find(s => s.Name == stationName);
+
+            // StationTimePropertiesオブジェクト生成
+            StationTimeProperties stationTimeProperties = new StationTimeProperties();
+
+            // StationTimePropertyオブジェクト
+            StationTimeProperty stationTimeProperty = null;
+
+            // 方向種別で分岐
+            switch (Direction)
+            {
+                case DirectionType.Outbound:
+                    // シーケンス番号を繰り返す
+                    foreach (var sequence in sequences.OrderBy(s => s.Seq))
+                    {
+                        // シーケンス番号判定
+                        if (sequence.Seq <= targetStationSequence.Seq)
+                        {
+                            // StationTimePropertyオブジェクト取得
+                            stationTimeProperty = StationTimes.Find(s => s.StationName == sequence.Name);
+                        }
+                        else
+                        {
+                            // StationTimePropertyオブジェクト取得
+                            stationTimeProperty = property.StationTimes.Find(s => s.StationName == sequence.Name);
+                        }
+
+                        // 登録
+                        stationTimeProperties.Add(stationTimeProperty);
+                    }
+                    break;
+                case DirectionType.Inbound:
+                    // シーケンス番号を繰り返す
+                    foreach (var sequence in sequences.OrderByDescending(s => s.Seq))
+                    {
+                        // シーケンス番号判定
+                        if (sequence.Seq <= targetStationSequence.Seq)
+                        {
+                            // StationTimePropertyオブジェクト取得
+                            stationTimeProperty = property.StationTimes.Find(s => s.StationName == sequence.Name);
+                        }
+                        else
+                        {
+                            // StationTimePropertyオブジェクト取得
+                            stationTimeProperty = StationTimes.Find(s => s.StationName == sequence.Name);
+                        }
+
+                        // 登録
+                        stationTimeProperties.Add(stationTimeProperty);
+                    }
+                    break;
+                default:
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", Direction));
+            }
+
+            // データ登録
+            StationTimes.Copy(stationTimeProperties);
+
+            // ロギング
+            Logger.Debug("<<<<= TrainProperty::Join(StationProperties, StationSequenceProperties, string, TrainProperty)");
+        }
+        #endregion
+
         #region 発着駅設定
         /// <summary>
         /// 発着駅設定
@@ -438,6 +716,7 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 当駅始発設定
         /// <summary>
         /// 当駅始発設定
         /// </summary>
@@ -470,7 +749,7 @@ namespace TrainTimeTable.Property
             }
 
             // シーケンスを繰り返す
-            foreach(var sequence in orderedSequence)
+            foreach (var sequence in orderedSequence)
             {
                 // 始発駅に一致？
                 if (sequence.Name == stationName)
@@ -489,7 +768,9 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= TrainProperty::StartStationSetting(DirectionType, StationSequenceProperties, string)");
         }
+        #endregion
 
+        #region 当駅止り設定
         /// <summary>
         /// 当駅止り設定
         /// </summary>
@@ -541,6 +822,7 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= TrainProperty::StopStationSetting(DirectionType, StationSequenceProperties, string)");
         }
+        #endregion
 
         #region 文字列化
         /// <summary>

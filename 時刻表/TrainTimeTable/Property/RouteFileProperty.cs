@@ -929,6 +929,27 @@ namespace TrainTimeTable.Property
             // ロギング
             Logger.Debug("<<<<= RouteFileProperty::InsertTrain(DirectionType, int, TrainProperty)");
         }
+
+        /// <summary>
+        /// 列車挿入
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="index"></param>
+        /// <param name="properties"></param>
+        public void InsertTrain(DirectionType type, int index, TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::InsertTrain(DirectionType, int, TrainProperties)");
+            Logger.DebugFormat("type      :[{0}]", type.GetStringValue());
+            Logger.DebugFormat("index     :[{0}]", index);
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 各プロパティで列車挿入
+            Diagrams.InsertTrain(type, index, properties);
+
+            // ロギング
+            Logger.Debug("<<<<= RouteFileProperty::InsertTrain(DirectionType, int, TrainProperties)");
+        }
         #endregion
 
         #region 列車削除
