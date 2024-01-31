@@ -245,7 +245,7 @@ namespace TrainTimeTable.Database.Table
             Logger.DebugFormat("newProperties:[{0}]", newProperties);
 
             // 削除プロパティ取得
-            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+            DiagramProperties removeProperties = oldProperties.GetRemoveKeys(newProperties);
 
             // ロギング
             Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
@@ -268,9 +268,25 @@ namespace TrainTimeTable.Database.Table
             // ダイヤグラム分繰り返す
             foreach (var property in newProperties)
             {
+                // (旧)DiagramPropertyオブジェクト取得
+                DiagramProperty oldProperty = oldProperties.Find(d=>d.Name == property.Name);
+
                 // 方向種別分繰り返す
                 foreach (var direction in property.Trains.Keys)
                 {
+                    // TrainPropertiesオブジェクト取得
+                    TrainProperties oldTrainProperties = oldProperty.Trains[direction];
+
+                    // 削除プロパティ取得
+                    TrainProperties removeTrainProperties = oldTrainProperties.GetRemoveKeys(property.Trains[direction]);
+
+                    // 列車分繰り返す
+                    foreach (var train in removeTrainProperties)
+                    {
+                        // 削除
+                        Remove(train.StationTimes);
+                    }
+
                     // 列車分繰り返す
                     foreach (var train in property.Trains[direction])
                     {
@@ -486,7 +502,7 @@ namespace TrainTimeTable.Database.Table
                 foreach (var property in properties)
                 {
                     query.Append(string.Format("DELETE FROM {0} ", m_TableName));
-                    query.Append("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND TrainId = " + property.TrainId + " AND StationName = '" + property.StationName + "';");
+                    query.AppendLine("WHERE DiagramName = '" + property.DiagramName + "' AND Direction = " + (int)property.Direction + " AND TrainId = " + property.TrainId + " AND StationName = '" + property.StationName + "';");
                 }
 
                 // 削除実行

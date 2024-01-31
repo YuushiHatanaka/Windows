@@ -177,6 +177,53 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+        public DiagramProperties GetRemoveKeys(DiagramProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> DiagramProperties::GetRemoveKeys(DiagramProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 結果オブジェクト生成
+            DiagramProperties result = new DiagramProperties();
+
+            // 削除要素作成
+            foreach (var src in this)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in properties)
+                {
+                    // キーを比較
+                    if (src.Name == dst.Name)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= DiagramProperties::GetRemoveKeys(DiagramProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 駅関連
         #region 発着駅設定
         /// <summary>

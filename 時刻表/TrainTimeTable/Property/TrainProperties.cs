@@ -196,6 +196,53 @@ namespace TrainTimeTable.Property
         }
         #endregion
 
+        #region 削除キー取得
+        /// <summary>
+        /// 削除キー取得
+        /// </summary>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+        public TrainProperties GetRemoveKeys(TrainProperties properties)
+        {
+            // ロギング
+            Logger.Debug("=>>>> TrainProperties::GetRemoveKeys(TrainProperties)");
+            Logger.DebugFormat("properties:[{0}]", properties);
+
+            // 結果オブジェクト生成
+            TrainProperties result = new TrainProperties();
+
+            // 削除要素作成
+            foreach (var src in this)
+            {
+                // 削除されたか判定する
+                bool removeId = true;
+                foreach (var dst in properties)
+                {
+                    // キーを比較
+                    if (src.DiagramName == dst.DiagramName && src.Direction == dst.Direction && src.Id == dst.Id)
+                    {
+                        removeId = false;
+                        break;
+                    }
+                }
+
+                // 削除対象判定
+                if (removeId)
+                {
+                    // 登録
+                    result.Add(src);
+                }
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= TrainProperties::GetRemoveKeys(TrainProperties)");
+
+            // 返却
+            return result;
+        }
+        #endregion
+
         #region 文字列化
         /// <summary>
         /// 文字列化

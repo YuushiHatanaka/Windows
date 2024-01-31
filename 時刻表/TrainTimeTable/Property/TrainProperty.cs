@@ -585,6 +585,9 @@ namespace TrainTimeTable.Property
                             stationTimeProperty = property.StationTimes.Find(s => s.StationName == sequence.Name);
                         }
 
+                        // ID更新
+                        stationTimeProperty.TrainId = Id;
+
                         // 登録
                         stationTimeProperties.Add(stationTimeProperty);
                     }
@@ -605,6 +608,9 @@ namespace TrainTimeTable.Property
                             stationTimeProperty = StationTimes.Find(s => s.StationName == sequence.Name);
                         }
 
+                        // ID更新
+                        stationTimeProperty.TrainId = Id;
+
                         // 登録
                         stationTimeProperties.Add(stationTimeProperty);
                     }
@@ -615,6 +621,9 @@ namespace TrainTimeTable.Property
 
             // データ登録
             StationTimes.Copy(stationTimeProperties);
+
+            // 発着駅設定
+            DepartureArrivalStationOutboundSetting();
 
             // ロギング
             Logger.Debug("<<<<= TrainProperty::Join(StationProperties, StationSequenceProperties, string, TrainProperty)");

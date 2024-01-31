@@ -238,7 +238,7 @@ namespace TrainTimeTable.Database.Table
             Logger.DebugFormat("newProperties:[{0}]", newProperties);
 
             // 削除プロパティ取得
-            DiagramProperties removeProperties = TableLibrary.GetRemoveKeys(oldProperties, newProperties);
+            DiagramProperties removeProperties = oldProperties.GetRemoveKeys(newProperties);
 
             // ロギング
             Logger.DebugFormat("removeProperties:[{0}]", removeProperties);
