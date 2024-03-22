@@ -203,7 +203,6 @@ namespace TrainTimeTable.Control
             // ヘッダーの色等
             EnableHeadersVisualStyles = false;     // Visualスタイルを使用しない
             ColumnHeadersDefaultCellStyle.BackColor = Color.WhiteSmoke;
-            ColumnHeadersDefaultCellStyle.Font = m_FontDictionary["時刻表ヘッダー"];
             ColumnHeadersDefaultCellStyle.Font = Font;
             ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
@@ -213,13 +212,13 @@ namespace TrainTimeTable.Control
 
             // 仮想モード設定
             VirtualMode = true;
-            CellValueNeeded += new DataGridViewCellValueEventHandler(VirtualDataGridViewTimeTable_CellValueNeeded);
-            CellValuePushed += new DataGridViewCellValueEventHandler(VirtualDataGridViewTimeTable_CellValuePushed);
-            NewRowNeeded += new DataGridViewRowEventHandler(VirtualDataGridViewTimeTable_NewRowNeeded);
-            RowValidated += new DataGridViewCellEventHandler(VirtualDataGridViewTimeTable_RowValidated);
-            RowDirtyStateNeeded += new QuestionEventHandler(VirtualDataGridViewTimeTable_RowDirtyStateNeeded);
-            CancelRowEdit += new QuestionEventHandler(VirtualDataGridViewTimeTable_CancelRowEdit);
-            UserDeletingRow += new DataGridViewRowCancelEventHandler(VirtualDataGridViewTimeTable_UserDeletingRow);
+            CellValueNeeded += VirtualDataGridViewTimeTable_CellValueNeeded;
+            CellValuePushed += VirtualDataGridViewTimeTable_CellValuePushed;
+            NewRowNeeded += VirtualDataGridViewTimeTable_NewRowNeeded;
+            RowValidated += VirtualDataGridViewTimeTable_RowValidated;
+            RowDirtyStateNeeded += VirtualDataGridViewTimeTable_RowDirtyStateNeeded;
+            CancelRowEdit += VirtualDataGridViewTimeTable_CancelRowEdit;
+            UserDeletingRow += VirtualDataGridViewTimeTable_UserDeletingRow;
 
             // コンテキストメニュー追加
             ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
@@ -262,10 +261,10 @@ namespace TrainTimeTable.Control
             ContextMenuStrip.Opened += ContextMenuStripOpened;
 
             // イベント設定
-            ColumnAdded += new DataGridViewColumnEventHandler(VirtualDataGridViewTimeTable_ColumnAdded);
-            CellPainting += new DataGridViewCellPaintingEventHandler(VirtualDataGridViewTimeTable_CellPainting);
-            CellFormatting += new DataGridViewCellFormattingEventHandler(VirtualDataGridViewTimeTable_CellFormatting);
-            MouseDoubleClick += new MouseEventHandler(VirtualDataGridViewTimeTable_MouseDoubleClick);
+            ColumnAdded += VirtualDataGridViewTimeTable_ColumnAdded;
+            CellPainting += VirtualDataGridViewTimeTable_CellPainting;
+            CellFormatting += VirtualDataGridViewTimeTable_CellFormatting;
+            MouseDoubleClick += VirtualDataGridViewTimeTable_MouseDoubleClick;
 
             // ロギング
             Logger.Debug("<<<<= VirtualDataGridViewTimeTable::Initialization()");
@@ -509,6 +508,7 @@ namespace TrainTimeTable.Control
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        /// <see cref="https://arayan-jp.blogspot.com/2009/05/c-datagridview_21.html"/>
         private void VirtualDataGridViewTimeTable_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             // ロギング
@@ -516,51 +516,113 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("sender:[{0}]", sender);
             Logger.DebugFormat("e     :[{0}]", e);
 
-            // セルの下側の境界線を「境界線なし」に設定
+            // DataGridViewオブジェクト取得
+            VirtualDataGridViewTimeTable dataGridView = (VirtualDataGridViewTimeTable)sender;
+
+            // 罫線初期化
+            e.AdvancedBorderStyle.Top = DataGridViewAdvancedCellBorderStyle.None;
             e.AdvancedBorderStyle.Bottom = DataGridViewAdvancedCellBorderStyle.None;
+            e.AdvancedBorderStyle.Right = DataGridViewAdvancedCellBorderStyle.None;
+            e.AdvancedBorderStyle.Left = DataGridViewAdvancedCellBorderStyle.None;
 
-            // 設定
-            if (e.ColumnIndex == 2)
+            // 駅間距離列
+            if (e.ColumnIndex == 0)
             {
-                // セルの上側の境界線を「境界線なし」に設定
-                e.AdvancedBorderStyle.Top = DataGridViewAdvancedCellBorderStyle.None;
-
-                // 最初の行は上側境界線を「境界線あり」に設定する
-                if (e.RowIndex == 0)
+                e.AdvancedBorderStyle.Right = AdvancedCellBorderStyle.Right;
+            }
+            // 駅印列
+            else if (e.ColumnIndex == 1)
+            {
+                e.AdvancedBorderStyle.Right = AdvancedCellBorderStyle.Right;
+            }
+            // 駅名列
+            else if (e.ColumnIndex == 2)
+            {
+                if (e.RowIndex == 0 || e.RowIndex == 1 || e.RowIndex == 3 || e.RowIndex == 4)
                 {
-                    // セルの上側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
                 }
-                // 最終行は下側境界線を「境界線あり」に設定する
-                else if (e.RowIndex == Rows.Count - 1)
-                {
-                    // セルの上側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
 
-                    // セルの下側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
+                // セル結合
+                if (e.RowIndex == 2)
+                {
                 }
-                else
+                else if (e.RowIndex >= 6)
                 {
                     // 前カラムと値が同じか判定
-                    if (!IsTheSameCellValue(e.ColumnIndex, 0, e.RowIndex, -1))
+                    if (IsTheSameCellValue(e.ColumnIndex, 0, e.RowIndex, -1))
                     {
-                        // セルの上側の境界線を既定の境界線に設定
-                        e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
+                        // イベント　ハンドラ内で処理を行ったことを通知
+                        e.Handled = true;
+                    }
+                    // 後カラムと値が同じか判定
+                    else if (IsTheSameCellValue(e.ColumnIndex, 0, e.RowIndex, 1))
+                    {
+                        // 描画オブジェクト設定
+                        Rectangle rectangle = e.CellBounds;
+                        DataGridViewCell currentDataGridViewCell = this[e.ColumnIndex, e.RowIndex];
+                        DataGridViewCell adjacentDataGridViewCell = this[e.ColumnIndex, e.RowIndex + 1];
+
+                        // 描画領域調整
+                        rectangle.Width = adjacentDataGridViewCell.Size.Width;
+                        rectangle.Height += adjacentDataGridViewCell.Size.Height;
+
+                        // 描画色設定
+                        SolidBrush solidBrush = null;
+                        Color forColor = Color.White;
+                        if ((e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected)
+                        {
+                            solidBrush = new SolidBrush(e.CellStyle.SelectionBackColor);
+                            forColor = e.CellStyle.SelectionForeColor;
+                        }
+                        else
+                        {
+                            solidBrush = new SolidBrush(e.CellStyle.BackColor);
+                            forColor = e.CellStyle.ForeColor;
+                        }
+
+                        // 背景、セルボーダーライン、セルの値を描画
+                        e.Graphics.FillRectangle(solidBrush, rectangle);
+                        TextRenderer.DrawText(e.Graphics, e.FormattedValue.ToString(), e.CellStyle.Font, rectangle, forColor, TextFormatFlags.VerticalCenter);
+
+                        // イベントハンドラ内で処理を行ったことを通知
+                        e.Handled = true;
                     }
                 }
             }
-            else
+            // 駅発着列
+            else if (e.ColumnIndex == 3)
             {
-                // セルの上側の境界線を既定の境界線に設定
-                e.AdvancedBorderStyle.Top = AdvancedCellBorderStyle.Top;
-
-                // 最終行は下側境界線を「境界線あり」に設定する
-                if (e.RowIndex == Rows.Count - 1)
+                e.AdvancedBorderStyle.Right = AdvancedCellBorderStyle.Right;
+                if (e.RowIndex == 0 || e.RowIndex == 1 || e.RowIndex == 3 || e.RowIndex == 4)
                 {
-                    // セルの下側の境界線を既定の境界線に設定
-                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Top;
+                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
                 }
+            }
+            // 列車列
+            else if (e.ColumnIndex >= 4)
+            {
+                e.AdvancedBorderStyle.Right = AdvancedCellBorderStyle.Right;
+                if (e.RowIndex == 0 || e.RowIndex == 1 || e.RowIndex == 3 || e.RowIndex == 4)
+                {
+                    e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
+                }
+            }
+
+            // 終着行
+            if (e.RowIndex == 5)
+            {
+                e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
+            }
+            // 駅時刻最終行
+            else if (e.RowIndex == m_StationDrawRowInfomation.Count + 5)
+            {
+                e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
+            }
+            // 備考行
+            else if (e.RowIndex == RowCount - 1)
+            {
+                e.AdvancedBorderStyle.Bottom = AdvancedCellBorderStyle.Bottom;
             }
 
             // ロギング
@@ -2612,6 +2674,32 @@ namespace TrainTimeTable.Control
             // 結果設定
             bool result = true;
 
+            // 範囲判定
+            if (column + columnOffset >= ColumnCount)
+            {
+                // 結果設定
+                result = false;
+
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int, int, int)");
+
+                // 返却
+                return result;
+            }
+            if (row + rowOffset >= RowCount)
+            {
+                // 結果設定
+                result = false;
+
+                // ロギング
+                Logger.DebugFormat("result:[{0}]", result);
+                Logger.Debug("<<<<= VirtualDataGridViewTimeTable::IsTheSameCellValue(int, int, int, int)");
+
+                // 返却
+                return result;
+            }
+
             // DataGridViewCellオブジェクト取得
             DataGridViewCell srcDataGridViewCell = this[column, row];
             DataGridViewCell dstDataGridViewCell = this[column + columnOffset, row + rowOffset];
@@ -3030,16 +3118,7 @@ namespace TrainTimeTable.Control
             Logger.DebugFormat("column:[{0}]", column);
 
             // 結果初期化
-            StringBuilder result = new StringBuilder();
-
-            // 列車名追加
-            result.Append(m_DrawTrainProperties[column].Name);
-
-            // 列車号数追加
-            if (m_DrawTrainProperties[column].Number != string.Empty)
-            {
-                result.Append(string.Format("{0}号", m_DrawTrainProperties[column].Number));
-            }
+            string result = m_DrawTrainProperties[column].FullName;
 
             // ロギング
             Logger.DebugFormat("result:[{0}]", result);

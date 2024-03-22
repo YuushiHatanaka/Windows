@@ -778,6 +778,45 @@ namespace TrainTimeTable.Property
             return result;
         }
         #endregion
+
+        #region 駅順取得
+        /// <summary>
+        /// 駅順取得
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IOrderedEnumerable<StationSequenceProperty> GetStationSequences(DirectionType type)
+        {
+            // ロギング
+            Logger.Debug("=>>>> RouteFileProperty::GetStationSequences(DirectionType)");
+            Logger.DebugFormat("type:[{0}]", type);
+
+            // IOrderedEnumerable<T>オブジェクト設定
+            IOrderedEnumerable<StationSequenceProperty> result = null;
+
+            // 方向種別で分岐する
+            switch (type)
+            {
+                case DirectionType.Outbound:
+                    // 昇順設定
+                    result = StationSequences.OrderBy(s => s.Seq);
+                    break;
+                case DirectionType.Inbound:
+                    // 降順設定
+                    result = StationSequences.OrderByDescending(s => s.Seq);
+                    break;
+                default:
+                    throw new AggregateException(string.Format("方向種別の異常を検出しました:[{0}]", type));
+            }
+
+            // ロギング
+            Logger.DebugFormat("result:[{0}]", result);
+            Logger.Debug("<<<<= RouteFileProperty::GetStationSequences(DirectionType)");
+
+            // 返却
+            return result;
+        }
+        #endregion
         #endregion
 
         #region 列車種別駅関連

@@ -84,6 +84,7 @@
     <Compile Include="Common\DiaProFont.cs" />
     <Compile Include="Common\DirectionType.cs" />
     <Compile Include="Common\FontLibrary.cs" />
+    <Compile Include="Common\BorderProperty.cs" />
     <Compile Include="Common\ImportFileType.cs" />
     <Compile Include="Common\MathLibrary.cs" />
     <Compile Include="Common\SerializationHelper.cs" />
@@ -212,6 +213,9 @@
     <Compile Include="Database\Table\TrainTypeTable.cs" />
     <Compile Include="Database\Table\TrainMarkTable.cs" />
     <Compile Include="Database\Table\TrainSequenceTable.cs" />
+    <Compile Include="Control\DataGridView\DataGridViewStationCell.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Dialog\DialogAbout.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -88,6 +89,31 @@ namespace TrainTimeTable.Property
         /// 備考
         /// </summary>
         public string Remarks { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public string FullName
+        {
+            get
+            {
+                // 結果初期化
+                StringBuilder result = new StringBuilder();
+
+                // 列車名追加
+                result.Append(Name);
+
+                // 列車号数追加
+                if (Number != string.Empty)
+                {
+                    result.Append(string.Format("{0}号", Number));
+                }
+
+                // 返却
+                return result.ToString();
+            }
+        }
 
         #region コンストラクタ
         /// <summary>

@@ -69,6 +69,13 @@
     <Compile Include="Common\CommonConsole.cs" />
     <Compile Include="Common\ControlMargin.cs" />
     <Compile Include="Common\ControlPositions.cs" />
+    <Compile Include="Console\CommandDetectionEventArgs.cs" />
+    <Compile Include="Console\CommandHistory.cs" />
+    <Compile Include="Console\ConsoleTextBox.cs" />
+    <Compile Include="Console\TextBoxConsole.cs" />
+    <Compile Include="Console\TextBoxConsole.Designer.cs">
+      <DependentUpon>TextBoxConsole.cs</DependentUpon>
+    </Compile>
     <Compile Include="Directory\DirectoryTreeView.cs">
       <SubType>Component</SubType>
     </Compile>

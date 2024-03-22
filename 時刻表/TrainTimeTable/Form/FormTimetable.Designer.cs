@@ -33,8 +33,8 @@
             this.toolStripButtonPrint = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonPrintPreview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonPrinterSetting = new System.Windows.Forms.ToolStripButton();
-            this.panelMain = new System.Windows.Forms.Panel();
             this.statusStripMain = new System.Windows.Forms.StatusStrip();
+            this.panelMain = new System.Windows.Forms.Panel();
             this.toolStripMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -80,13 +80,6 @@
             this.toolStripButtonPrinterSetting.Text = "プリンターの設定";
             this.toolStripButtonPrinterSetting.Click += new System.EventHandler(this.toolStripButtonPrinterSetting_Click);
             // 
-            // panelMain
-            // 
-            this.panelMain.Location = new System.Drawing.Point(12, 28);
-            this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(488, 332);
-            this.panelMain.TabIndex = 3;
-            // 
             // statusStripMain
             // 
             this.statusStripMain.Location = new System.Drawing.Point(0, 539);
@@ -94,6 +87,13 @@
             this.statusStripMain.Size = new System.Drawing.Size(784, 22);
             this.statusStripMain.TabIndex = 4;
             this.statusStripMain.Text = "statusStrip1";
+            // 
+            // panelMain
+            // 
+            this.panelMain.Location = new System.Drawing.Point(12, 28);
+            this.panelMain.Name = "panelMain";
+            this.panelMain.Size = new System.Drawing.Size(682, 461);
+            this.panelMain.TabIndex = 5;
             // 
             // FormTimetable
             // 
@@ -116,10 +116,10 @@
         #endregion
 
         private System.Windows.Forms.ToolStrip toolStripMain;
-        private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.ToolStripButton toolStripButtonPrint;
         private System.Windows.Forms.ToolStripButton toolStripButtonPrintPreview;
         private System.Windows.Forms.ToolStripButton toolStripButtonPrinterSetting;
         private System.Windows.Forms.StatusStrip statusStripMain;
+        private System.Windows.Forms.Panel panelMain;
     }
 }

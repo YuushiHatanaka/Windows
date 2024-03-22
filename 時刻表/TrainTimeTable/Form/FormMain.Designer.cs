@@ -206,7 +206,7 @@
             // toolStripMenuItemHelpAbout
             // 
             this.toolStripMenuItemHelpAbout.Name = "toolStripMenuItemHelpAbout";
-            this.toolStripMenuItemHelpAbout.Size = new System.Drawing.Size(158, 22);
+            this.toolStripMenuItemHelpAbout.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemHelpAbout.Text = "バージョン情報(&A)";
             this.toolStripMenuItemHelpAbout.Click += new System.EventHandler(this.toolStripMenuItemHelpAbout_Click);
             // 

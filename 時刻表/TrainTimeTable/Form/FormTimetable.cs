@@ -148,7 +148,7 @@ namespace TrainTimeTable
             // ロギング
             Logger.Debug("<<<<= FormTimetable::FormTimetable_Load(object, EventArgs)");
         }
-        #endregion
+#endregion
 
         #region TableLayoutPanelTimetableイベント
         /// <summary>
@@ -419,7 +419,7 @@ namespace TrainTimeTable
             Logger.Debug("<<<<= FormTimetable::toolStripButtonPrinterSetting_Click(object, EventArgs)");
         }
         #endregion
-        #endregion
+#endregion
 
         #region publicメソッド
         /// <summary>
